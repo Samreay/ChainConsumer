@@ -702,9 +702,11 @@ class ChainConsumer(object):
 
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
 
+        plt.rc('text', usetex=True)
         if self.parameters_general["serif"]:
-            plt.rc('text', usetex=True)
             plt.rc('font', family='serif')
+        else:
+            plt.rc('font', family='sans-serif')
         for i, axes_row in enumerate(axes):
             ax = axes_row[0]
             if i >= extra:
