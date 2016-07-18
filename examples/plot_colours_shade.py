@@ -21,15 +21,17 @@ from chain_consumer import ChainConsumer
 
 if __name__ == "__main__":
     np.random.seed(2)
-    cov = 0.2 * normal(size=(3, 3)) + np.identity(3)
-    data = multivariate_normal(normal(size=3), 0.5 * (cov + cov.T), size=100000)
+    cov = normal(size=(2, 2)) + np.identity(2)
+    data = multivariate_normal(normal(size=2), 0.5 * (cov + cov.T), size=100000)
+    cov = normal(size=(2, 2)) + np.identity(2)
+    data2 = multivariate_normal(normal(size=2), 0.5 * (cov + cov.T), size=100000)
 
-    c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\beta$"])
-    c.plot(filename="demoVarious6_TruthValues.png", truth=[0.0, 5.0, 0.0, 0.0])
+    c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"]).add_chain(data2)
+    c.configure_general(colours=["#B32222", "#D1D10D"])
+    c.configure_contour(contourf=True, contourf_alpha=0.5)
+    c.configure_bar(shade=True)
+    fig = c.plot()
 
-    # You can also set truth using a dictionary, like below.
-    # If you do it this way, you do not need to
-    # set truth values for all parameters
-    c.configure_truth(color='w', ls=":", alpha=0.5) \
-        .plot(filename="demoVarious6_TruthValues2.png",
-              truth={"$x$": 0.0, "$y$": 5.0, r"$\beta$": 0.0})
+    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+
