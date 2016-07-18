@@ -24,4 +24,4 @@ if __name__ == "__main__":
     c.add_chain(data2, parameters=["$x$", "$y$", r"$\alpha$", r"$\gamma$"])
     fig = c.plot()
 
-    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig because sphinx-gallery truncates them
+    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
