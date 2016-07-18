@@ -483,6 +483,8 @@ class ChainConsumer(object):
             parameters = self.all_parameters
         elif isinstance(parameters, int):
             parameters = self.all_parameters[:parameters]
+        if truth is not None and isinstance(truth, np.ndarray):
+            truth = truth.tolist()
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
 
@@ -636,6 +638,9 @@ class ChainConsumer(object):
             self.configure_contour()
         if not self._configured_truth:
             self.configure_truth()
+
+        if truth is not None and isinstance(truth, np.ndarray):
+            truth = truth.tolist()
 
         if parameters is None:
             parameters = self.all_parameters
