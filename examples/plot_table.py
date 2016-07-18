@@ -1,5 +1,23 @@
+"""
+===========
+Plot Tables
+===========
+
+You can also get LaTeX tables for parameter summaries.
+
+Turned into glorious LaTeX, we would get something like the following:
+
+.. figure::     ../../examples/resources/table.png
+    :align:     center
+
+"""
+
+###############################################################################
+# The code to produce this, and the raw LaTeX, is given below:
+
+
 import numpy as np
-from dessn.chain.chain import ChainConsumer
+from chain_consumer import ChainConsumer
 
 
 if __name__ == "__main__":

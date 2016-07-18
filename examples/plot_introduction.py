@@ -19,3 +19,5 @@ if __name__ == "__main__":
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x_1$", "$x_2$"])
     fig = c.plot(figsize="column", truth=[0.0, 4.0])
+
+    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig because sphinx-gallery truncates them

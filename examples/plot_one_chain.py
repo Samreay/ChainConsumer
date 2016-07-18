@@ -5,7 +5,9 @@ One Chain
 
 Plot one chain with parameter names.
 
-
+Because we are only plotting one chain, we will get
+parameter bounds on the marginalised surfaces by
+default.
 """
 
 import numpy as np
@@ -20,4 +22,5 @@ if __name__ == "__main__":
 
     # If you pass in parameter labels and only one chain, you can also get parameter bounds
     fig = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\epsilon$"]).plot()
+
     fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig because sphinx-gallery truncates them
