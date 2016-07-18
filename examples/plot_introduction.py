@@ -11,15 +11,11 @@ fit one column of a two column document.
 """
 
 import numpy as np
-# from chain_consumer import ChainConsumer
-#
-# mean = np.array([0.0, 4.0])
-# cov = np.array([[1.0, 0.7], [0.7, 1.5]])
-# data = np.random.multivariate_normal(mean, cov, size=100000)
-#
-# c = ChainConsumer()
-# c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-# fig = c.plot(figsize="column", truth=[0.0, 4.0])
+from chain_consumer import ChainConsumer
 
-import matplotlib.pyplot as plt
-plt.plot(np.arange(10))
+if __name__ == "__main__":
+    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=100000)
+
+    c = ChainConsumer()
+    c.add_chain(data, parameters=["$x_1$", "$x_2$"])
+    fig = c.plot(figsize="column", truth=[0.0, 4.0])

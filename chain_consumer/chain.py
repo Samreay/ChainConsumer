@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+import matplotlib, matplotlib.pyplot as plt
 import numpy as np
 import logging
 from scipy.interpolate import interp1d

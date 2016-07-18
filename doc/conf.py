@@ -46,7 +46,7 @@ autosummary_generate = True
 autoclass_content = "class"
 autodoc_default_flags = ["members", "no-special-members"]
 sphinx_gallery_conf = {
-    # 'filename_pattern': '/plot_',
+    'filename_pattern': 'plot_',
     'examples_dirs' : '../examples',  # path to examples scripts
     'gallery_dirs'  : 'examples'}     # path to gallery generated examples
 
