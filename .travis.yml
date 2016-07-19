@@ -13,6 +13,9 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.5
 
+        - os: linux
+          env: PYTHON_VERSION=2.7
+
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         wget https://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh;
