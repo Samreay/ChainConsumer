@@ -28,12 +28,14 @@ The output figure is displayed below.
    :align:     center
    :width:     70%
 
-For API usage, please follow the links.
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
    chain_api
+   examples/index
 
 ChainConsumer requires the following dependencies::
 

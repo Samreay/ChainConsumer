@@ -1,2 +1,5 @@
+.. _examples-index:
+
+========
 Examples
 ========
