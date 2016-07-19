@@ -11,7 +11,11 @@ if [ -n "$GITHUB_API_KEY2" ]; then
     make html
     cd "$TRAVIS_BUILD_DIR"
     rm -rf .git/
-    cd doc/out/html
+    cd doc
+    echo `ls`
+    cd /out/html
+    echo `pwd`
+    echo `ls`
     git config --global user.email "travis"
     git config --global user.name "travis"
     touch .nojekll
