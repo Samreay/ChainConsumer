@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.0.1"
+    __version__ = "0.9.0"
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)

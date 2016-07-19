@@ -1,11 +1,14 @@
-# ChainConsumer
+# [ChainConsumer](https://samreay.github.io/ChainConsumer)
+
+[![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg?style=flat-square)](https://travis-ci.org/Samreay/ChainConsumer)
+
 
 A new library to consume your fitting chains! Produce likelihood surfaces,
 plot your walks to check convergence, or even output a LaTeX table of the
 marginalised parameter distributions with uncertainties and significant
 figures all done for you!
 
-
+[Click through to the online documentation](https://samreay.github.io/ChainConsumer)
 
 ```python
 import numpy as np
