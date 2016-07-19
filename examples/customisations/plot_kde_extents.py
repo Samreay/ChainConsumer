@@ -19,9 +19,9 @@ import numpy as np
 from chain_consumer import ChainConsumer
 
 if __name__ == "__main__":
-    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=300000)
+    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=50000)
 
     c = ChainConsumer()
     c.add_chain(data)
-    c.configure_general(bins=1.5, kde=True)
+    c.configure_general(bins=0.9, kde=True)
     c.plot(extents=[(-2, 4), (0, 10)])
