@@ -25,7 +25,7 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
     - conda info -a
-    - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip
+    - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip coveralls
     - source activate test
     - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery
     - pip install -r requirements.txt
