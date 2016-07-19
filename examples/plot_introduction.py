@@ -1,7 +1,7 @@
 """
-============
-Introduction
-============
+=============
+Plot Contours
+=============
 
 A trivial example using data from a multivariate normal.
 
