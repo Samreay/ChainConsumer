@@ -1,6 +1,8 @@
 # [ChainConsumer](https://samreay.github.io/ChainConsumer)
 
 [![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg?style=flat-square)](https://travis-ci.org/Samreay/ChainConsumer)
+[![Coverage Status](https://coveralls.io/repos/github/Samreay/ChainConsumer/badge.svg?branch=master)](https://coveralls.io/github/Samreay/ChainConsumer?branch=master)
+[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/dessn/abc/blob/master/LICENSE)
 
 
 A new library to consume your fitting chains! Produce likelihood surfaces,
@@ -25,3 +27,6 @@ c.plot(filename="example.png", figsize="column", truth=mean)
 
 ![Example plot](example.png)
 
+Install via `pip`:
+    
+    pip install chainconsumer

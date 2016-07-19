@@ -41,3 +41,7 @@ Contents
 ChainConsumer requires the following dependencies:
 
 .. literalinclude:: ../requirements.txt
+
+ChainConsumer can be installed as follows::
+
+    pip install chainconsumer
