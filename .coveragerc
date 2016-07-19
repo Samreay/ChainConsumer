@@ -1,0 +1,15 @@
+[report]
+omit =
+    doc/*
+    build/*
+    dist/*
+    examples/*
+    tests/*
+    **/test*.py
+    *__init__*
+
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    raise ImportError
+    def __len__

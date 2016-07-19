@@ -40,9 +40,9 @@ before_script:
 
 script:
     - python setup.py clean install
-#    - python setup.py test -a "--cov dessn -v"
+    - python setup.py test -a "--cov chainconsumer -v"
 
 after_success:
-#    - coveralls
+    - coveralls
     - chmod u+x deploy.sh
     - ./deploy.sh
