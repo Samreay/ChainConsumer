@@ -1,4 +1,4 @@
-import matplotlib, matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import logging
 from scipy.interpolate import interp1d
@@ -754,14 +754,17 @@ class ChainConsumer(object):
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         kde = self.parameters_general["kde"]
         if kde:
+            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
+                                           "If you would like weights, please vote for this issue: " \
+                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
             pdf = sm.nonparametric.KDEUnivariate(chain_row)
-            pdf.fit(weights=weights)
+            pdf.fit()
             xs = np.linspace(extents[0], extents[1], 100)
             if flip:
                 ax.plot(pdf.evaluate(xs), xs, color=colour)
             else:
                 ax.plot(xs, pdf.evaluate(xs), color=colour)
-            interpolator = pdf
+            interpolator = pdf.evaluate
         else:
             if flip:
                 orientation = "horizontal"
@@ -969,6 +972,9 @@ class ChainConsumer(object):
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
         if self.parameters_general["kde"]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
+            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
+                                           "If you would like weights, please vote for this issue: " \
+                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
             pdf = sm.nonparametric.KDEUnivariate(data)
             pdf.fit()
             ys = interp1d(kde_xs, pdf.evaluate(kde_xs), kind="cubic")(xs)
