@@ -27,7 +27,7 @@ install:
     - conda info -a
     - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip
     - source activate test
-    - pip install sphinx numpydoc sphinx_rtd_theme sphinx_gallery
+    - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery
     - pip install -r requirements.txt
     - ulimit -s unlimited
     - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
