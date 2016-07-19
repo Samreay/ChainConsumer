@@ -12,7 +12,7 @@ figures all done for you!
 
 ```python
 import numpy as np
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 
 mean = [0.0, 4.0]

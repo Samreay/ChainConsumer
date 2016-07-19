@@ -13,7 +13,7 @@ Plot truth values on top of your contours.
 
 import numpy as np
 from numpy.random import normal, multivariate_normal
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 np.random.seed(2)
 cov = 0.2 * normal(size=(3, 3)) + np.identity(3)

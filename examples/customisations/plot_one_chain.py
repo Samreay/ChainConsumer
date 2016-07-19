@@ -12,7 +12,7 @@ default.
 
 import numpy as np
 from numpy.random import normal, multivariate_normal
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 
 if __name__ == "__main__":

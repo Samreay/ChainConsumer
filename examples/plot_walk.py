@@ -21,7 +21,7 @@ giving the top two subplots.
 # you can use the following code:
 
 import numpy as np
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
     np.random.seed(0)

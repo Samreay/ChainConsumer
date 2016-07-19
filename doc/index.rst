@@ -11,7 +11,7 @@ To get things started, here is a basic example:
 .. code-block:: python
 
     import numpy as np
-    from chain_consumer import ChainConsumer
+    from chainconsumer import ChainConsumer
 
 
     mean = [0.0, 4.0]

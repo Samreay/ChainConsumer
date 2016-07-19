@@ -17,7 +17,7 @@ Turned into glorious LaTeX, we would get something like the following:
 
 
 import numpy as np
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 
 if __name__ == "__main__":

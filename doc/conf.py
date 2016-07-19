@@ -63,7 +63,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 project = u'ChainConsumer'
 copyright = u'2016-2017, Samuel Hinton and contributors'

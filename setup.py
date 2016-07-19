@@ -3,7 +3,7 @@ import re
 from setuptools import setup
 
 # Synchronize version from code.
-version = re.findall(r"__version__ = \"(.*?)\"", open("chain_consumer/chain.py").read())[0]
+version = re.findall(r"__version__ = \"(.*?)\"", open("chainconsumer/chain.py").read())[0]
 
 setup(name="ChainConsumer",
       version=version,
@@ -16,7 +16,7 @@ setup(name="ChainConsumer",
                    "Topic :: Scientific/Engineering",
                    "Topic :: Scientific/Engineering :: Astronomy",
                    "Intended Audience :: Science/Research"],
-      packages=["chain_consumer"],
+      packages=["chainconsumer"],
       include_package_data=True,
       url="http://github.com/samreay/ChainConsumer",
       author="Samuel Hinton",

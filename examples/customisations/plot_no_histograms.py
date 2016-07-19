@@ -9,7 +9,7 @@ Sometimes marginalised histograms are not needed.
 
 
 from numpy.random import multivariate_normal, normal, seed
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
     seed(0)

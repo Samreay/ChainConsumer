@@ -13,7 +13,7 @@ ticks to the axis in this example
 """
 
 import numpy as np
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
     data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=100000)

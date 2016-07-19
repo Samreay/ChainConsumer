@@ -9,7 +9,7 @@ Plot three chains together. Name the chains to get a legend.
 """
 import numpy as np
 from numpy.random import normal, random, multivariate_normal
-from chain_consumer import ChainConsumer
+from chainconsumer import ChainConsumer
 
 
 if __name__ == "__main__":
