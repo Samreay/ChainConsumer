@@ -270,11 +270,6 @@ class ChainConsumer(object):
                         label=None, hlines=True, blank_fill="--"):  # pragma: no cover
         """ Generates a LaTeX table from parameter summaries.
 
-        For an example output, see the image below:
-
-        .. figure::     ../dessn/chain/examples/demoTable.png
-            :align:     center
-
         Parameters
         ----------
         parameters : list[str], optional
