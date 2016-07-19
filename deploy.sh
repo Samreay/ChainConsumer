@@ -22,6 +22,6 @@ if [ -n "$GITHUB_API_KEY2" ]; then
     # Make sure to make the output quiet, or else the API token will leak!
     # This works because the API key can replace your password.
     echo "Pushing"
-    git push -f -q "https://${GITHUB_API_KEY2}@${GH_REF}" master:gh-pages > /dev/null 2>&1 && echo "Pushed"
+    git push -f -q "https://${GITHUB_API_KEY2}@${GH_REF}" master:gh-pages # > /dev/null 2>&1 && echo "Pushed"
 fi
 echo "Deploy script ending"
