@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "master" ];
-    then exit 0;
+if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "master" ]; then
+    echo "Not on master branch, or pull request. Not building doco"
+    exit 0;
 fi
-if [ -n "$GITHUB_API_KEY" ]; then
+if [ -n "$GITHUB_API_KEY2" ]; then
     echo "Github key found. Building documentation."
     cd "$TRAVIS_BUILD_DIR"/doc
     make clean
