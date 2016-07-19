@@ -28,6 +28,8 @@ The output figure is displayed below.
    :align:     center
    :width:     70%
 
+Check out the API and far more :ref:`examples-index` below:
+
 Contents
 --------
 
@@ -37,20 +39,6 @@ Contents
    chain_api
    examples/index
 
-ChainConsumer requires the following dependencies::
+ChainConsumer requires the following dependencies:
 
-   matplotlib
-   numpy
-   scipy
-   statsmodel
-   pytest
-
-Examples for how to use ChainConsumer are given below.
-
-.. include:: examples/index.rst
-.. raw:: html
-
-        <div style='clear:both'></div>
-
-
-
+.. literalinclude:: ../requirements.txt
