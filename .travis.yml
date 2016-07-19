@@ -1,6 +1,6 @@
 # Following travis outline from dfm/emcee3
 
-sudo: false
+sudo: true
 
 language: c
 
@@ -30,6 +30,7 @@ install:
     - pip install sphinx numpydoc sphinx_rtd_theme sphinx_gallery
     - pip install -r requirements.txt
     - ulimit -s unlimited
+    - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
 
 before_script:
     - "export DISPLAY=:99.0"
