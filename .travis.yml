@@ -31,6 +31,11 @@ install:
     - pip install -r requirements.txt
     - ulimit -s unlimited
 
+before_script:
+    - "export DISPLAY=:99.0"
+    - "sh -e /etc/init.d/xvfb start"
+    - sleep 5
+
 script:
     - python setup.py clean install
 #    - python setup.py test -a "--cov dessn -v"
