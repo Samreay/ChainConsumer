@@ -6,7 +6,7 @@ language: c
 
 env:
     global:
-        - GH_REF: github.com/dessn/sn-doc.git
+        - GH_REF: github.com/samreay/ChainConsumer.git
 
 matrix:
     include:
@@ -25,7 +25,7 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
     - conda info -a
-    - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip cython
+    - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip
     - source activate test
     - pip install -r requirements.txt
     - ulimit -s unlimited
