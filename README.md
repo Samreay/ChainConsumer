@@ -30,3 +30,19 @@ c.plot(filename="example.png", figsize="column", truth=mean)
 Install via `pip`:
     
     pip install chainconsumer
+
+
+----------
+
+
+### Update History
+
+##### 0.9.2
+* Adding in smoothing, making it default
+* Adding extra example to show how to remove smoothing.
+
+##### 0.9.1
+* Adding in tests
+
+##### 0.9.0
+* Initial PyPi push
