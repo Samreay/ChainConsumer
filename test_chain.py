@@ -8,16 +8,28 @@ from chainconsumer import ChainConsumer
 
 class TestChain(object):
     np.random.seed(1)
-    n = 1000000
+    n = 2000000
     data = np.random.normal(loc=5.0, scale=1.5, size=n)
     data2 = np.random.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
 
     def test_summary(self):
+        tolerance = 2e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data[::10])
+        consumer.configure_general(kde=True)
+        summary = consumer.get_summary()
+        actual = np.array(list(summary[0].values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_summary_no_smooth(self):
         tolerance = 5e-2
         consumer = ChainConsumer()
-        consumer.add_chain(self.data[::2])
-        consumer.configure_general(kde=True)
+        consumer.add_chain(self.data)
+        consumer.configure_general(smooth=0)
+        consumer.plot(display=True)
         summary = consumer.get_summary()
         actual = np.array(list(summary[0].values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -29,7 +41,6 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(self.data_combined, parameters=["a", "b"], name="chain1")
         consumer.add_chain(self.data_combined, name="chain2")
-        consumer.configure_general(bins=1.9)
         summary = consumer.get_summary()
         k1 = list(summary[0].keys())
         k2 = list(summary[1].keys())
@@ -161,7 +172,7 @@ class TestChain(object):
         num_walkers = 2
 
         c = consumer.divide_chain(0, 2)
-        c.configure_general(kde=True)
+        c.configure_general()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]

@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from matplotlib.ticker import MaxNLocator
 import matplotlib.cm as cm
 import statsmodels.api as sm
-
+from scipy.ndimage.filters import gaussian_filter
 
 __all__ = ["ChainConsumer"]
 
@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.9.1"
+    __version__ = "0.9.2"
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class ChainConsumer(object):
         return self
 
     def configure_general(self, bins=None, flip=True, rainbow=None, colours=None,
-                          serif=True, plot_hists=True, max_ticks=5, kde=False):  # pragma: no cover
+                          serif=True, plot_hists=True, max_ticks=5, kde=False, smooth=10):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots. If you do not call this explicitly, the :func:`plot`
         method will invoke this method automatically.
@@ -135,7 +135,10 @@ class ChainConsumer(object):
             distribution is highly non-gaussian. Due to the slowness of performing a
             KDE on all data, it is often useful to disable this before producing final
             plots.
-
+        smooth : int, optional
+            How much to smooth the marginalised distributions using a gaussian filter.
+            If ``kde`` is set to true, this parameter is ignored. Setting it to either
+            ``0`` or ``None`` disables smoothing.
         """
         assert rainbow is None or colours is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
@@ -155,6 +158,7 @@ class ChainConsumer(object):
         self.parameters_general["rainbow"] = rainbow
         self.parameters_general["plot_hists"] = plot_hists
         self.parameters_general["kde"] = kde
+        self.parameters_general["smooth"] = smooth
         if colours is None:
             self.parameters_general["colours"] = self.all_colours
         else:
@@ -744,10 +748,17 @@ class ChainConsumer(object):
 
     def _plot_bars(self, ax, parameter, chain_row, weights, colour, bins=25, flip=False, summary=False,
                    fit_values=None, truth=None, extents=None):  # pragma: no cover
-        bins = np.linspace(extents[0], extents[1], bins + 1)
+
+        kde = self.parameters_general["kde"]
+        smooth = self.parameters_general["smooth"]
+        do_smooth = smooth is not None and smooth > 0
+        if not do_smooth:
+            smooth = 1
+        bins = np.linspace(extents[0], extents[1], smooth * bins + 1)
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
-        kde = self.parameters_general["kde"]
+        if do_smooth:
+            hist = gaussian_filter(hist, smooth, mode='constant')
         if kde:
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -761,12 +772,18 @@ class ChainConsumer(object):
                 ax.plot(xs, pdf.evaluate(xs), color=colour)
             interpolator = pdf.evaluate
         else:
-            if flip:
-                orientation = "horizontal"
+            if do_smooth:
+                if flip:
+                    ax.plot(hist, edge_center, color=colour)
+                else:
+                    ax.plot(edge_center, hist, color=colour)
             else:
-                orientation = "vertical"
-            ax.hist(edge_center, weights=hist, bins=edges, histtype="step",
-                    color=colour, orientation=orientation)
+                if flip:
+                    orientation = "horizontal"
+                else:
+                    orientation = "vertical"
+                ax.hist(edge_center, weights=hist, bins=edges, histtype="step",
+                        color=colour, orientation=orientation)
             interpolator = interp1d(edge_center, hist, kind="nearest")
 
         if self.parameters_bar["shade"] and fit_values is not None:
@@ -961,10 +978,18 @@ class ChainConsumer(object):
     def _get_parameter_summary(self, data, weights, parameter, chain_index, desired_area=0.6827):
         if not self._configured_general:
             self.configure_general()
+
+        smooth = self.parameters_general["smooth"]
+        do_smooth = smooth is not None and smooth > 0
+        if not do_smooth:
+            smooth = 1
         bins = self.parameters_general['bins'][chain_index]
-        hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
+        hist, edges = np.histogram(data, bins=(smooth * bins + 1), normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
+        if do_smooth:
+            hist = gaussian_filter(hist, smooth, mode='constant')
+
         if self.parameters_general["kde"]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
