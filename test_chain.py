@@ -29,7 +29,6 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         consumer.configure_general(smooth=0)
-        consumer.plot(display=True)
         summary = consumer.get_summary()
         actual = np.array(list(summary[0].values())[0])
         expected = np.array([3.5, 5.0, 6.5])
