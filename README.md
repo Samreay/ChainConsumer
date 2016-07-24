@@ -55,6 +55,9 @@ Install via `pip`:
 
 ----------
 
+Please feel free to fork the project and open pull-requests, or
+raise an issue via Github if any bugs are encountered or 
+features requests thought up.
 
 ### Update History
 
