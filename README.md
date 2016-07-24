@@ -27,6 +27,27 @@ c.plot(filename="example.png", figsize="column", truth=mean)
 
 ![Example plot](example.png)
 
+You can plot walks:
+
+```
+c.plot_walks(filename="walks.png")
+```
+
+![Example walks](examples/resources/exampleWalk.png)
+
+And finally, you can also create LaTeX tables:
+
+```
+print(c.get_latex_table())
+```
+
+Which compiles to something as shown below:
+
+![Example rendered table](examples/resources/table.png)
+
+-----------
+
+
 Install via `pip`:
     
     pip install chainconsumer
