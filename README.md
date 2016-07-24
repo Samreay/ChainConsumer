@@ -62,6 +62,12 @@ features requests thought up.
 
 ### Update History
 
+##### 0.9.4
+* Updating setup and package details
+
+##### 0.9.3
+* Initial zenodo release
+
 ##### 0.9.2
 * Adding in smoothing, making it default
 * Adding extra example to show how to remove smoothing.
