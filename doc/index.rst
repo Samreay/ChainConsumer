@@ -23,7 +23,7 @@ To get things started, here is a basic example:
 
 The output figure is displayed below.
 
-.. figure::     ../example.png
+.. figure::     ../paper/example.png
    :align:     center
    :width:     70%
 

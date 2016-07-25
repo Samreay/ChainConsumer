@@ -26,7 +26,7 @@ c.plot(filename="example.png", figsize="column", truth=mean)
 ```
 
 
-![Example plot](example.png)
+![Example plot](paper/example.png)
 
 You can plot walks:
 
@@ -61,6 +61,9 @@ raise an issue via Github if any bugs are encountered or
 features requests thought up.
 
 ### Update History
+
+##### 0.9.5
+* Adding markdown paper.
 
 ##### 0.9.4
 * Updating setup and package details
