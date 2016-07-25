@@ -48,7 +48,7 @@ setup(name="ChainConsumer",
       url="http://github.com/samreay/ChainConsumer",
       author="Samuel Hinton",
       author_email="samuelreay@gmail.com",
-      requires=requirements,
+      requires=["numpy", "scipy", "matplotlib", "statsmodels"],
       tests_require=["pytest","pytest-cov"],
       cmdclass={"test": PyTest},
 )
