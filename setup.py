@@ -29,8 +29,6 @@ class PyTest(test):
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
 
 setup(name="ChainConsumer",
       version=version,
