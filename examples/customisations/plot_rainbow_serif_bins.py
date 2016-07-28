@@ -31,7 +31,7 @@ if __name__ == "__main__":
     c.add_chain(data2, name="B")
     c.add_chain(data3, name="C")
     c.add_chain(data4, name="D")
-    c.configure_general(bins=150,rainbow=True)
+    c.configure_general(bins=50, rainbow=True)
     fig = c.plot()
 
     fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

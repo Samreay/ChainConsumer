@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.9.7"
+    __version__ = "0.9.8"
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -138,7 +138,7 @@ class ChainConsumer(object):
         smooth : int, optional
             How much to smooth the marginalised distributions using a gaussian filter.
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
-            ``0`` or ``None`` disables smoothing.
+            ``0``, ``False`` or ``None`` disables smoothing.
         """
         assert rainbow is None or colours is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
@@ -158,6 +158,8 @@ class ChainConsumer(object):
         self.parameters_general["rainbow"] = rainbow
         self.parameters_general["plot_hists"] = plot_hists
         self.parameters_general["kde"] = kde
+        if not smooth:
+            smooth = None
         self.parameters_general["smooth"] = smooth
         if colours is None:
             self.parameters_general["colours"] = self.all_colours
@@ -179,8 +181,8 @@ class ChainConsumer(object):
         Parameters
         ----------
         sigmas : np.array, optional
-            The :math:`\sigma` contour levels to plot. Defaults to [0.5, 1, 2, 3].
-            Number of contours shown decreases with the number of chains to show.
+            The :math:`\sigma` contour levels to plot. Defaults to [1, 2, 3] for a single chain
+            and [1, 2] for multiple chains.
         cloud : bool, optional
             If set, overrides the default behaviour and plots the cloud or not
         contourf : bool, optional
@@ -192,9 +194,9 @@ class ChainConsumer(object):
 
         if sigmas is None:
             if num_chains == 1:
-                sigmas = np.array([0, 0.5, 1, 1.5, 2])
+                sigmas = np.array([0, 1, 2, 3])
             elif num_chains < 4:
-                sigmas = np.array([0, 0.5, 1, 2])
+                sigmas = np.array([0, 1, 2])
             else:
                 sigmas = np.array([0, 1, 2])
         sigmas = np.sort(sigmas)
@@ -758,7 +760,7 @@ class ChainConsumer(object):
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         if do_smooth:
-            hist = gaussian_filter(hist, smooth, mode='constant')
+            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
         if kde:
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -813,14 +815,19 @@ class ChainConsumer(object):
     def _plot_contour(self, ax, x, y, w, px, py, colour, bins=25, truth=None):  # pragma: no cover
 
         levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
-
+        smooth = self.parameters_general["smooth"]
+        do_smooth = smooth is not None and smooth > 0
+        if not do_smooth:
+            smooth = 1
         colours = self._scale_colours(colour, len(levels))
         colours2 = [self._scale_colour(colours[0], 0.7)] + \
                    [self._scale_colour(c, 0.8) for c in colours[:-1]]
 
-        hist, x_bins, y_bins = np.histogram2d(x, y, bins=bins, weights=w)
+        hist, x_bins, y_bins = np.histogram2d(x, y, bins=(bins * smooth + 1), weights=w)
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
+        if do_smooth:
+            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
         if self.parameters_contour["cloud"]:
@@ -853,6 +860,8 @@ class ChainConsumer(object):
         n = len(all_parameters)
         max_ticks = self.parameters_general["max_ticks"]
         plot_hists = self.parameters_general["plot_hists"]
+        max_sigma = np.array(self.parameters_contour["sigmas"]).max()
+        sigma_extent = max(3, max_sigma + 1)
         if not plot_hists:
             n -= 1
 
@@ -882,8 +891,8 @@ class ChainConsumer(object):
                     # max_val = chain[:, index].max()
                     mean = np.mean(chain[:, index])
                     std = np.std(chain[:, index])
-                    min_prop = mean - 3 * std
-                    max_prop = mean + 3 * std
+                    min_prop = mean - sigma_extent * std
+                    max_prop = mean + sigma_extent* std
                     if min_val is None or min_prop < min_val:
                         min_val = min_prop
                     if max_val is None or max_prop > max_val:
@@ -933,7 +942,7 @@ class ChainConsumer(object):
         return fig, axes, params1, params2, extents
 
     def _get_bins(self):
-        proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.3)))
+        proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
                     for chain in self.chains]
         return proposal
 
@@ -946,7 +955,7 @@ class ChainConsumer(object):
 
     def _scale_colours(self, colour, num):  # pragma: no cover
         # http://thadeusb.com/weblog/2010/10/10/python_scale_hex_color
-        scales = np.logspace(np.log(0.8), np.log(1.4), num)
+        scales = np.logspace(np.log(0.9), np.log(1.3), num)
         colours = [self._scale_colour(colour, scale) for scale in scales]
         return colours
 
@@ -988,7 +997,7 @@ class ChainConsumer(object):
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
         if do_smooth:
-            hist = gaussian_filter(hist, smooth, mode='constant')
+            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
 
         if self.parameters_general["kde"]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))

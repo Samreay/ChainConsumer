@@ -25,7 +25,7 @@ The output figure is displayed below.
 
 .. figure::     ../paper/example.png
    :align:     center
-   :width:     70%
+   :width:     80%
 
 Check out the API and far more :ref:`examples-index` below:
 
