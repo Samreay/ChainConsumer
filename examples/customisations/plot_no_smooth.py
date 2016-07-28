@@ -5,7 +5,7 @@ No Smoothing
 
 We can turn off the default gaussian filter on marginalised distributions.
 
-This can be done by setting ``smooth`` to either ``0`` or ``None``.
+This can be done by setting ``smooth`` to either ``0``, ``None`` or ``False``.
 Note that the parameter summaries also have smoothing turned off, and
 thus summaries may change.
 

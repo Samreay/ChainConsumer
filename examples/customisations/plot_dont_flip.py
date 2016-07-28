@@ -16,7 +16,8 @@ import numpy as np
 from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
-    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=100000)
+    np.random.seed(0)
+    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
 
     c = ChainConsumer().add_chain(data, parameters=["$x_1$", "$x_2$"])
     c.configure_general(flip=False, max_ticks=10)

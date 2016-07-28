@@ -101,7 +101,7 @@ class ChainConsumer(object):
         return self
 
     def configure_general(self, bins=None, flip=True, rainbow=None, colours=None,
-                          serif=True, plot_hists=True, max_ticks=5, kde=False, smooth=10):  # pragma: no cover
+                          serif=True, plot_hists=True, max_ticks=5, kde=False, smooth=3):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots. If you do not call this explicitly, the :func:`plot`
         method will invoke this method automatically.
@@ -158,7 +158,7 @@ class ChainConsumer(object):
         self.parameters_general["rainbow"] = rainbow
         self.parameters_general["plot_hists"] = plot_hists
         self.parameters_general["kde"] = kde
-        if not smooth:
+        if not smooth or kde:
             smooth = None
         self.parameters_general["smooth"] = smooth
         if colours is None:
@@ -169,8 +169,8 @@ class ChainConsumer(object):
         self._configured_general = True
         return self
 
-    def configure_contour(self, sigmas=None, cloud=None, contourf=None,
-                          contourf_alpha=1.0):  # pragma: no cover
+    def configure_contour(self, sigmas=None, cloud=None, shade=None,
+                          shade_alpha=None):  # pragma: no cover
         """ Configure the default variables for the contour plots. If you do not call this
         explicitly, the :func:`plot` method will invoke this method automatically.
 
@@ -185,10 +185,10 @@ class ChainConsumer(object):
             and [1, 2] for multiple chains.
         cloud : bool, optional
             If set, overrides the default behaviour and plots the cloud or not
-        contourf : bool, optional
+        shade : bool, optional
             If set, overrides the default behaviour and plots filled contours or not
-        contourf_alpha : float, optional
-            Filled contour alpha value override.
+        shade_alpha : float, optional
+            Filled contour alpha value override. Default is 1.0
         """
         num_chains = len(self.chains)
 
@@ -205,10 +205,15 @@ class ChainConsumer(object):
             cloud = False
         self.parameters_contour["cloud"] = cloud
 
-        if contourf is None:
-            contourf = num_chains == 1
-        self.parameters_contour["contourf"] = contourf
-        self.parameters_contour["contourf_alpha"] = contourf_alpha
+        if shade is None:
+            shade = num_chains <= 2
+        self.parameters_contour["shade"] = shade
+        if shade_alpha is None:
+            if num_chains == 1:
+                shade_alpha = 1.0
+            else:
+                shade_alpha = np.sqrt(1 / num_chains)
+        self.parameters_contour["shade_alpha"] = shade_alpha
 
         self._configured_contour = True
 
@@ -223,13 +228,15 @@ class ChainConsumer(object):
             Will not work if you have multiple chains
         shade : bool, optional
             If set to true, shades in confidence regions in under histogram. By default
-            this happens if you have a single chain, but is disabled if you are comparing
-            multiple chains.
+            this happens if you less than 3 chains, but is disabled if you are comparing
+            more chains.
         """
         if summary is not None:
             summary = summary and len(self.chains) == 1
         self.parameters_bar["summary"] = summary
-        self.parameters_bar["shade"] = shade if shade is not None else len(self.chains) == 1
+        if shade is None:
+            shade = len(self.chains) <= 2
+        self.parameters_bar["shade"] = shade
         self._configured_bar = True
         return self
 
@@ -753,14 +760,13 @@ class ChainConsumer(object):
 
         kde = self.parameters_general["kde"]
         smooth = self.parameters_general["smooth"]
-        do_smooth = smooth is not None and smooth > 0
-        if not do_smooth:
-            smooth = 1
-        bins = np.linspace(extents[0], extents[1], smooth * bins + 1)
+        bins, smooth = self._get_smoothed_bins(smooth, bins)
+
+        bins = np.linspace(extents[0], extents[1], bins)
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
-        if do_smooth:
-            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
+        if smooth:
+            hist = gaussian_filter(hist, smooth, mode='constant')
         if kde:
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -774,7 +780,7 @@ class ChainConsumer(object):
                 ax.plot(xs, pdf.evaluate(xs), color=colour)
             interpolator = pdf.evaluate
         else:
-            if do_smooth:
+            if smooth:
                 if flip:
                     ax.plot(hist, edge_center, color=colour)
                 else:
@@ -786,7 +792,8 @@ class ChainConsumer(object):
                     orientation = "vertical"
                 ax.hist(edge_center, weights=hist, bins=edges, histtype="step",
                         color=colour, orientation=orientation)
-            interpolator = interp1d(edge_center, hist, kind="nearest")
+            interp_type = "linear" if smooth else "nearest"
+            interpolator = interp1d(edge_center, hist, kind=interp_type)
 
         if self.parameters_bar["shade"] and fit_values is not None:
             lower = fit_values[0]
@@ -816,27 +823,26 @@ class ChainConsumer(object):
 
         levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
         smooth = self.parameters_general["smooth"]
-        do_smooth = smooth is not None and smooth > 0
-        if not do_smooth:
-            smooth = 1
+        bins, smooth = self._get_smoothed_bins(smooth, bins, marginalsied=False)
+
         colours = self._scale_colours(colour, len(levels))
         colours2 = [self._scale_colour(colours[0], 0.7)] + \
                    [self._scale_colour(c, 0.8) for c in colours[:-1]]
 
-        hist, x_bins, y_bins = np.histogram2d(x, y, bins=(bins * smooth + 1), weights=w)
+        hist, x_bins, y_bins = np.histogram2d(x, y, bins=bins, weights=w)
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
-        if do_smooth:
-            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
+        if smooth:
+            hist = gaussian_filter(hist, smooth, mode='constant')
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
         if self.parameters_contour["cloud"]:
-            skip = max(1, x.size / 80000)
+            skip = max(1, int(x.size / 50000))
             ax.scatter(x[::skip], y[::skip], s=10, alpha=0.4, c=colours[1],
                        marker=".", edgecolors="none")
-        if self.parameters_contour["contourf"]:
+        if self.parameters_contour["shade"]:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
-                        alpha=self.parameters_contour["contourf_alpha"])
+                        alpha=self.parameters_contour["shade_alpha"])
         ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2)
 
         if truth is not None:
@@ -984,20 +990,25 @@ class ChainConsumer(object):
 
         return sigma_cumsum[i_unsort].reshape(shape)
 
+    def _get_smoothed_bins(self, smooth, bins, marginalsied=True):
+        if smooth is None or not smooth or smooth == 0:
+            return bins, 0
+        else:
+            return ((3 if marginalsied else 2) * smooth * bins), smooth
+
     def _get_parameter_summary(self, data, weights, parameter, chain_index, desired_area=0.6827):
         if not self._configured_general:
             self.configure_general()
 
         smooth = self.parameters_general["smooth"]
-        do_smooth = smooth is not None and smooth > 0
-        if not do_smooth:
-            smooth = 1
         bins = self.parameters_general['bins'][chain_index]
-        hist, edges = np.histogram(data, bins=(smooth * bins + 1), normed=True, weights=weights)
+        bins, smooth = self._get_smoothed_bins(smooth, bins)
+
+        hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
-        if do_smooth:
-            hist = gaussian_filter(hist, int(smooth / 2), mode='constant')
+        if smooth:
+            hist = gaussian_filter(hist, smooth, mode='constant')
 
         if self.parameters_general["kde"]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))

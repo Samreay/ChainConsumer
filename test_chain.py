@@ -28,7 +28,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(smooth=0)
+        consumer.configure_general(smooth=0, bins=2.4)
         summary = consumer.get_summary()
         actual = np.array(list(summary[0].values())[0])
         expected = np.array([3.5, 5.0, 6.5])

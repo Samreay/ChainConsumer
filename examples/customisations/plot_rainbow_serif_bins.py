@@ -9,6 +9,12 @@ By default, the rainbow colour scheme is used if you have many, many chains. You
 enable it before that point if you wish. You can also pick how many bins you want to
 display your data with.
 
+You can see that in this example, we pick too many bins and would not get good
+summaries. If you simply want more (or less) bins than the default estimate,
+if you input a float instead of an integer, the number of bins will simply scale
+by that amount. For example, if the estimated picks 20 bins, and you set ``bins=1.5``
+your plots and summaries would be calculated with 30 bins.
+
 """
 import numpy as np
 from numpy.random import normal, random, multivariate_normal

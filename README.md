@@ -62,6 +62,18 @@ features requests thought up.
 
 ### Update History
 
+##### 0.9.8
+* Adding 2D Gaussian smoothing for the contour surfaces.
+* Renaming ``contourf`` and ``contourf_alpha`` to ``shade`` and ``shade_alpha``.
+* Updating some of the example plots.
+
+##### 0.9.7
+* Updating package setup scripts.
+
+##### 0.9.6
+* Updating package setup scripts.
+
+
 ##### 0.9.5
 * Adding markdown paper.
 

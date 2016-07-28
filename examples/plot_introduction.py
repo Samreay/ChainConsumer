@@ -8,13 +8,20 @@ A trivial example using data from a multivariate normal.
 We give truth values, parameter labels and set the figure size to
 fit one column of a two column document.
 
+Note that the parameter summaries are all calculated from the chosen bin size and take
+into account if the data is being smoothed or not. It is thus important to consider
+whether you want smoothing enabled or (depending on your surfaces) more or less
+bins than automatically estimated. See the extended customisation examples for
+more information.
+
 """
 
 import numpy as np
 from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
-    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=100000)
+    np.random.seed(0)
+    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
 
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x_1$", "$x_2$"])
