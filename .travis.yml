@@ -1,5 +1,3 @@
-# Following travis outline from dfm/emcee3
-
 sudo: required
 
 language: c
@@ -17,6 +15,8 @@ matrix:
           env: PYTHON_VERSION=2.7
 
 install:
+    - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+    - apt-get install dvipng
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         wget https://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh;
       else
@@ -33,8 +33,6 @@ install:
     - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery coveralls
     - pip install -r requirements.txt
     - ulimit -s unlimited
-    - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-    - sudo apt-get install dvipng
 
 before_script:
     - "export DISPLAY=:99.0"
