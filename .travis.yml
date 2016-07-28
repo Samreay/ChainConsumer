@@ -15,8 +15,8 @@ matrix:
           env: PYTHON_VERSION=2.7
 
 install:
-    - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-    - apt-get install dvipng
+    - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+    - sudo apt-get install dvipng
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         wget https://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh;
       else
