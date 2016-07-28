@@ -1,6 +1,6 @@
 # Following travis outline from dfm/emcee3
 
-sudo: true
+sudo: required
 
 language: c
 
