@@ -176,13 +176,14 @@ class ChainConsumer(object):
 
         Please ensure that you call this method after adding all the relevant data to the
         chain consumer, as the consume changes configuration values depending on
-        the presupplied data.
+        the supplied data.
 
         Parameters
         ----------
         sigmas : np.array, optional
-            The :math:`\sigma` contour levels to plot. Defaults to [1, 2, 3] for a single chain
-            and [1, 2] for multiple chains.
+            The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
+            and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
+            your surfaces to have a hole in them.
         cloud : bool, optional
             If set, overrides the default behaviour and plots the cloud or not
         shade : bool, optional
