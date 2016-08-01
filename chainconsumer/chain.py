@@ -14,9 +14,10 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.9.8"
+    __version__ = "0.9.9"
 
     def __init__(self):
+        logging.basicConfig()
         self.logger = logging.getLogger(__name__)
         self.all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
                             "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
