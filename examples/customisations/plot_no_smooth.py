@@ -9,6 +9,8 @@ This can be done by setting ``smooth`` to either ``0``, ``None`` or ``False``.
 Note that the parameter summaries also have smoothing turned off, and
 thus summaries may change.
 
+Fun colour change! And thicker lines!
+
 """
 
 import numpy as np
@@ -19,7 +21,7 @@ if __name__ == "__main__":
 
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-    c.configure_general(smooth=0)
+    c.configure_general(smooth=0, linewidths=2, colours="#673AB7")
     fig = c.plot(figsize="column", truth=[0.0, 4.0])
 
     # If we wanted to save to file, we would instead have written

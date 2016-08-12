@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import logging
 from scipy.interpolate import interp1d
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import matplotlib.cm as cm
 import statsmodels.api as sm
 from scipy.ndimage.filters import gaussian_filter
@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.9.9"
+    __version__ = "0.9.10"
 
     def __init__(self):
         logging.basicConfig()
@@ -102,10 +102,15 @@ class ChainConsumer(object):
         return self
 
     def configure_general(self, bins=None, flip=True, rainbow=None, colours=None,
-                          serif=True, plot_hists=True, max_ticks=5, kde=False, smooth=3):  # pragma: no cover
+                          linestyles=None, linewidths=None, serif=True, plot_hists=True,
+                          max_ticks=5, kde=False, smooth=3):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots. If you do not call this explicitly, the :func:`plot`
         method will invoke this method automatically.
+
+        Please ensure that you call this method *after* adding all the relevant data to the
+        chain consumer, as the consume changes configuration values depending on
+        the supplied data.
 
         Parameters
         ----------
@@ -121,9 +126,18 @@ class ChainConsumer(object):
             rotate the histogram so that it is horizontal.
         rainbow : bool, optional
             Set to True to force use of rainbow colours
-        colours : list[str(hex)], optional
+        colours : str(hex)|list[str(hex)], optional
             Provide a list of colours to use for each chain. If you provide more chains
-            than colours, you *will* get the rainbow colour spectrum.
+            than colours, you *will* get the rainbow colour spectrum. If you only pass
+            one colour, all chains are set to this colour. This probably won't look good.
+        linestyles : str, list[str], optional
+            Provide a list of line styles to plot the contours and marginalsied
+            distributions with. By default, this will become a list of solid lines. If a
+            string is passed instead of a list, this style is used for all chains.
+        linewidths : float, list[float], optional
+            Provide a list of line widths to plot the contours and marginalsied
+            distributions with. By default, this is a width of 1. If a float
+            is passed instead of a list, this width is used for all chains.
         serif : bool, optional
             Whether to display ticks and labels with serif font.
         plot_hists : bool, optional
@@ -163,10 +177,26 @@ class ChainConsumer(object):
             smooth = None
         self.parameters_general["smooth"] = smooth
         if colours is None:
-            self.parameters_general["colours"] = self.all_colours
+            if self.parameters_general.get("colours") is None:
+                self.parameters_general["colours"] = self.all_colours[:len(self.chains)]
         else:
+            if isinstance(colours, str):
+                colours = [colours] * len(self.chains)
             self.parameters_general["colours"] = colours
-
+        if linestyles is None:
+            if self.parameters_general.get("linestyles") is None:
+                self.parameters_general["linestyles"] = ["-"] * len(self.chains)
+        else:
+            if isinstance(linestyles, str):
+                linestyles = [linestyles] * len(self.chains)
+            self.parameters_general["linestyles"] = linestyles[:len(self.chains)]
+        if linewidths is None:
+            if self.parameters_general.get("linewidths") is None:
+                self.parameters_general["linewidths"] = [1.0] * len(self.chains)
+        else:
+            if isinstance(linewidths, float) or isinstance(linewidths, int):
+                linewidths = [linewidths] * len(self.chains)
+            self.parameters_general["linewidths"] = linewidths[:len(self.chains)]
         self._configured_general = True
         return self
 
@@ -175,7 +205,7 @@ class ChainConsumer(object):
         """ Configure the default variables for the contour plots. If you do not call this
         explicitly, the :func:`plot` method will invoke this method automatically.
 
-        Please ensure that you call this method after adding all the relevant data to the
+        Please ensure that you call this method *after* adding all the relevant data to the
         chain consumer, as the consume changes configuration values depending on
         the supplied data.
 
@@ -187,10 +217,12 @@ class ChainConsumer(object):
             your surfaces to have a hole in them.
         cloud : bool, optional
             If set, overrides the default behaviour and plots the cloud or not
-        shade : bool, optional
-            If set, overrides the default behaviour and plots filled contours or not
-        shade_alpha : float, optional
-            Filled contour alpha value override. Default is 1.0
+        shade : bool|list[bool] optional
+            If set, overrides the default behaviour and plots filled contours or not. If a list of
+            bools is passed, you can turn shading on or off for specific chains.
+        shade_alpha : float|list[float], optional
+            Filled contour alpha value override. Default is 1.0. If a list is passed, you can set the
+            shade opacity for specific chains.
         """
         num_chains = len(self.chains)
 
@@ -207,15 +239,20 @@ class ChainConsumer(object):
             cloud = False
         self.parameters_contour["cloud"] = cloud
 
-        if shade is None:
-            shade = num_chains <= 2
-        self.parameters_contour["shade"] = shade
         if shade_alpha is None:
             if num_chains == 1:
                 shade_alpha = 1.0
             else:
                 shade_alpha = np.sqrt(1 / num_chains)
-        self.parameters_contour["shade_alpha"] = shade_alpha
+        if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
+                shade_alpha = [shade_alpha] * num_chains
+
+        if shade is None:
+            shade = num_chains <= 2
+        if isinstance(shade, bool):
+            shade = [shade] * num_chains
+        self.parameters_contour["shade"] = shade[:num_chains]
+        self.parameters_contour["shade_alpha"] = shade_alpha[:num_chains]
 
         self._configured_contour = True
 
@@ -225,20 +262,26 @@ class ChainConsumer(object):
         """ Configure the bar plots showing the marginalised distributions. If you do not
         call this explicitly, the :func:`plot` method will invoke this method automatically.
 
+        Please ensure that you call this method *after* adding all the relevant data to the
+        chain consumer, as the consume changes configuration values depending on
+        the supplied data.
+
         summary : bool, optional
             If overridden, sets whether parameter summaries should be set as axis titles.
             Will not work if you have multiple chains
-        shade : bool, optional
+        shade : bool|list[bool], optional
             If set to true, shades in confidence regions in under histogram. By default
             this happens if you less than 3 chains, but is disabled if you are comparing
-            more chains.
+            more chains. You can pass a list if you wish to shade some chains but not others.
         """
         if summary is not None:
             summary = summary and len(self.chains) == 1
         self.parameters_bar["summary"] = summary
         if shade is None:
             shade = len(self.chains) <= 2
-        self.parameters_bar["shade"] = shade
+        if isinstance(shade, bool):
+            shade = [shade] * len(self.chains)
+        self.parameters_bar["shade"] = shade[:len(self.chains)]
         self._configured_bar = True
         return self
 
@@ -533,7 +576,15 @@ class ChainConsumer(object):
         fit_values = self.get_summary()
         colours = self._get_colours(self.parameters_general["colours"],
                                     rainbow=self.parameters_general["rainbow"])
+        linestyles = self.parameters_general["linestyles"]
+        shades = self.parameters_contour["shade"]
+        shade_alphas = self.parameters_contour["shade_alpha"]
         summary = self.parameters_bar["summary"]
+        bar_shades = self.parameters_bar["shade"]
+        linewidths = self.parameters_general["linewidths"]
+        num_chains = len(self.chains)
+        assert len(linestyles) == num_chains, \
+            "Have %d linestyles and %d chains. Please address." % (len(linestyles), num_chains)
         if summary is None:
             summary = len(parameters) < 5 and len(self.chains) == 1
         if len(self.chains) == 1:
@@ -549,13 +600,13 @@ class ChainConsumer(object):
                 do_flip = (flip and i == len(params1) - 1)
                 if plot_hists and i == j:
                     max_val = None
-                    for chain, weights, parameters, colour, bins, fit in \
+                    for chain, weights, parameters, colour, bins, fit, ls, bs, lw in \
                             zip(self.chains, self.weights, self.parameters, colours,
-                                num_bins, fit_values):
+                                num_bins, fit_values, linestyles, bar_shades, linewidths):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
-                        m = self._plot_bars(ax, p1, chain[:, index], weights, colour, bins=bins,
+                        m = self._plot_bars(ax, p1, chain[:, index], weights, colour, ls, bs, lw, bins=bins,
                                             fit_values=fit[p1], flip=do_flip, summary=summary,
                                             truth=truth, extents=extents[p1])
                         if max_val is None or m > max_val:
@@ -566,15 +617,15 @@ class ChainConsumer(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for chain, parameters, bins, colour, fit, weights in \
-                            zip(self.chains, self.parameters, num_bins,
-                                colours, fit_values, self.weights):
+                    for chain, parameters, bins, colour, ls, s, sa, lw, fit, weights in \
+                            zip(self.chains, self.parameters, num_bins, colours, linestyles, shades,
+                                shade_alphas, linewidths, fit_values, self.weights):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
                         i2 = parameters.index(p2)
-                        self._plot_contour(ax, chain[:, i2], chain[:, i1], weights, p1, p2, colour,
-                                           bins=bins, truth=truth)
+                        self._plot_contour(ax, chain[:, i2], chain[:, i1], weights, p1, p2, colour, ls,
+                                           s, sa, lw, bins=bins, truth=truth)
 
         if self.names is not None and legend:
             ax = axes[0, -1]
@@ -582,7 +633,15 @@ class ChainConsumer(object):
                        for n, c in zip(self.names, colours) if n is not None]
             location = "center" if len(parameters) > 1 else 1
             ax.legend(artists, self.names, loc=location, frameon=False)
-
+        fig.canvas.draw()
+        for ax in axes[-1, :]:
+            offset = ax.get_xaxis().get_offset_text()
+            ax.set_xlabel('{0} {1}'.format(ax.get_xlabel(), offset.get_text()))
+            offset.set_visible(False)
+        for ax in axes[:, 0]:
+            offset = ax.get_yaxis().get_offset_text()
+            ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), offset.get_text()))
+            offset.set_visible(False)
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
         if display:
@@ -757,8 +816,9 @@ class ChainConsumer(object):
         if truth is not None:
             ax.axhline(truth, **self.parameters_truth)
 
-    def _plot_bars(self, ax, parameter, chain_row, weights, colour, bins=25, flip=False, summary=False,
-                   fit_values=None, truth=None, extents=None):  # pragma: no cover
+    def _plot_bars(self, ax, parameter, chain_row, weights, colour, linestyle, bar_shade,
+                   linewidth, bins=25, flip=False, summary=False, fit_values=None,
+                   truth=None, extents=None):  # pragma: no cover
 
         kde = self.parameters_general["kde"]
         smooth = self.parameters_general["smooth"]
@@ -777,27 +837,27 @@ class ChainConsumer(object):
             pdf.fit()
             xs = np.linspace(extents[0], extents[1], 100)
             if flip:
-                ax.plot(pdf.evaluate(xs), xs, color=colour)
+                ax.plot(pdf.evaluate(xs), xs, color=colour, ls=linestyle, lw=linewidth)
             else:
-                ax.plot(xs, pdf.evaluate(xs), color=colour)
+                ax.plot(xs, pdf.evaluate(xs), color=colour, ls=linestyle, lw=linewidth)
             interpolator = pdf.evaluate
         else:
             if smooth:
                 if flip:
-                    ax.plot(hist, edge_center, color=colour)
+                    ax.plot(hist, edge_center, color=colour, ls=linestyle, lw=linewidth)
                 else:
-                    ax.plot(edge_center, hist, color=colour)
+                    ax.plot(edge_center, hist, color=colour, ls=linestyle, lw=linewidth)
             else:
                 if flip:
                     orientation = "horizontal"
                 else:
                     orientation = "vertical"
                 ax.hist(edge_center, weights=hist, bins=edges, histtype="step",
-                        color=colour, orientation=orientation)
+                        color=colour, orientation=orientation, ls=linestyle, lw=linewidth)
             interp_type = "linear" if smooth else "nearest"
             interpolator = interp1d(edge_center, hist, kind=interp_type)
 
-        if self.parameters_bar["shade"] and fit_values is not None:
+        if bar_shade and fit_values is not None:
             lower = fit_values[0]
             upper = fit_values[2]
             if lower is not None and upper is not None:
@@ -821,7 +881,8 @@ class ChainConsumer(object):
                     ax.axvline(truth_value, **self.parameters_truth)
         return hist.max()
 
-    def _plot_contour(self, ax, x, y, w, px, py, colour, bins=25, truth=None):  # pragma: no cover
+    def _plot_contour(self, ax, x, y, w, px, py, colour, linestyle, shade,
+                      shade_alpha, linewidth, bins=25, truth=None):  # pragma: no cover
 
         levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
         smooth = self.parameters_general["smooth"]
@@ -840,12 +901,13 @@ class ChainConsumer(object):
         vals = self._convert_to_stdev(hist.T)
         if self.parameters_contour["cloud"]:
             skip = max(1, int(x.size / 50000))
-            ax.scatter(x[::skip], y[::skip], s=10, alpha=0.4, c=colours[1],
+            ax.scatter(x[::skip], y[::skip], s=10, alpha=0.3, c=colours[1],
                        marker=".", edgecolors="none")
-        if self.parameters_contour["shade"]:
+        if shade:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
-                        alpha=self.parameters_contour["shade_alpha"])
-        ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2)
+                        alpha=shade_alpha)
+        ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2,
+                   linestyles=linestyle, linewidths=linewidth)
 
         if truth is not None:
             truth_value = truth.get(px)
@@ -883,6 +945,10 @@ class ChainConsumer(object):
             plt.rc('text', usetex=True)
             plt.rc('font', family='serif')
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
+
+        formatter = ScalarFormatter(useOffset=False) # useMathText=True
+        # formatter.set_scientific(True)
+        formatter.set_powerlimits((-3, 4))
 
         extents = {}
         for p in all_parameters:
@@ -938,9 +1004,11 @@ class ChainConsumer(object):
                     if display_x_ticks:
                         [l.set_rotation(45) for l in ax.get_xticklabels()]
                         ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                        ax.xaxis.set_major_formatter(formatter)
                     if display_y_ticks:
                         [l.set_rotation(45) for l in ax.get_yticklabels()]
                         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                        ax.yaxis.set_major_formatter(formatter)
                     if i != j or not plot_hists:
                         ax.set_ylim(extents[p1])
                     elif flip and i == 1:

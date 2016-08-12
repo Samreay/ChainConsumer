@@ -62,6 +62,14 @@ features requests thought up.
 
 ### Update History
 
+##### 0.9.10
+* Smarter extent tick labels and offsets.
+* Adding list based line styles, widths, shading and opacity.
+* Adding two more examples.
+
+##### 0.9.9
+* Preconfiguring logging.
+
 ##### 0.9.8
 * Adding 2D Gaussian smoothing for the contour surfaces.
 * Renaming ``contourf`` and ``contourf_alpha`` to ``shade`` and ``shade_alpha``.
