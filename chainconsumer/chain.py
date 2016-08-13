@@ -585,6 +585,15 @@ class ChainConsumer(object):
         num_chains = len(self.chains)
         assert len(linestyles) == num_chains, \
             "Have %d linestyles and %d chains. Please address." % (len(linestyles), num_chains)
+        assert len(linewidths) == num_chains, \
+            "Have %d linewidths and %d chains. Please address." % (len(linewidths), num_chains)
+        assert len(bar_shades) == num_chains, \
+            "Have %d bar_shades and %d chains. Please address." % (len(bar_shades), num_chains)
+        assert len(shade_alphas) == num_chains, \
+            "Have %d shade_alphas and %d chains. Please address." % (len(shade_alphas), num_chains)
+        assert len(shades) == num_chains, \
+            "Have %d shades and %d chains. Please address." % (len(shades), num_chains)
+
         if summary is None:
             summary = len(parameters) < 5 and len(self.chains) == 1
         if len(self.chains) == 1:
