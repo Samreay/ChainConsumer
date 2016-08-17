@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.9.10"
+    __version__ = "0.10.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -42,10 +42,12 @@ class ChainConsumer(object):
 
         Parameters
         ----------
-        chain : str|ndarray
-            The chain to load. Normally a ``numpy.ndarray``, but can also accept a string.
-            If a string is found, it interprets the string as a filename
-            and attempts to load it in.
+        chain : str|ndarray|dict
+            The chain to load. Normally a ``numpy.ndarray``. If a string is found, it
+             interprets the string as a filename and attempts to load it in. If a ``dict``
+             is passed in, it assumes the dict has keys of parameter names and values of
+             an array of samples. Notice that using a dictionary puts the order of
+             parameters in the output under the control of the python ``dict.keys()`` function.
         parameters : list[str], optional
             A list of parameter names, one for each column (dimension) in the chain.
         name : str, optional
@@ -66,6 +68,14 @@ class ChainConsumer(object):
                 chain = np.loadtxt(chain)
             else:
                 chain = np.load(chain)
+        elif isinstance(chain, dict):
+            assert parameters is None, \
+                "You cannot pass a dictionary and specify parameter names"
+            parameters = list(chain.keys())
+            chain = np.array([chain[p] for p in parameters]).T
+        elif isinstance(chain, list):
+            chain = np.array(chain)
+
         if len(chain.shape) == 1:
             chain = chain[None].T
         self.chains.append(chain)
@@ -306,8 +316,15 @@ class ChainConsumer(object):
         self._configured_truth = True
         return self
 
-    def get_summary(self):
+    def get_summary(self, squeeze=True):
         """  Gets a summary of the marginalised parameter distributions.
+
+        Parameters
+        ----------
+        squeeze : bool, optional
+            Squeeze the summaries. If you only have one chain, squeeze will not return
+            a length one list, just the single summary. If this is false, you will
+            get a length one list.
 
         Returns
         -------
@@ -322,6 +339,8 @@ class ChainConsumer(object):
                 summary = self._get_parameter_summary(chain[:, i], weights, p, ind)
                 res[p] = summary
             results.append(res)
+        if squeeze and len(results) == 1:
+            return results[0]
         return results
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
@@ -364,7 +383,7 @@ class ChainConsumer(object):
                 "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
         num_chains = len(self.chains)
-        fit_values = self.get_summary()
+        fit_values = self.get_summary(squeeze=False)
         if label is None:
             label = ""
         if caption is None:
@@ -573,7 +592,7 @@ class ChainConsumer(object):
 
         num_bins = self.parameters_general["bins"]
         self.logger.info("Plotting surfaces with %s bins" % num_bins)
-        fit_values = self.get_summary()
+        fit_values = self.get_summary(squeeze=False)
         colours = self._get_colours(self.parameters_general["colours"],
                                     rainbow=self.parameters_general["rainbow"])
         linestyles = self.parameters_general["linestyles"]

@@ -62,6 +62,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.10.0
+* Modifying the ``add_chain`` API, so that you can pass dictionaries!
+
 ##### 0.9.10
 * Smarter extent tick labels and offsets.
 * Adding list based line styles, widths, shading and opacity.

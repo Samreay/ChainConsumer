@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import numpy as np
+import pytest
 
 from chainconsumer import ChainConsumer
 
@@ -19,7 +20,7 @@ class TestChain(object):
         consumer.add_chain(self.data[::10])
         consumer.configure_general(kde=True)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -30,7 +31,7 @@ class TestChain(object):
         consumer.add_chain(self.data)
         consumer.configure_general(smooth=0, bins=2.4)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -62,7 +63,7 @@ class TestChain(object):
         consumer.add_chain(self.data)
         consumer.configure_general(bins=1.6)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -70,7 +71,7 @@ class TestChain(object):
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])
-        vals = consumer.get_summary()[0]["a"]
+        vals = consumer.get_summary()["a"]
         text = consumer.get_parameter_text(*vals)
         assert text == r"5.0\pm 1.5"
 
@@ -137,7 +138,7 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(filename)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         assert np.abs(actual[1] - 5.0) < 0.5
 
     def test_file_loading2(self):
@@ -149,8 +150,51 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(filename)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         assert np.abs(actual[1] - 5.0) < 0.5
+
+    def test_using_list(self):
+        data = self.data.tolist()
+        c = ChainConsumer()
+        c.add_chain(data)
+        summary = c.get_summary()
+        actual = np.array(list(summary.values())[0])
+        assert np.abs(actual[1] - 5.0) < 0.1
+
+    def test_using_dict(self):
+        data = {"x": self.data, "y": self.data2}
+        c = ChainConsumer()
+        c.add_chain(data)
+        summary = c.get_summary()
+        print(c.chains[0].shape)
+        deviations = np.abs([summary["x"][1] - 5, summary["y"][1] - 3])
+        assert np.all(deviations < 0.1)
+
+    def test_summary_when_no_parameter_names(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        summary = c.get_summary()
+        assert list(summary.keys()) == [0]
+
+    def test_squeeze_squeezes(self):
+        sum = ChainConsumer().add_chain(self.data).get_summary()
+        assert isinstance(sum, dict)
+
+    def test_squeeze_doesnt(self):
+        sum = ChainConsumer().add_chain(self.data).get_summary(squeeze=False)
+        assert isinstance(sum, list)
+        assert len(sum) == 1
+
+    def test_squeeze_doesnt_squeeze_multi(self):
+        c = ChainConsumer()
+        c.add_chain(self.data).add_chain(self.data)
+        sum = c.get_summary()
+        assert isinstance(sum, list)
+        assert len(sum) == 2
+
+    def test_dictionary_and_parameters_fail(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain({"x": self.data}, parameters=["$x$"])
 
     def test_convergence_failure(self):
         data = np.concatenate((np.random.normal(loc=0.0, size=10000),
@@ -158,7 +202,7 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(data)
         summary = consumer.get_summary()
-        actual = np.array(list(summary[0].values())[0])
+        actual = np.array(list(summary.values())[0])
         print(actual)
         assert actual[0] is None and actual[2] is None
 
