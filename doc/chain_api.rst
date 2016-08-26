@@ -7,9 +7,8 @@ Chain Consumer API
 
 .. autosummary::
 
-    chainconsumer
+    chainconsumer.ChainConsumer
 
 .. autoclass:: chainconsumer.ChainConsumer
     :members:
     :undoc-members:
-    :show-inheritance:
