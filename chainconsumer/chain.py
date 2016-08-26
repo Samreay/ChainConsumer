@@ -117,7 +117,9 @@ class ChainConsumer(object):
                           linestyles=None, linewidths=None, serif=True, plot_hists=True,
                           max_ticks=5, kde=False, smooth=3):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
-        and contour plots. If you do not call this explicitly, the :func:`plot`
+        and contour plots.
+
+        If you do not call this explicitly, the :func:`plot`
         method will invoke this method automatically.
 
         Please ensure that you call this method *after* adding all the relevant data to the
@@ -220,8 +222,10 @@ class ChainConsumer(object):
 
     def configure_contour(self, sigmas=None, cloud=None, shade=None,
                           shade_alpha=None):  # pragma: no cover
-        """ Configure the default variables for the contour plots. If you do not call this
-        explicitly, the :func:`plot` method will invoke this method automatically.
+        """ Configure the default variables for the contour plots.
+
+        If you do not call this explicitly, the :func:`plot` method
+        will invoke this method automatically.
 
         Please ensure that you call this method *after* adding all the relevant data to the
         chain consumer, as the consume changes configuration values depending on
@@ -282,8 +286,10 @@ class ChainConsumer(object):
         return self
 
     def configure_bar(self, summary=None, shade=None):  # pragma: no cover
-        """ Configure the bar plots showing the marginalised distributions. If you do not
-        call this explicitly, the :func:`plot` method will invoke this method automatically.
+        """ Configure the bar plots showing the marginalised distributions.
+
+        If you do not call this explicitly, the :func:`plot` method will
+        invoke this method automatically.
 
         Please ensure that you call this method *after* adding all the relevant data to the
         chain consumer, as the consume changes configuration values depending on
@@ -564,7 +570,7 @@ class ChainConsumer(object):
 
     def plot(self, figsize="GROW", parameters=None, extents=None, filename=None,
              display=False, truth=None, legend=None):  # pragma: no cover
-        """ Plot the chain
+        """ Plot the chain!
 
         Parameters
         ----------

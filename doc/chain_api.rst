@@ -5,9 +5,9 @@
 Chain Consumer API
 ==================
 
-.. autosummary:: chainconsumer.ChainConsumer
-    :members:
-    :undoc-members:
+.. autosummary::
+
+    chainconsumer
 
 .. autoclass:: chainconsumer.ChainConsumer
     :members:
