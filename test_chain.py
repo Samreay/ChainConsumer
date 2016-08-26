@@ -214,7 +214,7 @@ class TestChain(object):
         consumer.add_chain(data)
         num_walkers = 2
 
-        c = consumer.divide_chain(0, 2)
+        c = consumer.divide_chain(2)
         c.configure_general()
         means = [0, 1.0]
         for i in range(num_walkers):
