@@ -5,9 +5,7 @@
 Chain Consumer API
 ==================
 
-.. autosummary::
-
-    chainconsumer.ChainConsumer
+.. toctree::
 
 .. autoclass:: chainconsumer.ChainConsumer
     :members:
