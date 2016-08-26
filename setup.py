@@ -47,6 +47,7 @@ setup(name="ChainConsumer",
       author="Samuel Hinton",
       author_email="samuelreay@gmail.com",
       requires=["numpy", "scipy", "matplotlib", "statsmodels"],
+      install_requires=["numpy", "scipy", "matplotlib", "statsmodels"],
       tests_require=["pytest","pytest-cov"],
       cmdclass={"test": PyTest},
 )

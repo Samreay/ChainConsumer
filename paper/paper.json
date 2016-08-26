@@ -4,10 +4,10 @@
   "author": [
     "Samuel Hinton"
   ],
-  "identifier": "http://dx.doi.org/10.5281/zenodo.58511",
+  "identifier": "http://dx.doi.org/10.5281/zenodo.60315",
   "codeRepository": "https://github.com/samreay/ChainConsumer",
   "datePublished": "2016-07-24",
-  "dateModified": "2016-07-24",
+  "dateModified": "2016-08-26",
   "dateCreated": "2016-07-24",
   "description": "A software package to consume chains produced by MCMC and similar algorithms, to provide likelihood surfaces, chain visualisations and parameter summaries in the form of LaTeX tables.",
   "keywords": "Python, visualization, mcmc",

@@ -86,8 +86,16 @@ if "%1" == "html" (
 	goto end
 )
 
+if "%1" == "htmlfull" (
+	%SPHINXBUILD% -E -a -b html %ALLSPHINXOPTS% %BUILDDIR%/html
+	if errorlevel 1 exit /b 1
+	echo.
+	echo.Build finished. The HTML pages are in %BUILDDIR%/html.
+	goto end
+)
+
 if "%1" == "rst" (
-	sphinx-apidoc -fM -o . ../dessn
+	sphinx-apidoc -fM -o . ../chainconsumer
 	if errorlevel 1 exit /b 1
 	echo.
 	echo.Made rst

@@ -2,9 +2,11 @@
 ChainConsumer
 =============
 
-I wrote this code after realising that the fantastic library
-`corner <https://github.com/dfm/corner.py>`_ could not plot everything I
-wanted to plot. And so here we are!
+ChainConsumer is a python package designed to do one thing - consume the chains
+output from Monte Carlo processes like MCMC. ChainConsumer can utilise these chains
+to produce plots of the posterior surface inferred from the chain distributions,
+to plot the chains as walks (to check for mixing and convergence), and to output
+parameter summaries in the form of LaTeX tables.
 
 To get things started, here is a basic example:
 
@@ -38,6 +40,9 @@ Contents
    chain_api
    examples/index
 
+Installation
+------------
+
 ChainConsumer requires the following dependencies:
 
 .. literalinclude:: ../requirements.txt
@@ -45,3 +50,14 @@ ChainConsumer requires the following dependencies:
 ChainConsumer can be installed as follows::
 
     pip install chainconsumer
+
+Contributing
+------------
+
+Users that wish to contribute to this project may do so in a number of ways.
+Firstly, for any feature requests, bugs or general ideas, please raise an issue
+via `Github <https://github.com/samreay/ChainConsumer/issues>`_.
+
+If you wish to contribute code to the project, please simple fork the project on
+Github and then raise a pull request. Pull requests will be reviewed to determine
+whether the changes are major or minor in nature, and to ensure all changes are tested.

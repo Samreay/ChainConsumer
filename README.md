@@ -48,11 +48,24 @@ Which compiles to something as shown below:
 
 -----------
 
+### Installation
 
 Install via `pip`:
     
     pip install chainconsumer
 
+
+----------
+
+## Contributing
+
+Users that wish to contribute to this project may do so in a number of ways.
+Firstly, for any feature requests, bugs or general ideas, please raise an issue
+via [Github](https://github.com/samreay/ChainConsumer/issues).
+
+If you wish to contribute code to the project, please simple fork the project on
+Github and then raise a pull request. Pull requests will be reviewed to determine
+whether the changes are major or minor in nature, and to ensure all changes are tested.
 
 ----------
 

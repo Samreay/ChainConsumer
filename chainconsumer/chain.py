@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.10.0"
+    __version__ = "0.10.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -44,12 +44,14 @@ class ChainConsumer(object):
         ----------
         chain : str|ndarray|dict
             The chain to load. Normally a ``numpy.ndarray``. If a string is found, it
-             interprets the string as a filename and attempts to load it in. If a ``dict``
-             is passed in, it assumes the dict has keys of parameter names and values of
-             an array of samples. Notice that using a dictionary puts the order of
-             parameters in the output under the control of the python ``dict.keys()`` function.
+            interprets the string as a filename and attempts to load it in. If a ``dict``
+            is passed in, it assumes the dict has keys of parameter names and values of
+            an array of samples. Notice that using a dictionary puts the order of
+            parameters in the output under the control of the python ``dict.keys()`` function.
         parameters : list[str], optional
-            A list of parameter names, one for each column (dimension) in the chain.
+            A list of parameter names, one for each column (dimension) in the chain. This parameter
+            should remain ``None`` if a dictionary is given as ``chain``, as the parameter names
+            are taken from the dictionary keys.
         name : str, optional
             The name of the chain. Used when plotting multiple chains at once.
         weights : ndarray, optional
@@ -164,6 +166,12 @@ class ChainConsumer(object):
             How much to smooth the marginalised distributions using a gaussian filter.
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
             ``0``, ``False`` or ``None`` disables smoothing.
+
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
         """
         assert rainbow is None or colours is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
@@ -233,6 +241,11 @@ class ChainConsumer(object):
         shade_alpha : float|list[float], optional
             Filled contour alpha value override. Default is 1.0. If a list is passed, you can set the
             shade opacity for specific chains.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
         """
         num_chains = len(self.chains)
 
@@ -276,6 +289,8 @@ class ChainConsumer(object):
         chain consumer, as the consume changes configuration values depending on
         the supplied data.
 
+        Parameters
+        ----------
         summary : bool, optional
             If overridden, sets whether parameter summaries should be set as axis titles.
             Will not work if you have multiple chains
@@ -283,6 +298,11 @@ class ChainConsumer(object):
             If set to true, shades in confidence regions in under histogram. By default
             this happens if you less than 3 chains, but is disabled if you are comparing
             more chains. You can pass a list if you wish to shade some chains but not others.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
         """
         if summary is not None:
             summary = summary and len(self.chains) == 1
@@ -306,6 +326,16 @@ class ChainConsumer(object):
         if you want some basic control.
 
         Default is to use an opaque black dashed line.
+
+        Parameters
+        ----------
+        kwargs : dict
+            The keyword arguments to unwrap when calling ``axvline`` and ``axhline``.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
         """
         if kwargs.get("ls") is None and kwargs.get("linestyle") is None:
             kwargs["ls"] = "--"
@@ -449,6 +479,11 @@ class ChainConsumer(object):
             The upper bound on the parameter
         wrap : bool
             Wrap output text in dollar signs for LaTeX
+
+        Returns
+        -------
+        str
+            The formatted text given the parameter bounds
         """
         if lower is None or upper is None:
             return ""
@@ -488,7 +523,30 @@ class ChainConsumer(object):
             text = "$%s$" % text
         return text
 
-    def divide_chain(self, i, num_walkers):
+    def divide_chain(self, num_walkers, i=0):
+        """
+        Returns a ChainConsumer instance containing ``num_walker`` chains,
+        each formed by splitting the ``i``th chain ``num_walker`` times.
+
+        This method might be useful if, for example, your chain was made using
+        MCMC with 4 walkers. To check the sampling of all 4 walkers agree, you could
+        call this with ``num_walkers=4`` and plot, and hopefully all four contours
+        you would see all agree.
+
+        Parameters
+        ----------
+        num_walkers : int
+            How many walkers (with equal number of samples) compose
+            this chain.
+        i : int,optional
+            The index of the chain you wish to divide
+
+        Returns
+        -------
+        ChainConsumer
+            A new ChainConsumer instance with the same settings as the parent instance, containing
+            ``num_walker`` chains.
+        """
         cs = np.split(self.chains[i], num_walkers)
         ws = np.split(self.weights[i], num_walkers)
         con = ChainConsumer()
