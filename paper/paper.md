@@ -32,7 +32,8 @@ parameter values, which provides an easy visual check on chain
 mixing and chain convergence.
 
 Plotting is performed via the matplotlib library [@matplotlib], and 
-makes use of various numpy [@numpy] and scipy [@scipy] functions.
+makes use of various numpy [@numpy] and scipy [@scipy] functions. The
+optional KDE feature makes use of [@statsmodels].
 
 Code archives can be found on Zenodo at [@zenodo] and any
 bugs or feature requests can be opened as issues on the Github
