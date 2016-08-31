@@ -70,6 +70,28 @@ whether the changes are major or minor in nature, and to ensure all changes are 
 
 ----------
 
+## Citing
+
+For those that use ChainConsumer and would like to reference it, the
+following BibTeX is generated from the JOSS article:
+
+```
+@article{Hinton2016,
+  doi = {10.21105/joss.00045},
+  url = {http://dx.doi.org/10.21105/joss.00045},
+  year  = {2016},
+  month = {aug},
+  publisher = {The Open Journal},
+  volume = {1},
+  number = {4},
+  author = {Samuel Hinton},
+  title = {{ChainConsumer}},
+  journal = {{JOSS}}
+}
+```
+
+----------
+
 Please feel free to fork the project and open pull-requests, or
 raise an issue via Github if any bugs are encountered or 
 features requests thought up.
