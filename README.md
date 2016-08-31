@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.10.1
+* Updating setup so that dependencies are automatically installed.
+
 ##### 0.10.0
 * Modifying the ``add_chain`` API, so that you can pass dictionaries!
 
