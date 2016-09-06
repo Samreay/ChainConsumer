@@ -35,7 +35,7 @@ class ChainConsumer(object):
         self.parameters_contour = {}
         self.parameters_bar = {}
         self.parameters_truth = {}
-        self.parameters_general = {"statistics": "max"}
+        self.parameters_general = {}
         self.summaries = {
             "max": self._get_parameter_summary_max,
             "mean": self._get_parameter_summary_mean,
@@ -133,9 +133,11 @@ class ChainConsumer(object):
 
         Parameters
         ----------
-        statistics : string, optional
+        statistics : string|list[str], optional
             Which sort of statistics to use. Defaults to `"max"` for maximum likelihood
-            statistics. Other available options are `"mean"` and `"cumulative"`
+            statistics. Other available options are `"mean"` and `"cumulative"`. In the
+            very, very rare case you want to enable different statistics for different
+            chains, you can pass in a list of strings.
         bins : int|float, optional
             The number of bins to use. By default uses :math:`\frac{\sqrt{n}}{10}`, where
             :math:`n` are the number of data points. Giving an integer will set the number
@@ -186,10 +188,17 @@ class ChainConsumer(object):
         assert rainbow is None or colours is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
 
-        assert statistics is not None, "statistics should be a string!"
-        statistics = statistics.lower()
-        assert statistics in ["max", "mean", "cumulative"], \
-            "statistics %s not recognised. Should be max, mean or cumulative" % statistics
+        assert statistics is not None, "statistics should be a string or list of strings!"
+        if isinstance(statistics, str):
+            statistics = [statistics.lower()] * len(self.chains)
+        elif isinstance(statistics, list):
+            for i, l in enumerate(statistics):
+                statistics[i] = l.lower()
+        else:
+            raise ValueError("statistics is not a string or a list!")
+        for s in statistics:
+            assert s in ["max", "mean", "cumulative"], \
+                "statistics %s not recognised. Should be max, mean or cumulative" % s
         self.parameters_general["statistics"] = statistics
         if bins is None:
             bins = self._get_bins()
@@ -1171,9 +1180,6 @@ class ChainConsumer(object):
             return ((3 if marginalsied else 2) * smooth * bins), smooth
 
     def _get_smoothed_histogram(self, data, weights, chain_index):
-        if not self._configured_general:
-            self.configure_general()
-
         smooth = self.parameters_general["smooth"]
         bins = self.parameters_general['bins'][chain_index]
         bins, smooth = self._get_smoothed_bins(smooth, bins)
@@ -1197,14 +1203,17 @@ class ChainConsumer(object):
         cs /= cs.max()
         return xs, ys, cs
 
-    def _get_parameter_summary(self, *args, **kwargs):
-        return self.summaries[self.parameters_general["statistics"]](*args, **kwargs)
+    def _get_parameter_summary(self, data, weights, parameter, chain_index, **kwargs):
+        if not self._configured_general:
+            self.configure_general()
+        method = self.summaries[self.parameters_general["statistics"][chain_index]]
+        return method(data, weights, parameter, chain_index, **kwargs)
 
     def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827):
         xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
         vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
         bounds = interp1d(cs, xs)(vals)
-        bounds[1] = np.average(data, weights=weights)
+        bounds[1] = 0.5 * (bounds[0] + bounds[2])
         return bounds
 
     def _get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827):

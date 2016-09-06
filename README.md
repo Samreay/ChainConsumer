@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.10.2
+* Adding options for alternate statistics.
+
 ##### 0.10.1
 * Updating setup so that dependencies are automatically installed.
 

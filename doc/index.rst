@@ -38,6 +38,7 @@ Contents
    :maxdepth: 2
 
    chain_api
+   usage
    examples/index
 
 Installation

@@ -1,0 +1,50 @@
+=====
+Usage
+=====
+
+I recommend going straight to the :ref:`chain_api` and
+the :ref:`examples-index` page for details on how to use ChainConsumer.
+
+The Process
+-----------
+
+The process of using ChainConsumer should be straightforward:
+
+1. Create an instance of ChainConsumer.
+2. Add your chains to this instance.
+3. Update the configurations if needed.
+4. Plot.
+
+The main page and the examples page has code demonstrating these,
+so I won't repeat it here.
+
+
+
+
+Statistics
+----------
+
+An area of some difference in analyses is how to generate summary statistics
+from marginalised posterior distributions. ChainConsumer comes equipped
+with the three different methods that can be configured with the
+`configure_general` method. The three methods are:
+
+Maximum Likelihood Statistics
+   The default statistic used by ChainConsumer, maximum likelihood statistics
+   report asymmetric uncertainty, from the point of maximum likelihood to the
+   iso-likelihood levels above and below the maximal point.
+Cumulative Statistics
+   For cumulative statistics , the lower :math:`1\sigma` confidence bound, mean value,
+   and upper bound are respectively given by the value of the cumulative function
+   at points :math:`C(x) = 0.15865`, :math:`0.5`, and :math:`0.84135`.
+Mean Statistics
+   Mean statistics report the same upper and lower confidence bound as cumulative
+   statistics, however report symmetric error bars by having the primary statistic
+   reported as the mean of the lower and upper bound.
+
+All three methods are illustrated below.
+
+.. figure::     ../examples/resources/stats.png
+   :align:     center
+   :width:     80%
+
