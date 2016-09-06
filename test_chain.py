@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import numpy as np
+from scipy.stats import skewnorm
 import pytest
 
 from chainconsumer import ChainConsumer
@@ -13,6 +14,7 @@ class TestChain(object):
     data = np.random.normal(loc=5.0, scale=1.5, size=n)
     data2 = np.random.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
+    data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
 
     def test_summary(self):
         tolerance = 2e-2
@@ -222,4 +224,77 @@ class TestChain(object):
             assert np.abs(stats[1] - means[i]) < 1e-1
             assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
 
+    def test_stats_max_normal(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data)
+        consumer.configure_general(statistics="max")
+        summary = consumer.get_summary()
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
 
+    def test_stats_mean_normal(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data)
+        consumer.configure_general(statistics="mean")
+        summary = consumer.get_summary()
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_stats_cum_normal(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data)
+        consumer.configure_general(statistics="cumulative")
+        summary = consumer.get_summary()
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_reject_bad_satst(self):
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data)
+        with pytest.raises(AssertionError):
+            consumer.configure_general(statistics="monkey")
+
+    def test_stats_max_skew(self):
+        tolerance = 2e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data_skew)
+        consumer.configure_general(statistics="max")
+        summary = consumer.get_summary()
+        print(summary)
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([1.01, 1.55, 2.72])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_stats_mean_skew(self):
+        tolerance = 2e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data_skew)
+        consumer.configure_general(statistics="mean")
+        summary = consumer.get_summary()
+        print(summary)
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([1.27, 2.19, 3.11])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_stats_cum_skew(self):
+        tolerance = 2e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data_skew)
+        consumer.configure_general(statistics="cumulative")
+        summary = consumer.get_summary()
+        print(summary)
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([1.27, 2.01, 3.11])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)

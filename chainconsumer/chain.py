@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.10.1"
+    __version__ = "0.10.2"
 
     def __init__(self):
         logging.basicConfig()
@@ -35,7 +35,12 @@ class ChainConsumer(object):
         self.parameters_contour = {}
         self.parameters_bar = {}
         self.parameters_truth = {}
-        self.parameters_general = {}
+        self.parameters_general = {"statistics": "max"}
+        self.summaries = {
+            "max": self._get_parameter_summary_max,
+            "mean": self._get_parameter_summary_mean,
+            "cumulative": self._get_parameter_summary_cumulative
+        }
 
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None):
         """ Add a chain to the consumer.
@@ -113,9 +118,9 @@ class ChainConsumer(object):
         self._configured_truth = False
         return self
 
-    def configure_general(self, bins=None, flip=True, rainbow=None, colours=None,
-                          linestyles=None, linewidths=None, serif=True, plot_hists=True,
-                          max_ticks=5, kde=False, smooth=3):  # pragma: no cover
+    def configure_general(self, statistics="max", bins=None, flip=True, rainbow=None,
+                          colours=None, linestyles=None, linewidths=None, serif=True,
+                          plot_hists=True, max_ticks=5, kde=False, smooth=3):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -128,6 +133,9 @@ class ChainConsumer(object):
 
         Parameters
         ----------
+        statistics : string, optional
+            Which sort of statistics to use. Defaults to `"max"` for maximum likelihood
+            statistics. Other available options are `"mean"` and `"cumulative"`
         bins : int|float, optional
             The number of bins to use. By default uses :math:`\frac{\sqrt{n}}{10}`, where
             :math:`n` are the number of data points. Giving an integer will set the number
@@ -178,6 +186,11 @@ class ChainConsumer(object):
         assert rainbow is None or colours is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
 
+        assert statistics is not None, "statistics should be a string!"
+        statistics = statistics.lower()
+        assert statistics in ["max", "mean", "cumulative"], \
+            "statistics %s not recognised. Should be max, mean or cumulative" % statistics
+        self.parameters_general["statistics"] = statistics
         if bins is None:
             bins = self._get_bins()
         elif isinstance(bins, float):
@@ -856,7 +869,6 @@ class ChainConsumer(object):
         if figsize is None:
             figsize = (8, 0.75 + (n + extra))
 
-
         chain_data = self.chains[chain]
         self.logger.debug("Plotting chain of size %s" % (chain_data.shape,))
         chain_parameters = self.parameters[chain]
@@ -1158,14 +1170,13 @@ class ChainConsumer(object):
         else:
             return ((3 if marginalsied else 2) * smooth * bins), smooth
 
-    def _get_parameter_summary(self, data, weights, parameter, chain_index, desired_area=0.6827):
+    def _get_smoothed_histogram(self, data, weights, chain_index):
         if not self._configured_general:
             self.configure_general()
 
         smooth = self.parameters_general["smooth"]
         bins = self.parameters_general['bins'][chain_index]
         bins, smooth = self._get_smoothed_bins(smooth, bins)
-
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
@@ -1182,10 +1193,28 @@ class ChainConsumer(object):
             ys = interp1d(kde_xs, pdf.evaluate(kde_xs), kind="cubic")(xs)
         else:
             ys = interp1d(edge_centers, hist, kind="linear")(xs)
-
         cs = ys.cumsum()
         cs /= cs.max()
+        return xs, ys, cs
 
+    def _get_parameter_summary(self, *args, **kwargs):
+        return self.summaries[self.parameters_general["statistics"]](*args, **kwargs)
+
+    def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
+        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+        bounds = interp1d(cs, xs)(vals)
+        bounds[1] = np.average(data, weights=weights)
+        return bounds
+
+    def _get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
+        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+        bounds = interp1d(cs, xs)(vals)
+        return bounds
+
+    def _get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0
