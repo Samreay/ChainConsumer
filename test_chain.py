@@ -208,21 +208,72 @@ class TestChain(object):
         print(actual)
         assert actual[0] is None and actual[2] is None
 
-    def test_divide_chains(self):
+    def test_divide_chains_default(self):
         np.random.seed(0)
         data = np.concatenate((np.random.normal(loc=0.0, size=100000),
                                np.random.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
-        consumer.add_chain(data)
         num_walkers = 2
+        print(consumer.walkers)
 
-        c = consumer.divide_chain(2)
+        consumer.add_chain(data, walkers=num_walkers)
+
+        c = consumer.divide_chain()
         c.configure_general()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
             assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_index(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        num_walkers = 2
+        consumer.add_chain(data, walkers=num_walkers)
+
+        c = consumer.divide_chain(chain=0)
+        c.configure_general()
+        means = [0, 1.0]
+        for i in range(num_walkers):
+            stats = list(c.get_summary()[i].values())[0]
+            assert np.abs(stats[1] - means[i]) < 1e-1
+            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_name(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        num_walkers = 2
+        consumer.add_chain(data, walkers=num_walkers, name="test")
+        c = consumer.divide_chain(chain="test")
+        c.configure_general()
+        means = [0, 1.0]
+        for i in range(num_walkers):
+            stats = list(c.get_summary()[i].values())[0]
+            assert np.abs(stats[1] - means[i]) < 1e-1
+            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_fail(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=2)
+        with pytest.raises(ValueError):
+            consumer.divide_chain(chain=2.0)
+
+    def test_divide_chains_name_fail(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=2)
+        with pytest.raises(AssertionError):
+            c = consumer.divide_chain(chain="notexist")
 
     def test_stats_max_normal(self):
         tolerance = 5e-2

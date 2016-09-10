@@ -14,7 +14,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.10.2"
+    __version__ = "0.11.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -22,6 +22,7 @@ class ChainConsumer(object):
         self.all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
                             "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
         self.chains = []
+        self.walkers = []
         self.weights = []
         self.posteriors = []
         self.names = []
@@ -42,7 +43,7 @@ class ChainConsumer(object):
             "cumulative": self._get_parameter_summary_cumulative
         }
 
-    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None):
+    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None):
         """ Add a chain to the consumer.
 
         Parameters
@@ -63,6 +64,10 @@ class ChainConsumer(object):
             If given, uses this array to weight the samples in chain
         posterior : ndarray, optional
             If given, records the log posterior for each sample in the chain
+        walkers : int, optional
+            How many walkers went into creating the chain. Each walker should
+            contribute the same number of steps, and should appear in contiguous
+            blocks in the final chain.
 
         Returns
         -------
@@ -82,12 +87,14 @@ class ChainConsumer(object):
             chain = np.array([chain[p] for p in parameters]).T
         elif isinstance(chain, list):
             chain = np.array(chain)
-
         if len(chain.shape) == 1:
             chain = chain[None].T
         self.chains.append(chain)
         self.names.append(name)
         self.posteriors.append(posterior)
+        assert walkers is None or chain.shape[0] % walkers == 0, \
+            "The number of steps in the chain cannot be split evenly amongst the number of walkers"
+        self.walkers.append(walkers)
         if weights is None:
             self.weights.append(np.ones(chain.shape[0]))
         else:
@@ -551,23 +558,21 @@ class ChainConsumer(object):
             text = "$%s$" % text
         return text
 
-    def divide_chain(self, num_walkers, i=0):
+    def divide_chain(self, chain=0):
         """
-        Returns a ChainConsumer instance containing ``num_walker`` chains,
-        each formed by splitting the ``i``th chain ``num_walker`` times.
+        Returns a ChainConsumer instance containing all the walks of a given chain
+        as individual chains themselves.
 
         This method might be useful if, for example, your chain was made using
         MCMC with 4 walkers. To check the sampling of all 4 walkers agree, you could
-        call this with ``num_walkers=4`` and plot, and hopefully all four contours
-        you would see all agree.
+        call this to get a ChainConumser instance with one chain for ech of the
+        four walks. If you then plot, hopefully all four contours
+        you would see agree.
 
         Parameters
         ----------
-        num_walkers : int
-            How many walkers (with equal number of samples) compose
-            this chain.
-        i : int,optional
-            The index of the chain you wish to divide
+        chain : int|str, optional
+            The index or name of the chain you want divided
 
         Returns
         -------
@@ -575,6 +580,15 @@ class ChainConsumer(object):
             A new ChainConsumer instance with the same settings as the parent instance, containing
             ``num_walker`` chains.
         """
+        if isinstance(chain, str):
+            assert chain in self.names, "No chain with name %s found" % chain
+            i = self.names.index(chain)
+        elif isinstance(chain, int):
+            i = chain
+        else:
+            raise ValueError("Type %s not recognised. Please pass in an int or a string" % type(chain))
+        assert self.walkers[i] is not None, "The chain you have selected was not added with any walkers!"
+        num_walkers = self.walkers[i]
         cs = np.split(self.chains[i], num_walkers)
         ws = np.split(self.weights[i], num_walkers)
         con = ChainConsumer()

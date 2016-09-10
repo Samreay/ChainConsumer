@@ -12,6 +12,8 @@ if "test" in sys.argv:
 
 
 # Using framework from emcee. Pattern credit to Daniel Foreman-Mackey
+# To test, run: python setup.py test -a "--cov chainconsumer -v"
+# To test with html coverage, run: python setup.py test -a "--cov chainconsumer -v --cov-report html"
 class PyTest(test):
     user_options = [("pytest-args=", "a", "Arguments to pass to py.test")]
 
