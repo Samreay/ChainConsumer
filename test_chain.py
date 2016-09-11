@@ -362,3 +362,81 @@ class TestChain(object):
         diff1 = np.abs(expected1 - actual1)
         assert np.all(diff0 < tolerance)
         assert np.all(diff1 < tolerance)
+
+    def test_gelman_rubin_index(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4)
+        assert consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_not_converged(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        data[80000:, :] *= 2
+        data[80000:, :] += 1
+        consumer = ChainConsumer()
+
+        consumer.add_chain(data, walkers=4)
+        assert not consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_not_converged(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        data[80000:, 0] *= 2
+        consumer = ChainConsumer()
+
+        consumer.add_chain(data, walkers=4)
+        assert not consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4)
+        with pytest.raises(AssertionError):
+            consumer.diagnostic_gelman_rubin(chain=10)
+
+    def test_gelman_rubin_name(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        assert consumer.diagnostic_gelman_rubin(chain="testchain")
+
+    def test_gelman_rubin_name_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        with pytest.raises(AssertionError):
+            consumer.diagnostic_gelman_rubin(chain="testchain2")
+
+    def test_gelman_rubin_unknown_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        with pytest.raises(ValueError):
+            consumer.diagnostic_gelman_rubin(chain=np.pi)
+
+    def test_gelman_rubin_default(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="c1")
+        consumer.add_chain(data, walkers=4, name="c2")
+        consumer.add_chain(data, walkers=4, name="c3")
+        assert consumer.diagnostic_gelman_rubin()
+
+    def test_gelman_rubin_default_not_converge(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="c1")
+        consumer.add_chain(data, walkers=4, name="c2")
+        data2 = data.copy()
+        data2[80000:, 0] *= 1.2
+        data2[80000:, 0] += 0.5
+        consumer.add_chain(data2, walkers=4, name="c3")
+        assert not consumer.diagnostic_gelman_rubin()

@@ -924,7 +924,7 @@ class ChainConsumer(object):
             plt.show()
         return fig
 
-    def diagnostic_gelman_rubin(self, chain=0, threshold=0.1):
+    def diagnostic_gelman_rubin(self, chain=None, threshold=0.05):
         r""" Runs the Gelman Rubin diagnostic on the supplied chains.
 
         Parameters
@@ -955,12 +955,22 @@ class ChainConsumer(object):
         :math:`\hat{R} = \sqrt{\frac{\hat{V}}{W}}`. We check that for all parameters,
         this ratio deviates from unity by less than the supplied threshold.
         """
+        if chain is None:
+            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            return np.all([self.diagnostic_gelman_rubin(k, threshold=threshold) for k in keys])
+        if isinstance(chain, str):
+            assert chain in self.names, "Chain %s not found!" % chain
+            index = self.names.index(chain)
+        elif isinstance(chain, int):
+            assert chain < len(self.chains), "Chain index %d not found!" % chain
+            index = chain
+        else:
+            raise ValueError("Type %s not recognised for chain" % type(chain))
 
-        # chains = self.chains if chain is None else [self.chains[chain]]
-        num_walkers = self.walkers[chain]
-        parameters = self.parameters[chain]
-        name = chain
-        chain = self.chains[chain]
+        num_walkers = self.walkers[index]
+        parameters = self.parameters[index]
+        name = self.names[index]
+        chain = self.chains[index]
         chains = np.split(chain, num_walkers)
         assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
         m = len(chains)
