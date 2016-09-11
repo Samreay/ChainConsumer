@@ -12,8 +12,9 @@ The process of using ChainConsumer should be straightforward:
 
 1. Create an instance of ChainConsumer.
 2. Add your chains to this instance.
-3. Update the configurations if needed.
-4. Plot.
+3. Run convergence diagnostics, if desired.
+4. Update the configurations if needed.
+5. Plot.
 
 The main page and the examples page has code demonstrating these,
 so I won't repeat it here.
