@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.11.0
+* Adding Gelman-Rubin and Geweke diagnostic methods.
+
 ##### 0.10.2
 * Adding options for alternate statistics.
 
