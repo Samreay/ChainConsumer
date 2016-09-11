@@ -37,9 +37,9 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   chain_api
    usage
    examples/index
+   chain_api
 
 Installation
 ------------
