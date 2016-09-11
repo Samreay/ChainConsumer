@@ -208,21 +208,72 @@ class TestChain(object):
         print(actual)
         assert actual[0] is None and actual[2] is None
 
-    def test_divide_chains(self):
+    def test_divide_chains_default(self):
         np.random.seed(0)
         data = np.concatenate((np.random.normal(loc=0.0, size=100000),
                                np.random.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
-        consumer.add_chain(data)
         num_walkers = 2
+        print(consumer.walkers)
 
-        c = consumer.divide_chain(2)
+        consumer.add_chain(data, walkers=num_walkers)
+
+        c = consumer.divide_chain()
         c.configure_general()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
             assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_index(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        num_walkers = 2
+        consumer.add_chain(data, walkers=num_walkers)
+
+        c = consumer.divide_chain(chain=0)
+        c.configure_general()
+        means = [0, 1.0]
+        for i in range(num_walkers):
+            stats = list(c.get_summary()[i].values())[0]
+            assert np.abs(stats[1] - means[i]) < 1e-1
+            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_name(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        num_walkers = 2
+        consumer.add_chain(data, walkers=num_walkers, name="test")
+        c = consumer.divide_chain(chain="test")
+        c.configure_general()
+        means = [0, 1.0]
+        for i in range(num_walkers):
+            stats = list(c.get_summary()[i].values())[0]
+            assert np.abs(stats[1] - means[i]) < 1e-1
+            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+
+    def test_divide_chains_fail(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=2)
+        with pytest.raises(ValueError):
+            consumer.divide_chain(chain=2.0)
+
+    def test_divide_chains_name_fail(self):
+        np.random.seed(0)
+        data = np.concatenate((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000)))
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=2)
+        with pytest.raises(AssertionError):
+            c = consumer.divide_chain(chain="notexist")
 
     def test_stats_max_normal(self):
         tolerance = 5e-2
@@ -311,3 +362,114 @@ class TestChain(object):
         diff1 = np.abs(expected1 - actual1)
         assert np.all(diff0 < tolerance)
         assert np.all(diff1 < tolerance)
+
+    def test_gelman_rubin_index(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4)
+        assert consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_not_converged(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        data[80000:, :] *= 2
+        data[80000:, :] += 1
+        consumer = ChainConsumer()
+
+        consumer.add_chain(data, walkers=4)
+        assert not consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_not_converged(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        data[80000:, 0] *= 2
+        consumer = ChainConsumer()
+
+        consumer.add_chain(data, walkers=4)
+        assert not consumer.diagnostic_gelman_rubin(chain=0)
+
+    def test_gelman_rubin_index_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4)
+        with pytest.raises(AssertionError):
+            consumer.diagnostic_gelman_rubin(chain=10)
+
+    def test_gelman_rubin_name(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        assert consumer.diagnostic_gelman_rubin(chain="testchain")
+
+    def test_gelman_rubin_name_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        with pytest.raises(AssertionError):
+            consumer.diagnostic_gelman_rubin(chain="testchain2")
+
+    def test_gelman_rubin_unknown_fails(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="testchain")
+        with pytest.raises(ValueError):
+            consumer.diagnostic_gelman_rubin(chain=np.pi)
+
+    def test_gelman_rubin_default(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                               np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="c1")
+        consumer.add_chain(data, walkers=4, name="c2")
+        consumer.add_chain(data, walkers=4, name="c3")
+        assert consumer.diagnostic_gelman_rubin()
+
+    def test_gelman_rubin_default_not_converge(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=4, name="c1")
+        consumer.add_chain(data, walkers=4, name="c2")
+        data2 = data.copy()
+        data2[80000:, 0] *= 1.2
+        data2[80000:, 0] += 0.5
+        consumer.add_chain(data2, walkers=4, name="c3")
+        assert not consumer.diagnostic_gelman_rubin()
+
+    def test_geweke_index(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        assert consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_index_failed(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        data[98000:, :] += 0.3
+        consumer.add_chain(data, walkers=20, name="c1")
+        assert not consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_default(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        consumer.add_chain(data, walkers=20, name="c2")
+        assert consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_default_failed(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        data2 = data.copy()
+        data2[98000:, :] += 0.3
+        consumer.add_chain(data2, walkers=20, name="c2")
+        assert not consumer.diagnostic_geweke()

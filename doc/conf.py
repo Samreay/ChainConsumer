@@ -39,7 +39,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
-    'numpydoc',
+    "sphinx.ext.napoleon",
+    # 'numpydoc',
     'sphinx_gallery.gen_gallery'
 ]
 numpydoc_show_class_members = False

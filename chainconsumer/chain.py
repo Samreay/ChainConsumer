@@ -6,6 +6,8 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import matplotlib.cm as cm
 import statsmodels.api as sm
 from scipy.ndimage.filters import gaussian_filter
+from scipy.stats import normaltest
+from statsmodels.regression.linear_model import yule_walker
 
 __all__ = ["ChainConsumer"]
 
@@ -14,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.10.2"
+    __version__ = "0.11.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -22,6 +24,7 @@ class ChainConsumer(object):
         self.all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
                             "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
         self.chains = []
+        self.walkers = []
         self.weights = []
         self.posteriors = []
         self.names = []
@@ -42,7 +45,7 @@ class ChainConsumer(object):
             "cumulative": self._get_parameter_summary_cumulative
         }
 
-    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None):
+    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None):
         """ Add a chain to the consumer.
 
         Parameters
@@ -63,6 +66,10 @@ class ChainConsumer(object):
             If given, uses this array to weight the samples in chain
         posterior : ndarray, optional
             If given, records the log posterior for each sample in the chain
+        walkers : int, optional
+            How many walkers went into creating the chain. Each walker should
+            contribute the same number of steps, and should appear in contiguous
+            blocks in the final chain.
 
         Returns
         -------
@@ -82,12 +89,14 @@ class ChainConsumer(object):
             chain = np.array([chain[p] for p in parameters]).T
         elif isinstance(chain, list):
             chain = np.array(chain)
-
         if len(chain.shape) == 1:
             chain = chain[None].T
         self.chains.append(chain)
         self.names.append(name)
         self.posteriors.append(posterior)
+        assert walkers is None or chain.shape[0] % walkers == 0, \
+            "The number of steps in the chain cannot be split evenly amongst the number of walkers"
+        self.walkers.append(walkers)
         if weights is None:
             self.weights.append(np.ones(chain.shape[0]))
         else:
@@ -551,23 +560,21 @@ class ChainConsumer(object):
             text = "$%s$" % text
         return text
 
-    def divide_chain(self, num_walkers, i=0):
+    def divide_chain(self, chain=0):
         """
-        Returns a ChainConsumer instance containing ``num_walker`` chains,
-        each formed by splitting the ``i``th chain ``num_walker`` times.
+        Returns a ChainConsumer instance containing all the walks of a given chain
+        as individual chains themselves.
 
         This method might be useful if, for example, your chain was made using
         MCMC with 4 walkers. To check the sampling of all 4 walkers agree, you could
-        call this with ``num_walkers=4`` and plot, and hopefully all four contours
-        you would see all agree.
+        call this to get a ChainConumser instance with one chain for ech of the
+        four walks. If you then plot, hopefully all four contours
+        you would see agree.
 
         Parameters
         ----------
-        num_walkers : int
-            How many walkers (with equal number of samples) compose
-            this chain.
-        i : int,optional
-            The index of the chain you wish to divide
+        chain : int|str, optional
+            The index or name of the chain you want divided
 
         Returns
         -------
@@ -575,6 +582,15 @@ class ChainConsumer(object):
             A new ChainConsumer instance with the same settings as the parent instance, containing
             ``num_walker`` chains.
         """
+        if isinstance(chain, str):
+            assert chain in self.names, "No chain with name %s found" % chain
+            i = self.names.index(chain)
+        elif isinstance(chain, int):
+            i = chain
+        else:
+            raise ValueError("Type %s not recognised. Please pass in an int or a string" % type(chain))
+        assert self.walkers[i] is not None, "The chain you have selected was not added with any walkers!"
+        num_walkers = self.walkers[i]
         cs = np.split(self.chains[i], num_walkers)
         ws = np.split(self.weights[i], num_walkers)
         con = ChainConsumer()
@@ -909,6 +925,131 @@ class ChainConsumer(object):
         if display:
             plt.show()
         return fig
+
+    def diagnostic_gelman_rubin(self, chain=None, threshold=0.05):
+        r""" Runs the Gelman Rubin diagnostic on the supplied chains.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            Which chain to run the diagnostic on. By default, this is `None`,
+            which will run the diagnostic on all chains. You can also
+            supply and integer (the chain index) or a string, for the chain
+            name (if you set one).
+        threshold : float, optional
+            The maximum deviation permitted from 1 for the final value
+            :math:`\hat{R}`
+
+        Returns
+        -------
+        float
+            whether or not the chains pass the test
+
+        Notes
+        -----
+
+        I follow PyMC in calculating the Gelman-Rubin statistic, where,
+        having :math:`m` chains of length :math:`n`, we compute
+
+        .. math::
+
+            B = \frac{n}{m-1} \sum_{j=1}^{m} \left(\bar{\theta}_{.j} - \bar{\theta}_{..}\right)^2
+
+            W = \frac{1}{m} \sum_{j=1}^{m} \left[ \frac{1}{n-1} \sum_{i=1}^{n} \left( \theta_{ij} - \bar{\theta_{.j}}\right)^2 \right]
+
+        where :math:`\theta` represents each model parameter. We then compute
+        :math:`\hat{V} = \frac{n_1}{n}W + \frac{1}{n}B`, and have our convergence ratio
+        :math:`\hat{R} = \sqrt{\frac{\hat{V}}{W}}`. We check that for all parameters,
+        this ratio deviates from unity by less than the supplied threshold.
+        """
+        if chain is None:
+            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            return np.all([self.diagnostic_gelman_rubin(k, threshold=threshold) for k in keys])
+        index = self._get_chain(chain)
+        num_walkers = self.walkers[index]
+        parameters = self.parameters[index]
+        name = self.names[index] if self.names[index] is not None else "%d" % index
+        chain = self.chains[index]
+        chains = np.split(chain, num_walkers)
+        assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
+        m = 1.0 * len(chains)
+        n = 1.0 * chains[0].shape[0]
+        all_mean = np.mean(chain, axis=0)
+        chain_means = np.array([np.mean(c, axis=0) for c in chains])
+        chain_std = np.array([np.std(c, axis=0) for c in chains])
+        b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
+        w = (1 / m) * chain_std.sum(axis=0)
+        var = (n - 1) * w / n + b / n
+        passed = np.abs(var - 1) < threshold
+        print("Gelman-Rubin Statistic values for chain %s" % name)
+        for p, v, pas in zip(parameters, var, passed):
+            param = "Param %d" % p if isinstance(p, int) else p
+            print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
+        return np.all(passed)
+
+    def diagnostic_geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
+        """ Runs the Geweke diagnostic on the supplied chains.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            Which chain to run the diagnostic on. By default, this is `None`,
+            which will run the diagnostic on all chains. You can also
+            supply and integer (the chain index) or a string, for the chain
+            name (if you set one).
+        first : float, optional
+            The amount of the start of the chain to use
+        last : float, optional
+            The end amount of the chain to use
+        threshold : float, optional
+            The p-value to use when testing for normality.
+
+        Returns
+        -------
+        float
+            whether or not the chains pass the test
+
+        """
+        if chain is None:
+            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            return np.all([self.diagnostic_geweke(k, threshold=threshold) for k in keys])
+        index = self._get_chain(chain)
+        num_walkers = self.walkers[index]
+        name = self.names[index] if self.names[index] is not None else "%d" % index
+        chain = self.chains[index]
+        chains = np.split(chain, num_walkers)
+        n = 1.0 * chains[0].shape[0]
+        n_start = int(np.floor(first * n))
+        n_end = int(np.floor((1 - last) * n))
+        mean_start = np.array([np.mean(c[:n_start, i])
+                               for c in chains for i in range(c.shape[1])])
+        var_start = np.array([self._spec(c[:n_start, i])/c[:n_start, i].size
+                              for c in chains for i in range(c.shape[1])])
+        mean_end = np.array([np.mean(c[n_end:, i])
+                             for c in chains for i in range(c.shape[1])])
+        var_end = np.array([self._spec(c[n_end:, i])/c[n_end:, i].size
+                            for c in chains for i in range(c.shape[1])])
+        zs = (mean_start - mean_end) / (np.sqrt(var_start + var_end))
+        stat, pvalue = normaltest(zs)
+        print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
+        return pvalue > threshold
+
+    # Method of estimating spectral density following PyMC.
+    # See https://github.com/pymc-devs/pymc/blob/master/pymc/diagnostics.py
+    def _spec(self, x, order=2):
+        beta, sigma = yule_walker(x, order)
+        return sigma ** 2 / (1. - np.sum(beta)) ** 2
+
+    def _get_chain(self, chain):
+        if isinstance(chain, str):
+            assert chain in self.names, "Chain %s not found!" % chain
+            index = self.names.index(chain)
+        elif isinstance(chain, int):
+            assert chain < len(self.chains), "Chain index %d not found!" % chain
+            index = chain
+        else:
+            raise ValueError("Type %s not recognised for chain" % type(chain))
+        return index
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
                    convolve=None):  # pragma: no cover
