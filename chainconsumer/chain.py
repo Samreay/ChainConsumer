@@ -973,14 +973,14 @@ class ChainConsumer(object):
         chain = self.chains[index]
         chains = np.split(chain, num_walkers)
         assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
-        m = len(chains)
-        n = chains[0].shape[0]
+        m = 1.0 * len(chains)
+        n = 1.0 * chains[0].shape[0]
         all_mean = np.mean(chain, axis=0)
         chain_means = np.array([np.mean(c, axis=0) for c in chains])
         chain_std = np.array([np.std(c, axis=0) for c in chains])
-        b = 1.0 * n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
-        w = 1.0 * (1 / m) * chain_std.sum(axis=0)
-        var = 1.0 * (n - 1) * w / n + b / n
+        b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
+        w = (1 / m) * chain_std.sum(axis=0)
+        var = (n - 1) * w / n + b / n
         passed = np.abs(var - 1) < threshold
         print("Gelman-Rubin Statistic values for chain %s" % name)
         for p, v, pas in zip(parameters, var, passed):
