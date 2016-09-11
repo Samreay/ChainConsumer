@@ -924,6 +924,60 @@ class ChainConsumer(object):
             plt.show()
         return fig
 
+    def diagnostic_gelman_rubin(self, chain=0, threshold=0.1):
+        r""" Runs the Gelman Rubin diagnostic on the supplied chains.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            Which chain to run the diagnostic on. By default, this is `None`,
+            which will run the diagnostic on all chains. You can also
+            supply and integer (the chain index) or a string, for the chain
+            name (if you set one).
+        threshold : float, optional
+            The maximum deviation permitted from 1 for the final value
+            :math:`\hat{R}`
+
+        Notes
+        -----
+
+        I follow PyMC in calculating the Gelman-Rubin statistic, where,
+        having :math:`m` chains of length :math:`n`, we compute
+
+        .. math::
+
+            B = \frac{n}{m-1} \sum_{j=1}^{m} \left(\bar{\theta}_{.j} - \bar{\theta}_{..}\right)^2
+
+            W = \frac{1}{m} \sum_{j=1}^{m} \left[ \frac{1}{n-1} \sum_{i=1}^{n} \left( \theta_{ij} - \bar{\theta_{.j}}\right)^2 \right]
+
+        where :math:`\theta` represents each model parameter. We then compute
+        :math:`\hat{V} = \frac{n_1}{n}W + \frac{1}{n}B`, and have our convergence ratio
+        :math:`\hat{R} = \sqrt{\frac{\hat{V}}{W}}`. We check that for all parameters,
+        this ratio deviates from unity by less than the supplied threshold.
+        """
+
+        # chains = self.chains if chain is None else [self.chains[chain]]
+        num_walkers = self.walkers[chain]
+        parameters = self.parameters[chain]
+        name = chain
+        chain = self.chains[chain]
+        chains = np.split(chain, num_walkers)
+        assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
+        m = len(chains)
+        n = chains[0].shape[0]
+        all_mean = np.mean(chain, axis=0)
+        chain_means = np.array([np.mean(c, axis=0) for c in chains])
+        chain_std = np.array([np.std(c, axis=0) for c in chains])
+        b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
+        w = (1 / m) * chain_std.sum(axis=0)
+        var = (n - 1) * w / n + b / n
+        passed = np.abs(var - 1) < threshold
+        print("Gelman-Rubin Statistic values for chain %s" % name)
+        for p, v, pas in zip(parameters, var, passed):
+            param = "Param %d" % p if isinstance(p, int) else p
+            print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
+        return np.all(passed)
+
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
                    convolve=None):  # pragma: no cover
         if extents is not None:
