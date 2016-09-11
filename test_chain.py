@@ -440,3 +440,36 @@ class TestChain(object):
         data2[80000:, 0] += 0.5
         consumer.add_chain(data2, walkers=4, name="c3")
         assert not consumer.diagnostic_gelman_rubin()
+
+    def test_geweke_index(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        assert consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_index_failed(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        data[98000:, :] += 0.3
+        consumer.add_chain(data, walkers=20, name="c1")
+        assert not consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_default(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        consumer.add_chain(data, walkers=20, name="c2")
+        assert consumer.diagnostic_geweke(chain=0)
+
+    def test_geweke_default_failed(self):
+        data = np.vstack((np.random.normal(loc=0.0, size=100000),
+                          np.random.normal(loc=1.0, size=100000))).T
+        consumer = ChainConsumer()
+        consumer.add_chain(data, walkers=20, name="c1")
+        data2 = data.copy()
+        data2[98000:, :] += 0.3
+        consumer.add_chain(data2, walkers=20, name="c2")
+        assert not consumer.diagnostic_geweke()

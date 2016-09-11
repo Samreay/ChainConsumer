@@ -6,6 +6,8 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import matplotlib.cm as cm
 import statsmodels.api as sm
 from scipy.ndimage.filters import gaussian_filter
+from scipy.stats import normaltest
+from statsmodels.regression.linear_model import yule_walker
 
 __all__ = ["ChainConsumer"]
 
@@ -938,6 +940,11 @@ class ChainConsumer(object):
             The maximum deviation permitted from 1 for the final value
             :math:`\hat{R}`
 
+        Returns
+        -------
+        float
+            whether or not the chains pass the test
+
         Notes
         -----
 
@@ -958,18 +965,10 @@ class ChainConsumer(object):
         if chain is None:
             keys = [n if n is not None else i for i, n in enumerate(self.names)]
             return np.all([self.diagnostic_gelman_rubin(k, threshold=threshold) for k in keys])
-        if isinstance(chain, str):
-            assert chain in self.names, "Chain %s not found!" % chain
-            index = self.names.index(chain)
-        elif isinstance(chain, int):
-            assert chain < len(self.chains), "Chain index %d not found!" % chain
-            index = chain
-        else:
-            raise ValueError("Type %s not recognised for chain" % type(chain))
-
+        index = self._get_chain(chain)
         num_walkers = self.walkers[index]
         parameters = self.parameters[index]
-        name = self.names[index]
+        name = self.names[index] if self.names[index] is not None else "%d" % index
         chain = self.chains[index]
         chains = np.split(chain, num_walkers)
         assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
@@ -987,6 +986,70 @@ class ChainConsumer(object):
             param = "Param %d" % p if isinstance(p, int) else p
             print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
         return np.all(passed)
+
+    def diagnostic_geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
+        """ Runs the Geweke diagnostic on the supplied chains.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            Which chain to run the diagnostic on. By default, this is `None`,
+            which will run the diagnostic on all chains. You can also
+            supply and integer (the chain index) or a string, for the chain
+            name (if you set one).
+        first : float, optional
+            The amount of the start of the chain to use
+        last : float, optional
+            The end amount of the chain to use
+        threshold : float, optional
+            The p-value to use when testing for normality.
+
+        Returns
+        -------
+        float
+            whether or not the chains pass the test
+
+        """
+        if chain is None:
+            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            return np.all([self.diagnostic_geweke(k, threshold=threshold) for k in keys])
+        index = self._get_chain(chain)
+        num_walkers = self.walkers[index]
+        name = self.names[index] if self.names[index] is not None else "%d" % index
+        chain = self.chains[index]
+        chains = np.split(chain, num_walkers)
+        n = 1.0 * chains[0].shape[0]
+        n_start = int(np.floor(first * n))
+        n_end = int(np.floor((1 - last) * n))
+        mean_start = np.array([np.mean(c[:n_start, i])
+                               for c in chains for i in range(c.shape[1])])
+        var_start = np.array([self._spec(c[:n_start, i])/c[:n_start, i].size
+                              for c in chains for i in range(c.shape[1])])
+        mean_end = np.array([np.mean(c[n_end:, i])
+                             for c in chains for i in range(c.shape[1])])
+        var_end = np.array([self._spec(c[n_end:, i])/c[n_end:, i].size
+                            for c in chains for i in range(c.shape[1])])
+        zs = (mean_start - mean_end) / (np.sqrt(var_start + var_end))
+        stat, pvalue = normaltest(zs)
+        print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
+        return pvalue > threshold
+
+    # Method of estimating spectral density following PyMC.
+    # See https://github.com/pymc-devs/pymc/blob/master/pymc/diagnostics.py
+    def _spec(self, x, order=2):
+        beta, sigma = yule_walker(x, order)
+        return sigma ** 2 / (1. - np.sum(beta)) ** 2
+
+    def _get_chain(self, chain):
+        if isinstance(chain, str):
+            assert chain in self.names, "Chain %s not found!" % chain
+            index = self.names.index(chain)
+        elif isinstance(chain, int):
+            assert chain < len(self.chains), "Chain index %d not found!" % chain
+            index = chain
+        else:
+            raise ValueError("Type %s not recognised for chain" % type(chain))
+        return index
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
                    convolve=None):  # pragma: no cover
