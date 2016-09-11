@@ -32,6 +32,7 @@ Configuration Methods
 Diagnostic Methods
 ------------------
 * :func:`chainconsumer.ChainConsumer.diagnostic_gelman_rubin` - Run the Gelman-Rubin statistic on your chains.
+* :func:`chainconsumer.ChainConsumer.diagnostic_geweke` - Run the Geweke statistic on your chains.
 
 
 The full documentation can be found below.
