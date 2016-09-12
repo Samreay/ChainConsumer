@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.11.0"
+    __version__ = "0.11.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -766,11 +766,11 @@ class ChainConsumer(object):
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
-            ax.set_xlabel('{0} {1}'.format(ax.get_xlabel(), offset.get_text()))
+            ax.set_xlabel('{0} {1}'.format(ax.get_xlabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
             offset.set_visible(False)
         for ax in axes[:, 0]:
             offset = ax.get_yaxis().get_offset_text()
-            ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), offset.get_text()))
+            ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
             offset.set_visible(False)
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
