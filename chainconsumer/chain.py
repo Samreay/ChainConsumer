@@ -533,6 +533,10 @@ class ChainConsumer(object):
         r = 1
         if np.abs(resolution) > 2:
             factor = -resolution
+        if resolution == 2:
+            fmt = "%0.0f"
+            factor = -1
+            r = 0
         if resolution == -1:
             fmt = "%0.2f"
             r = 2
@@ -547,6 +551,12 @@ class ChainConsumer(object):
         maximum = round(maximum, r)
         if maximum == -0.0:
             maximum = 0.0
+        if resolution == 2:
+            upper_error *= 10 ** -factor
+            lower_error *= 10 ** -factor
+            maximum *= 10 ** -factor
+            factor = 0
+            fmt = "%0.0f"
         upper_error_text = fmt % upper_error
         lower_error_text = fmt % lower_error
         if upper_error_text == lower_error_text:
