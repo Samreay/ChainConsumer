@@ -98,6 +98,10 @@ features requests thought up.
 
 ### Update History
 
+
+##### 0.11.1
+* Improving text labels for high value data.
+
 ##### 0.11.0
 * Adding Gelman-Rubin and Geweke diagnostic methods.
 

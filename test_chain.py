@@ -131,6 +131,22 @@ class TestChain(object):
         text = consumer.get_parameter_text(*p1)
         assert text == r"0.0\pm 1.0"
 
+    def test_output_format9(self):
+        x = 123456.789
+        d = 123.321
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"123460\pm 120"
+
+    def test_output_format10(self):
+        x = 123456.789
+        d = 1234.321
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"\left( 123.5\pm 1.2 \right) \times 10^{3}"
+
     def test_file_loading1(self):
         data = self.data[:1000]
         directory = tempfile._get_default_tempdir()
