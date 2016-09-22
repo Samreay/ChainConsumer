@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.11.2
+* Improving text labels again
+
 ##### 0.11.1
 * Improving text labels for high value data.
 
