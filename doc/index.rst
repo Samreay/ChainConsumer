@@ -44,7 +44,7 @@ Contents
 Installation
 ------------
 
-ChainConsumer requires the following dependencies:
+ChainConsumer requires the following dependencies, along with a LaTeX installation:
 
 .. literalinclude:: ../requirements.txt
 
