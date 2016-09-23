@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.11.0"
+    __version__ = "0.11.2"
 
     def __init__(self):
         logging.basicConfig()
@@ -533,6 +533,12 @@ class ChainConsumer(object):
         r = 1
         if np.abs(resolution) > 2:
             factor = -resolution
+        if resolution == 2:
+            fmt = "%0.0f"
+            factor = -1
+            r = 0
+        if resolution == 1:
+            fmt = "%0.0f"
         if resolution == -1:
             fmt = "%0.2f"
             r = 2
@@ -547,6 +553,12 @@ class ChainConsumer(object):
         maximum = round(maximum, r)
         if maximum == -0.0:
             maximum = 0.0
+        if resolution == 2:
+            upper_error *= 10 ** -factor
+            lower_error *= 10 ** -factor
+            maximum *= 10 ** -factor
+            factor = 0
+            fmt = "%0.0f"
         upper_error_text = fmt % upper_error
         lower_error_text = fmt % lower_error
         if upper_error_text == lower_error_text:
@@ -766,11 +778,11 @@ class ChainConsumer(object):
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
-            ax.set_xlabel('{0} {1}'.format(ax.get_xlabel(), offset.get_text()))
+            ax.set_xlabel('{0} {1}'.format(ax.get_xlabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
             offset.set_visible(False)
         for ax in axes[:, 0]:
             offset = ax.get_yaxis().get_offset_text()
-            ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), offset.get_text()))
+            ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
             offset.set_visible(False)
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)

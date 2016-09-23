@@ -131,6 +131,70 @@ class TestChain(object):
         text = consumer.get_parameter_text(*p1)
         assert text == r"0.0\pm 1.0"
 
+    def test_output_format9(self):
+        x = 123456.789
+        d = 123.321
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"123460\pm 120"
+
+    def test_output_format10(self):
+        x = 123456.789
+        d = 1234.321
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"\left( 123.5\pm 1.2 \right) \times 10^{3}"
+
+    def test_output_format11(self):
+        x = 222.222
+        d = 111.111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"220\pm 110"
+
+    def test_output_format12(self):
+        x = 222.222
+        d = 11.111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"222\pm 11"
+
+    def test_output_format13(self):
+        x = 2222.222
+        d = 11.111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"2222\pm 11"
+
+    def test_output_format14(self):
+        x = 222.222
+        d = 1.111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"222.2\pm 1.1"
+
+    def test_output_format15(self):
+        x = 222.222
+        d = 0.111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"222.22\pm 0.11"
+
+    def test_output_format16(self):
+        x = 222.2222222
+        d = 0.0111
+        p1 = [x - d, x, x + d]
+        consumer = ChainConsumer()
+        text = consumer.get_parameter_text(*p1)
+        assert text == r"222.222\pm 0.011"
+
     def test_file_loading1(self):
         data = self.data[:1000]
         directory = tempfile._get_default_tempdir()
