@@ -2,7 +2,7 @@ import os
 import tempfile
 
 import numpy as np
-from scipy.stats import skewnorm
+from scipy.stats import skewnorm, norm
 import pytest
 
 from chainconsumer import ChainConsumer
@@ -426,6 +426,18 @@ class TestChain(object):
         diff1 = np.abs(expected1 - actual1)
         assert np.all(diff0 < tolerance)
         assert np.all(diff1 < tolerance)
+
+    def test_weights(self):
+        tolerance = 2e-2
+        samples = np.linspace(-4, 4, 200000)
+        weights = norm.pdf(samples)
+        c = ChainConsumer()
+        c.add_chain(samples, weights=weights)
+        expected = np.array([-1.0, 0.0, 1.0])
+        summary = c.get_summary()
+        actual = np.array(list(summary.values())[0])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
 
     def test_gelman_rubin_index(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
