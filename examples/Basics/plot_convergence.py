@@ -18,10 +18,12 @@ from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 # Here we have some nice data, and then some bad data,
-# where the last part of the chain has walked off!
+# where the last part of the chain has walked off, and the first part
+# of the chain isn't agreeing with anything else!
 data_good = normal(size=100000)
 data_bad = data_good.copy()
-data_bad[98000:] += 1.0
+data_bad[98000:] += 2.0
+data_bad[:1000] *= 2.0
 
 # Lets load it into ChainConsumer, and pretend 10 walks went into making the chain
 c = ChainConsumer()
