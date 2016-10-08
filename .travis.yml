@@ -28,8 +28,9 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
     - conda info -a
-    - conda create --yes -n test python=$PYTHON_VERSION numpy scipy pytest setuptools pip
+    - conda create --yes -n test python=$PYTHON_VERSION setuptools pip pytest
     - source activate test
+    - pip install --only-binary=numpy,scipy,matplotlib numpy scipy matplotlib
     - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery coveralls
     - pip install -r requirements.txt
     - ulimit -s unlimited
