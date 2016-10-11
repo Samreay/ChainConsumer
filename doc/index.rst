@@ -52,6 +52,24 @@ ChainConsumer can be installed as follows::
 
     pip install chainconsumer
 
+Citing
+------
+
+You can cite ChainConsumer using the following BibTeX::
+
+   @article{Hinton2016,
+     doi = {10.21105/joss.00045},
+     url = {http://dx.doi.org/10.21105/joss.00045},
+     year  = {2016},
+     month = {aug},
+     publisher = {The Open Journal},
+     volume = {1},
+     number = {4},
+     author = {Samuel Hinton},
+     title = {{ChainConsumer}},
+     journal = {{JOSS}}
+   }
+
 Contributing
 ------------
 
