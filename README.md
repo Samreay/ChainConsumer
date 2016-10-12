@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.11.3
+* Fixing bug in Gelman-Rubin statistic
+
 ##### 0.11.2
 * Improving text labels again
 

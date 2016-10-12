@@ -459,10 +459,10 @@ class TestChain(object):
     def test_gelman_rubin_index_not_converged(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
                                np.random.normal(loc=1.0, size=100000))).T
-        data[80000:, 0] *= 2
+        data[:, 0] += np.linspace(0, 10, 100000)
         consumer = ChainConsumer()
 
-        consumer.add_chain(data, walkers=4)
+        consumer.add_chain(data, walkers=8)
         assert not consumer.diagnostic_gelman_rubin(chain=0)
 
     def test_gelman_rubin_index_fails(self):
@@ -512,8 +512,7 @@ class TestChain(object):
         consumer.add_chain(data, walkers=4, name="c1")
         consumer.add_chain(data, walkers=4, name="c2")
         data2 = data.copy()
-        data2[80000:, 0] *= 1.2
-        data2[80000:, 0] += 0.5
+        data2[:, 0] += np.linspace(-5, 5, 100000)
         consumer.add_chain(data2, walkers=4, name="c3")
         assert not consumer.diagnostic_gelman_rubin()
 

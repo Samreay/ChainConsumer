@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.11.2"
+    __version__ = "0.11.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -992,9 +992,10 @@ class ChainConsumer(object):
         b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
         w = (1 / m) * chain_std.sum(axis=0)
         var = (n - 1) * w / n + b / n
-        passed = np.abs(var - 1) < threshold
+        R = np.sqrt(var / w)
+        passed = np.abs(R - 1) < threshold
         print("Gelman-Rubin Statistic values for chain %s" % name)
-        for p, v, pas in zip(parameters, var, passed):
+        for p, v, pas in zip(parameters, R, passed):
             param = "Param %d" % p if isinstance(p, int) else p
             print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
         return np.all(passed)
