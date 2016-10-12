@@ -22,8 +22,8 @@ np.random.seed(0)
 # of the chain isn't agreeing with anything else!
 data_good = normal(size=100000)
 data_bad = data_good.copy()
-data_bad[98000:] += 2.0
-data_bad[:1000] *= 2.0
+data_bad += np.linspace(-0.5, 0.5, 100000)
+data_bad[98000:] += 2
 
 # Lets load it into ChainConsumer, and pretend 10 walks went into making the chain
 c = ChainConsumer()

@@ -98,11 +98,14 @@ features requests thought up.
 
 ### Update History
 
+##### 0.12.0
+* Adding support for grid data.
+
 ##### 0.11.3
 * Fixing bug in Gelman-Rubin statistic
 
 ##### 0.11.2
-* Improving text labels again
+* Improving text labels again.
 
 ##### 0.11.1
 * Improving text labels for high value data.

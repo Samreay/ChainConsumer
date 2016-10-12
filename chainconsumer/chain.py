@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.11.3"
+    __version__ = "0.12.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -30,6 +30,7 @@ class ChainConsumer(object):
         self.names = []
         self.parameters = []
         self.all_parameters = []
+        self.grids = []
         self.default_parameters = None
         self._configured_bar = False
         self._configured_contour = False
@@ -45,7 +46,7 @@ class ChainConsumer(object):
             "cumulative": self._get_parameter_summary_cumulative
         }
 
-    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None):
+    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None, grid=False):
         """ Add a chain to the consumer.
 
         Parameters
@@ -70,6 +71,10 @@ class ChainConsumer(object):
             How many walkers went into creating the chain. Each walker should
             contribute the same number of steps, and should appear in contiguous
             blocks in the final chain.
+        grid : boolean, optional
+            Whether the input is a flattened chain from a grid search instead of a Monte-Carlo
+            chains. Note that when this is set, `walkers` should not be set, and `weights` should
+            be set to the posterior evaluation for the grid point.
 
         Returns
         -------
@@ -103,6 +108,11 @@ class ChainConsumer(object):
             self.weights.append(weights)
         if self.default_parameters is None and parameters is not None:
             self.default_parameters = parameters
+
+        self.grids.append(grid)
+        if grid:
+            assert walkers is None, "If grid is set, walkers should not be"
+            assert weights is not None, "If grid is set, you need to supply weights"
 
         if parameters is None:
             if self.default_parameters is not None:
@@ -399,11 +409,11 @@ class ChainConsumer(object):
             One entry per chain, parameter bounds stored in dictionary with parameter as key
         """
         results = []
-        for ind, (chain, parameters, weights) in enumerate(zip(self.chains,
-                                                               self.parameters, self.weights)):
+        for ind, (chain, parameters, weights, g) in enumerate(zip(self.chains,
+                                                               self.parameters, self.weights, self.grids)):
             res = {}
             for i, p in enumerate(parameters):
-                summary = self._get_parameter_summary(chain[:, i], weights, p, ind)
+                summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
                 res[p] = summary
             results.append(res)
         if squeeze and len(results) == 1:
@@ -742,13 +752,13 @@ class ChainConsumer(object):
                 do_flip = (flip and i == len(params1) - 1)
                 if plot_hists and i == j:
                     max_val = None
-                    for chain, weights, parameters, colour, bins, fit, ls, bs, lw in \
+                    for chain, weights, parameters, colour, bins, fit, ls, bs, lw, g in \
                             zip(self.chains, self.weights, self.parameters, colours,
-                                num_bins, fit_values, linestyles, bar_shades, linewidths):
+                                num_bins, fit_values, linestyles, bar_shades, linewidths, self.grids):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
-                        m = self._plot_bars(ax, p1, chain[:, index], weights, colour, ls, bs, lw, bins=bins,
+                        m = self._plot_bars(ax, p1, chain[:, index], weights, colour, ls, bs, lw, g, bins=bins,
                                             fit_values=fit[p1], flip=do_flip, summary=summary,
                                             truth=truth, extents=extents[p1])
                         if max_val is None or m > max_val:
@@ -759,15 +769,15 @@ class ChainConsumer(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for chain, parameters, bins, colour, ls, s, sa, lw, fit, weights in \
+                    for chain, parameters, bins, colour, ls, s, sa, lw, fit, weights, g in \
                             zip(self.chains, self.parameters, num_bins, colours, linestyles, shades,
-                                shade_alphas, linewidths, fit_values, self.weights):
+                                shade_alphas, linewidths, fit_values, self.weights, self.grids):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
                         i2 = parameters.index(p2)
                         self._plot_contour(ax, chain[:, i2], chain[:, i1], weights, p1, p2, colour, ls,
-                                           s, sa, lw, bins=bins, truth=truth)
+                                           s, sa, lw, g, bins=bins, truth=truth)
 
         if self.names is not None and legend:
             ax = axes[0, -1]
@@ -1084,14 +1094,16 @@ class ChainConsumer(object):
             ax.axhline(truth, **self.parameters_truth)
 
     def _plot_bars(self, ax, parameter, chain_row, weights, colour, linestyle, bar_shade,
-                   linewidth, bins=25, flip=False, summary=False, fit_values=None,
+                   linewidth, grid, bins=25, flip=False, summary=False, fit_values=None,
                    truth=None, extents=None):  # pragma: no cover
 
         kde = self.parameters_general["kde"]
         smooth = self.parameters_general["smooth"]
         bins, smooth = self._get_smoothed_bins(smooth, bins)
-
-        bins = np.linspace(extents[0], extents[1], bins)
+        if grid:
+            bins = self._get_grid_bins(chain_row)
+        else:
+            bins = np.linspace(extents[0], extents[1], bins)
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         if smooth:
@@ -1149,17 +1161,22 @@ class ChainConsumer(object):
         return hist.max()
 
     def _plot_contour(self, ax, x, y, w, px, py, colour, linestyle, shade,
-                      shade_alpha, linewidth, bins=25, truth=None):  # pragma: no cover
+                      shade_alpha, linewidth, grid, bins=25, truth=None):  # pragma: no cover
 
         levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
         smooth = self.parameters_general["smooth"]
-        bins, smooth = self._get_smoothed_bins(smooth, bins, marginalsied=False)
+        if grid:
+            binsx = self._get_grid_bins(x)
+            binsy = self._get_grid_bins(y)
+            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
+        else:
+            bins, smooth = self._get_smoothed_bins(smooth, bins, marginalsied=False)
+            hist, x_bins, y_bins = np.histogram2d(x, y, bins=bins, weights=w)
 
         colours = self._scale_colours(colour, len(levels))
         colours2 = [self._scale_colour(colours[0], 0.7)] + \
                    [self._scale_colour(c, 0.8) for c in colours[:-1]]
 
-        hist, x_bins, y_bins = np.histogram2d(x, y, bins=bins, weights=w)
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
         if smooth:
@@ -1224,16 +1241,18 @@ class ChainConsumer(object):
             if external_extents is not None and p in external_extents:
                 min_val, max_val = external_extents[p]
             else:
-                for chain, parameters in zip(self.chains, self.parameters):
+                for i, (chain, parameters) in enumerate(zip(self.chains, self.parameters)):
                     if p not in parameters:
                         continue
                     index = parameters.index(p)
-                    # min_val = chain[:, index].min()
-                    # max_val = chain[:, index].max()
-                    mean = np.mean(chain[:, index])
-                    std = np.std(chain[:, index])
-                    min_prop = mean - sigma_extent * std
-                    max_prop = mean + sigma_extent* std
+                    if self.grids[i]:
+                        min_prop = chain[:, index].min()
+                        max_prop = chain[:, index].max()
+                    else:
+                        mean = np.mean(chain[:, index])
+                        std = np.std(chain[:, index])
+                        min_prop = mean - sigma_extent * std
+                        max_prop = mean + sigma_extent * std
                     if min_val is None or min_prop < min_val:
                         min_val = min_prop
                     if max_val is None or max_prop > max_val:
@@ -1333,10 +1352,19 @@ class ChainConsumer(object):
         else:
             return ((3 if marginalsied else 2) * smooth * bins), smooth
 
-    def _get_smoothed_histogram(self, data, weights, chain_index):
+    def _get_grid_bins(self, data):
+        bin_c = sorted(np.unique(data))
+        delta = 0.5 * (bin_c[1] - bin_c[0])
+        bins = np.concatenate((bin_c - delta, [bin_c[-1] + delta]))
+        return bins
+
+    def _get_smoothed_histogram(self, data, weights, chain_index, grid):
         smooth = self.parameters_general["smooth"]
-        bins = self.parameters_general['bins'][chain_index]
-        bins, smooth = self._get_smoothed_bins(smooth, bins)
+        if grid:
+            bins = self._get_grid_bins(data)
+        else:
+            bins = self.parameters_general['bins'][chain_index]
+            bins, smooth = self._get_smoothed_bins(smooth, bins)
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
@@ -1363,21 +1391,21 @@ class ChainConsumer(object):
         method = self.summaries[self.parameters_general["statistics"][chain_index]]
         return method(data, weights, parameter, chain_index, **kwargs)
 
-    def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
+    def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
         vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
         bounds = interp1d(cs, xs)(vals)
         bounds[1] = 0.5 * (bounds[0] + bounds[2])
         return bounds
 
-    def _get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
+    def _get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
         vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
         bounds = interp1d(cs, xs)(vals)
         return bounds
 
-    def _get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index)
+    def _get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0

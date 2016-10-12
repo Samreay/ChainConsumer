@@ -2,7 +2,7 @@ import os
 import tempfile
 
 import numpy as np
-from scipy.stats import skewnorm, norm
+from scipy.stats import skewnorm, norm, multivariate_normal
 import pytest
 
 from chainconsumer import ChainConsumer
@@ -548,3 +548,20 @@ class TestChain(object):
         data2[98000:, :] += 0.3
         consumer.add_chain(data2, walkers=20, name="c2")
         assert not consumer.diagnostic_geweke()
+
+    def test_grid_data(self):
+        xx, yy = np.meshgrid(np.linspace(-3, 3, 100), np.linspace(-5, 5, 100))
+        xs, ys = xx.flatten(), yy.flatten()
+        chain = np.vstack((xs, ys)).T
+        pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xs * xs + ys * ys / 4))
+        c = ChainConsumer()
+        c.add_chain(chain, parameters=['x','y'], weights=pdf, grid=True)
+        c.configure_general(smooth=1)
+        summary = c.get_summary()
+        x_sum = summary['x']
+        y_sum = summary['y']
+        expected_x = np.array([-1.0, 0.0, 1.0])
+        expected_y = np.array([-2.0, 0.0, 2.0])
+        threshold = 0.05
+        assert np.all(np.abs(expected_x - x_sum) < threshold)
+        assert np.all(np.abs(expected_y - y_sum) < threshold)
