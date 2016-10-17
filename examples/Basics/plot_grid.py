@@ -8,6 +8,8 @@ If you don't have Monte Carlo chains, and have grid evaluations instead, that's 
 Just flatten your grid, set the weights to the grid evaluation, and set the grid flag. Here is
 a nice diamond that you get from modifying a simple multivariate normal distribution.
 
+Note that by default, grid data is not smoothed, though you can explicitly set the smooth
+parameter in ``configure_general`` if you do want smoothing.
 """
 import numpy as np
 from numpy.random import normal, multivariate_normal

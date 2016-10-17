@@ -28,8 +28,8 @@ if __name__ == "__main__":
     c.add_chain(d2)
     c.add_chain(d3)
 
-    c.configure_general(linestyles=["-", "--", ":"], linewidths=[1.0, 2.0, 2.5],
-                        colours=["#1E88E5", "#D32F2F", "#111111"])
+    c.configure_general(linestyles=["-", "--", ":"], linewidths=[1.0, 2.0, 2.5], bins=[3.0, 1.0, 1.0],
+                        colours=["#1E88E5", "#D32F2F", "#111111"], smooth=[0,1,2])
     c.configure_contour(shade=[True, True, False], shade_alpha=[0.2, 0.1, 0.0])
     c.configure_bar(shade=[True, False, False])
     fig = c.plot()

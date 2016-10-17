@@ -98,6 +98,10 @@ features requests thought up.
 
 ### Update History
 
+##### 0.13.0
+* Modifying API defaults for smoothing with grid data.
+* Allowing both smoothing and bins to be passed in as lists.
+
 ##### 0.12.0
 * Adding support for grid data.
 

@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.12.0"
+    __version__ = "0.13.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -74,7 +74,9 @@ class ChainConsumer(object):
         grid : boolean, optional
             Whether the input is a flattened chain from a grid search instead of a Monte-Carlo
             chains. Note that when this is set, `walkers` should not be set, and `weights` should
-            be set to the posterior evaluation for the grid point.
+            be set to the posterior evaluation for the grid point. **Be careful** when using
+            a coarse grid of setting a high smoothing value, as this may oversmooth the posterior
+            surface and give unreasonably large parameter bounds.
 
         Returns
         -------
@@ -139,7 +141,7 @@ class ChainConsumer(object):
 
     def configure_general(self, statistics="max", bins=None, flip=True, rainbow=None,
                           colours=None, linestyles=None, linewidths=None, serif=True,
-                          plot_hists=True, max_ticks=5, kde=False, smooth=3):  # pragma: no cover
+                          plot_hists=True, max_ticks=5, kde=False, smooth=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -157,7 +159,7 @@ class ChainConsumer(object):
             statistics. Other available options are `"mean"` and `"cumulative"`. In the
             very, very rare case you want to enable different statistics for different
             chains, you can pass in a list of strings.
-        bins : int|float, optional
+        bins : int|float,list, optional
             The number of bins to use. By default uses :math:`\frac{\sqrt{n}}{10}`, where
             :math:`n` are the number of data points. Giving an integer will set the number
             of bins to the given value. Giving a float will scale the number of bins, such
@@ -194,9 +196,10 @@ class ChainConsumer(object):
             KDE on all data, it is often useful to disable this before producing final
             plots.
         smooth : int, optional
-            How much to smooth the marginalised distributions using a gaussian filter.
+            Defaults to 3. How much to smooth the marginalised distributions using a gaussian filter.
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
-            ``0``, ``False`` or ``None`` disables smoothing.
+            ``0``, ``False`` disables smoothing. For grid data, smoothing
+            is set to 0 by default, not 3.
 
 
         Returns
@@ -221,6 +224,8 @@ class ChainConsumer(object):
         self.parameters_general["statistics"] = statistics
         if bins is None:
             bins = self._get_bins()
+        elif isinstance(bins, list):
+            bins = [b2 if isinstance(b2, int) else np.floor(b2 * b1) for b1, b2 in zip(self._get_bins(), bins)]
         elif isinstance(bins, float):
             bins = [np.floor(b * bins) for b in self._get_bins()]
         elif isinstance(bins, int):
@@ -234,8 +239,15 @@ class ChainConsumer(object):
         self.parameters_general["rainbow"] = rainbow
         self.parameters_general["plot_hists"] = plot_hists
         self.parameters_general["kde"] = kde
-        if not smooth or kde:
-            smooth = None
+        if smooth is None:
+            smooth = [0 if g or kde else 3 for g in self.grids]
+        else:
+            if smooth is not None and not smooth:
+                smooth = 0
+            if isinstance(smooth, list):
+                smooth = [0 if g or kde else s for g, s in zip(self.grids, smooth)]
+            else:
+                smooth = [0 if g or kde else smooth for g in self.grids]
         self.parameters_general["smooth"] = smooth
         if colours is None:
             if self.parameters_general.get("colours") is None:
@@ -715,6 +727,7 @@ class ChainConsumer(object):
                                                                 flip=flip, external_extents=extents)
 
         num_bins = self.parameters_general["bins"]
+        smooths = self.parameters_general["smooth"]
         self.logger.info("Plotting surfaces with %s bins" % num_bins)
         fit_values = self.get_summary(squeeze=False)
         colours = self._get_colours(self.parameters_general["colours"],
@@ -752,14 +765,14 @@ class ChainConsumer(object):
                 do_flip = (flip and i == len(params1) - 1)
                 if plot_hists and i == j:
                     max_val = None
-                    for chain, weights, parameters, colour, bins, fit, ls, bs, lw, g in \
+                    for chain, weights, parameters, colour, bins, smooth, fit, ls, bs, lw, g in \
                             zip(self.chains, self.weights, self.parameters, colours,
-                                num_bins, fit_values, linestyles, bar_shades, linewidths, self.grids):
+                                num_bins, smooths, fit_values, linestyles, bar_shades, linewidths, self.grids):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
                         m = self._plot_bars(ax, p1, chain[:, index], weights, colour, ls, bs, lw, g, bins=bins,
-                                            fit_values=fit[p1], flip=do_flip, summary=summary,
+                                            smooth=smooth, fit_values=fit[p1], flip=do_flip, summary=summary,
                                             truth=truth, extents=extents[p1])
                         if max_val is None or m > max_val:
                             max_val = m
@@ -769,15 +782,15 @@ class ChainConsumer(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for chain, parameters, bins, colour, ls, s, sa, lw, fit, weights, g in \
-                            zip(self.chains, self.parameters, num_bins, colours, linestyles, shades,
+                    for chain, parameters, bins, smooth, colour, ls, s, sa, lw, fit, weights, g in \
+                            zip(self.chains, self.parameters, num_bins, smooths, colours, linestyles, shades,
                                 shade_alphas, linewidths, fit_values, self.weights, self.grids):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
                         i2 = parameters.index(p2)
                         self._plot_contour(ax, chain[:, i2], chain[:, i1], weights, p1, p2, colour, ls,
-                                           s, sa, lw, g, bins=bins, truth=truth)
+                                           s, sa, lw, g, bins=bins, smooth=smooth, truth=truth)
 
         if self.names is not None and legend:
             ax = axes[0, -1]
@@ -1094,11 +1107,10 @@ class ChainConsumer(object):
             ax.axhline(truth, **self.parameters_truth)
 
     def _plot_bars(self, ax, parameter, chain_row, weights, colour, linestyle, bar_shade,
-                   linewidth, grid, bins=25, flip=False, summary=False, fit_values=None,
+                   linewidth, grid, bins=25, smooth=None, flip=False, summary=False, fit_values=None,
                    truth=None, extents=None):  # pragma: no cover
 
         kde = self.parameters_general["kde"]
-        smooth = self.parameters_general["smooth"]
         bins, smooth = self._get_smoothed_bins(smooth, bins)
         if grid:
             bins = self._get_grid_bins(chain_row)
@@ -1161,10 +1173,9 @@ class ChainConsumer(object):
         return hist.max()
 
     def _plot_contour(self, ax, x, y, w, px, py, colour, linestyle, shade,
-                      shade_alpha, linewidth, grid, bins=25, truth=None):  # pragma: no cover
+                      shade_alpha, linewidth, grid, bins=25, smooth=None, truth=None):  # pragma: no cover
 
         levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
-        smooth = self.parameters_general["smooth"]
         if grid:
             binsx = self._get_grid_bins(x)
             binsy = self._get_grid_bins(y)
@@ -1359,7 +1370,7 @@ class ChainConsumer(object):
         return bins
 
     def _get_smoothed_histogram(self, data, weights, chain_index, grid):
-        smooth = self.parameters_general["smooth"]
+        smooth = self.parameters_general["smooth"][chain_index]
         if grid:
             bins = self._get_grid_bins(data)
         else:
