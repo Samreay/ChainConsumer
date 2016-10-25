@@ -98,6 +98,10 @@ features requests thought up.
 
 ### Update History
 
+##### 0.13.1
+* Better determination of extents for data with extreme weighting.
+* Able to scale figure size using float when plotting.
+
 ##### 0.13.0
 * Modifying API defaults for smoothing with grid data.
 * Allowing both smoothing and bins to be passed in as lists.
