@@ -646,13 +646,14 @@ class ChainConsumer(object):
 
         Parameters
         ----------
-        figsize : str|tuple(float), optional
+        figsize : str|tuple(float)|float, optional
             The figure size to generate. Accepts a regular two tuple of size in inches,
             or one of several key words. The default value of ``COLUMN`` creates a figure
             of appropriate size of insertion into an A4 LaTeX document in two-column mode.
             ``PAGE`` creates a full page width figure. ``GROW`` creates an image that
             scales with parameters (1.5 inches per parameter). String arguments are not
-            case sensitive.
+            case sensitive. If you pass a float, it will scale the default ``GROW`` by
+            that amount, so ``2.0`` would result in a plot 3 inches per parameter.
         parameters : list[str]|int, optional
             If set, only creates a plot for those specific parameters (if list). If an
             integer is given, only plots the fist so many parameters.
@@ -695,16 +696,18 @@ class ChainConsumer(object):
             truth = truth.tolist()
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
-
+        grow_size = 1.5
         if isinstance(figsize, str):
             if figsize.upper() == "COLUMN":
                 figsize = (5, 5)
             elif figsize.upper() == "PAGE":
                 figsize = (10, 10)
             elif figsize.upper() == "GROW":
-                figsize = (1.5 * len(parameters), 1.5 * len(parameters))
+                figsize = (grow_size * len(parameters), grow_size * len(parameters))
             else:
                 raise ValueError("Unknown figure size %s" % figsize)
+        elif isinstance(figsize, float):
+                figsize = (figsize * grow_size * len(parameters), figsize * grow_size * len(parameters))
 
         assert truth is None or isinstance(truth, dict) or \
                (isinstance(truth, list) and len(truth) == len(parameters)), \
