@@ -12,18 +12,28 @@ Note that by default, grid data is not smoothed, though you can explicitly set t
 parameter in ``configure_general`` if you do want smoothing.
 """
 import numpy as np
-from numpy.random import normal, multivariate_normal
 from chainconsumer import ChainConsumer
 
 
-if __name__ == "__main__":
-    xx, yy = np.meshgrid(np.linspace(-3, 3, 100), np.linspace(-7, 7, 100))
-    xs, ys = xx.flatten(), yy.flatten()
-    data = np.vstack((xs, ys)).T
-    pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xs * xs + ys * ys / 4 + np.abs(xs * ys)))
+x, y = np.linspace(-3, 3, 50), np.linspace(-7, 7, 100)
+xx, yy = np.meshgrid(x, y, indexing='ij')
+pdf = np.exp(-0.5 * (xx * xx + yy * yy / 4 + np.abs(xx * yy)))
 
-    c = ChainConsumer()
-    c.add_chain(data, parameters=["$x$", "$y$"], weights=pdf, grid=True)
-    fig = c.plot()
+c = ChainConsumer()
+c.add_chain([x, y], parameters=["$x$", "$y$"], weights=pdf, grid=True)
+fig = c.plot()
+fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
-    fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# If you have the flattened array already, you can also pass this
+
+# Turning 2D data to flat data.
+xs, ys = xx.flatten(), yy.flatten()
+pdf_flat = pdf.flatten()
+c = ChainConsumer()
+c.add_chain([xs, ys], parameters=["$x$", "$y$"], weights=pdf_flat, grid=True)
+c.configure_general(smooth=1)  # Notice how smoothing changes the results!
+fig = c.plot()
+
+fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -98,6 +98,11 @@ features requests thought up.
 
 ### Update History
 
+##### 0.13.2
+* Fixing bug when smoothing grid data.
+* Adding more input options.
+* Grids can now be specified using a list of parameter vectors.
+
 ##### 0.13.1
 * Better determination of extents for data with extreme weighting.
 * Able to scale figure size using float when plotting.

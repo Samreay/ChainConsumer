@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.13.1"
+    __version__ = "0.13.2"
 
     def __init__(self):
         logging.basicConfig()
@@ -57,6 +57,7 @@ class ChainConsumer(object):
             is passed in, it assumes the dict has keys of parameter names and values of
             an array of samples. Notice that using a dictionary puts the order of
             parameters in the output under the control of the python ``dict.keys()`` function.
+            If you passed ``grid`` is set, you can pass in the parameter ranges in list form.
         parameters : list[str], optional
             A list of parameter names, one for each column (dimension) in the chain. This parameter
             should remain ``None`` if a dictionary is given as ``chain``, as the parameter names
@@ -95,7 +96,19 @@ class ChainConsumer(object):
             parameters = list(chain.keys())
             chain = np.array([chain[p] for p in parameters]).T
         elif isinstance(chain, list):
-            chain = np.array(chain)
+            chain = np.array(chain).T
+
+        if grid:
+            assert walkers is None, "If grid is set, walkers should not be"
+            assert weights is not None, "If grid is set, you need to supply weights"
+
+            if len(weights.shape) > 1:
+                self.logger.info("Constructing meshgrid for grid results")
+                meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
+                chain = np.vstack([m.flatten() for m in meshes]).T
+                weights = weights.flatten()
+                assert weights.size == chain[:, 0].size, "Error, given weight array size disagrees with parameter sampling"
+
         if len(chain.shape) == 1:
             chain = chain[None].T
         self.chains.append(chain)
@@ -112,9 +125,6 @@ class ChainConsumer(object):
             self.default_parameters = parameters
 
         self.grids.append(grid)
-        if grid:
-            assert walkers is None, "If grid is set, walkers should not be"
-            assert weights is not None, "If grid is set, you need to supply weights"
 
         if parameters is None:
             if self.default_parameters is not None:
@@ -245,9 +255,9 @@ class ChainConsumer(object):
             if smooth is not None and not smooth:
                 smooth = 0
             if isinstance(smooth, list):
-                smooth = [0 if g or kde else s for g, s in zip(self.grids, smooth)]
+                smooth = [0 if kde else s for s in smooth]
             else:
-                smooth = [0 if g or kde else smooth for g in self.grids]
+                smooth = [0 if kde else smooth for g in self.grids]
         self.parameters_general["smooth"] = smooth
         if colours is None:
             if self.parameters_general.get("colours") is None:

@@ -550,19 +550,19 @@ class TestChain(object):
         assert not consumer.diagnostic_geweke()
 
     def test_grid_data(self):
-        xx, yy = np.meshgrid(np.linspace(-3, 3, 100), np.linspace(-5, 5, 100))
+        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
+        xx, yy = np.meshgrid(x, y, indexing='ij')
         xs, ys = xx.flatten(), yy.flatten()
         chain = np.vstack((xs, ys)).T
         pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xs * xs + ys * ys / 4))
         c = ChainConsumer()
-        c.add_chain(chain, parameters=['x','y'], weights=pdf, grid=True)
-        c.configure_general(smooth=1)
+        c.add_chain(chain, parameters=['x', 'y'], weights=pdf, grid=True)
         summary = c.get_summary()
         x_sum = summary['x']
         y_sum = summary['y']
         expected_x = np.array([-1.0, 0.0, 1.0])
         expected_y = np.array([-2.0, 0.0, 2.0])
-        threshold = 0.05
+        threshold = 0.1
         assert np.all(np.abs(expected_x - x_sum) < threshold)
         assert np.all(np.abs(expected_y - y_sum) < threshold)
 
@@ -581,3 +581,74 @@ class TestChain(object):
         threshold = 0.02
         assert np.abs(mean) < threshold
         assert np.abs(std - 1) < threshold
+
+    def test_grid_list_input(self):
+        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
+        xx, yy = np.meshgrid(x, y, indexing='ij')
+        pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy / 4))
+        c = ChainConsumer()
+        c.add_chain([x, y], parameters=['x', 'y'], weights=pdf, grid=True)
+        summary = c.get_summary()
+        x_sum = summary['x']
+        y_sum = summary['y']
+        expected_x = np.array([-1.0, 0.0, 1.0])
+        expected_y = np.array([-2.0, 0.0, 2.0])
+        threshold = 0.05
+        assert np.all(np.abs(expected_x - x_sum) < threshold)
+        assert np.all(np.abs(expected_y - y_sum) < threshold)
+
+    def test_grid_dict_input(self):
+        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
+        xx, yy = np.meshgrid(x, y, indexing='ij')
+        pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy / 4))
+        c = ChainConsumer()
+        c.add_chain({'x': x, 'y': y}, weights=pdf, grid=True)
+        summary = c.get_summary()
+        x_sum = summary['x']
+        y_sum = summary['y']
+        expected_x = np.array([-1.0, 0.0, 1.0])
+        expected_y = np.array([-2.0, 0.0, 2.0])
+        threshold = 0.05
+        assert np.all(np.abs(expected_x - x_sum) < threshold)
+        assert np.all(np.abs(expected_y - y_sum) < threshold)
+
+    def test_grid_dict_input2(self):
+        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
+        xx, yy = np.meshgrid(x, y, indexing='ij')
+        pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy / 4))
+        c = ChainConsumer()
+        c.add_chain({'x': xx.flatten(), 'y': yy.flatten()}, weights=pdf.flatten(), grid=True)
+        summary = c.get_summary()
+        x_sum = summary['x']
+        y_sum = summary['y']
+        expected_x = np.array([-1.0, 0.0, 1.0])
+        expected_y = np.array([-2.0, 0.0, 2.0])
+        threshold = 0.05
+        assert np.all(np.abs(expected_x - x_sum) < threshold)
+        assert np.all(np.abs(expected_y - y_sum) < threshold)
+
+    def test_normal_list_input(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain([self.data, self.data2], parameters=['x', 'y'])
+        # consumer.configure_general(bins=1.6)
+        summary = consumer.get_summary()
+        actual1 = summary['x']
+        actual2 = summary['y']
+        expected1 = np.array([3.5, 5.0, 6.5])
+        expected2 = np.array([2.0, 3.0, 4.0])
+        diff1 = np.abs(expected1 - actual1)
+        diff2 = np.abs(expected2 - actual2)
+        assert np.all(diff1 < tolerance)
+        assert np.all(diff2 < tolerance)
+
+    def test_grid_3d(self):
+        x, y, z = np.linspace(-3, 3, 30), np.linspace(-3, 3, 30), np.linspace(-3, 3, 30)
+        xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
+        pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy + zz * zz))
+        c = ChainConsumer()
+        c.add_chain([x, y, z], parameters=['x', 'y', 'z'], weights=pdf, grid=True)
+        summary = c.get_summary()
+        expected = np.array([-1.0, 0.0, 1.0])
+        for k in summary:
+            assert np.all(np.abs(summary[k] - expected) < 0.2)

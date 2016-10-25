@@ -5,6 +5,7 @@ Loading Data
 
 Demonstrates the different ways of loading data!
 
+If you want examples of loading grid data, see the grid data example!
 
 """
 
@@ -24,7 +25,6 @@ cov = 0.2 * normal(size=(2, 2)) + np.identity(2)
 truth = normal(size=2)
 data = multivariate_normal(truth, 0.5 * (cov + cov.T), size=100000)
 parameters = ["$x$", "$y$"]
-dictionary = {"$x$": data[:, 0], "$y$": data[:, 1]}
 directory = tempfile._get_default_tempdir()
 filename = next(tempfile._get_candidate_names())
 filename1 = directory + os.sep + filename + ".txt"
@@ -38,8 +38,18 @@ fig = c.plot(truth=truth)
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
+# You don't actually need to have them as a 2D array, if you have each parameter independently, just list em up!
+
+x, y = data[:, 0], data[:, 1]
+c = ChainConsumer().add_chain([x, y], parameters=parameters)
+fig = c.plot(truth=truth)
+fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+
+###############################################################################
 # And yet we can do the same thing using a dictionary:
 
+dictionary = {"$x$": data[:, 0], "$y$": data[:, 1]}
 c = ChainConsumer().add_chain(dictionary)
 fig = c.plot(truth=truth)
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
