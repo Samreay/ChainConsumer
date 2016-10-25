@@ -570,14 +570,14 @@ class TestChain(object):
         xs = np.random.normal(size=10000)
         weights = np.ones(xs.shape)
         mean, std = ChainConsumer._get_extent(xs, weights)
-        threshold = 0.01
+        threshold = 0.02
         assert np.abs(mean) < threshold
         assert np.abs(std - 1) < threshold
 
     def test_extents_weighted(self):
-        xs = np.random.uniform(size=10000)
+        xs = np.random.uniform(low=-4, high=4, size=10000)
         weights = norm.pdf(xs)
         mean, std = ChainConsumer._get_extent(xs, weights)
-        threshold = 0.01
+        threshold = 0.02
         assert np.abs(mean) < threshold
         assert np.abs(std - 1) < threshold
