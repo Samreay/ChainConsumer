@@ -1220,6 +1220,12 @@ class ChainConsumer(object):
             colours = colours[:num_chains]
         return colours
 
+    @staticmethod
+    def _get_extent(data, weight):
+        mean = np.average(data, weights=weight)
+        std = np.sqrt(np.average((data - mean) ** 2, weights=weight))
+        return mean, std
+
     def _get_figure(self, all_parameters, flip, figsize=(5, 5),
                     external_extents=None):  # pragma: no cover
         n = len(all_parameters)
@@ -1252,7 +1258,7 @@ class ChainConsumer(object):
             if external_extents is not None and p in external_extents:
                 min_val, max_val = external_extents[p]
             else:
-                for i, (chain, parameters) in enumerate(zip(self.chains, self.parameters)):
+                for i, (chain, parameters, w) in enumerate(zip(self.chains, self.parameters, self.weights)):
                     if p not in parameters:
                         continue
                     index = parameters.index(p)
@@ -1260,8 +1266,7 @@ class ChainConsumer(object):
                         min_prop = chain[:, index].min()
                         max_prop = chain[:, index].max()
                     else:
-                        mean = np.mean(chain[:, index])
-                        std = np.std(chain[:, index])
+                        mean, std = self._get_extent(chain[:, index], w)
                         min_prop = mean - sigma_extent * std
                         max_prop = mean + sigma_extent * std
                     if min_val is None or min_prop < min_val:
