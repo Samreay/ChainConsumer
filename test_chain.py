@@ -598,7 +598,7 @@ class TestChain(object):
         assert np.all(np.abs(expected_y - y_sum) < threshold)
 
     def test_grid_dict_input(self):
-        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
+        x, y = np.linspace(-3, 3, 250), np.linspace(-5, 5, 250)
         xx, yy = np.meshgrid(x, y, indexing='ij')
         pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy / 4))
         c = ChainConsumer()
