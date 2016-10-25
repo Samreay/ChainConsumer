@@ -98,6 +98,9 @@ features requests thought up.
 
 ### Update History
 
+##### 0.13.3
+* Removing ability to having vectorised dictionary inputs for grid data due to 2.7 compatibility issues.
+
 ##### 0.13.2
 * Fixing bug when smoothing grid data.
 * Adding more input options.

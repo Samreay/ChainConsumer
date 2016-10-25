@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.13.2"
+    __version__ = "0.13.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -84,6 +84,7 @@ class ChainConsumer(object):
         ChainConsumer
             Itself, to allow chaining calls.
         """
+        is_dict = False
         assert chain is not None, "You cannot have a chain of None"
         if isinstance(chain, str):
             if chain.endswith("txt"):
@@ -93,6 +94,7 @@ class ChainConsumer(object):
         elif isinstance(chain, dict):
             assert parameters is None, \
                 "You cannot pass a dictionary and specify parameter names"
+            is_dict = True
             parameters = list(chain.keys())
             chain = np.array([chain[p] for p in parameters]).T
         elif isinstance(chain, list):
@@ -101,8 +103,9 @@ class ChainConsumer(object):
         if grid:
             assert walkers is None, "If grid is set, walkers should not be"
             assert weights is not None, "If grid is set, you need to supply weights"
-
             if len(weights.shape) > 1:
+                assert not is_dict, "We cannot construct a meshgrid from a dictionary, as the parameters" \
+                                    "are no longer ordered. Please pass in a flattened array instead."
                 self.logger.info("Constructing meshgrid for grid results")
                 meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
                 chain = np.vstack([m.flatten() for m in meshes]).T

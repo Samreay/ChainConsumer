@@ -10,6 +10,11 @@ a nice diamond that you get from modifying a simple multivariate normal distribu
 
 Note that by default, grid data is not smoothed, though you can explicitly set the smooth
 parameter in ``configure_general`` if you do want smoothing.
+
+Note that you *cannot* use dictionary input with the grid method and not specify the full
+flattened array. This is because we cannot construct the meshgrid from a dictionary, as
+the order of the parameters is not preserved in the dictionary.
+
 """
 import numpy as np
 from chainconsumer import ChainConsumer
@@ -23,7 +28,6 @@ c = ChainConsumer()
 c.add_chain([x, y], parameters=["$x$", "$y$"], weights=pdf, grid=True)
 fig = c.plot()
 fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
-
 
 ###############################################################################
 # If you have the flattened array already, you can also pass this

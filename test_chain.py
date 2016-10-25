@@ -598,19 +598,12 @@ class TestChain(object):
         assert np.all(np.abs(expected_y - y_sum) < threshold)
 
     def test_grid_dict_input(self):
-        x, y = np.linspace(-3, 3, 250), np.linspace(-5, 5, 250)
+        x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
         xx, yy = np.meshgrid(x, y, indexing='ij')
         pdf = (1 / (2 * np.pi)) * np.exp(-0.5 * (xx * xx + yy * yy / 4))
         c = ChainConsumer()
-        c.add_chain({'x': x, 'y': y}, weights=pdf, grid=True)
-        summary = c.get_summary()
-        x_sum = summary['x']
-        y_sum = summary['y']
-        expected_x = np.array([-1.0, 0.0, 1.0])
-        expected_y = np.array([-2.0, 0.0, 2.0])
-        threshold = 0.05
-        assert np.all(np.abs(expected_x - x_sum) < threshold)
-        assert np.all(np.abs(expected_y - y_sum) < threshold)
+        with pytest.raises(AssertionError):
+            c.add_chain({'x': x, 'y': y}, weights=pdf, grid=True)
 
     def test_grid_dict_input2(self):
         x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
