@@ -567,20 +567,20 @@ class TestChain(object):
         assert np.all(np.abs(expected_y - y_sum) < threshold)
 
     def test_extents(self):
-        xs = np.random.normal(size=10000)
+        xs = np.random.normal(size=100000)
         weights = np.ones(xs.shape)
-        mean, std = ChainConsumer._get_extent(xs, weights)
-        threshold = 0.02
-        assert np.abs(mean) < threshold
-        assert np.abs(std - 1) < threshold
+        low, high = ChainConsumer()._get_extent(xs, weights)
+        threshold = 0.1
+        assert np.abs(low + 3) < threshold
+        assert np.abs(high - 3) < threshold
 
     def test_extents_weighted(self):
-        xs = np.random.uniform(low=-4, high=4, size=10000)
+        xs = np.random.uniform(low=-4, high=4, size=100000)
         weights = norm.pdf(xs)
-        mean, std = ChainConsumer._get_extent(xs, weights)
-        threshold = 0.02
-        assert np.abs(mean) < threshold
-        assert np.abs(std - 1) < threshold
+        low, high = ChainConsumer()._get_extent(xs, weights)
+        threshold = 0.1
+        assert np.abs(low + 3) < threshold
+        assert np.abs(high - 3) < threshold
 
     def test_grid_list_input(self):
         x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)

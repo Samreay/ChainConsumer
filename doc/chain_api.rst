@@ -24,9 +24,7 @@ Plotting Methods
 
 Configuration Methods
 ---------------------
-* :func:`chainconsumer.ChainConsumer.configure_general` - Configure general settings.
-* :func:`chainconsumer.ChainConsumer.configure_bar` - Configure the plots for the marginalised distributions.
-* :func:`chainconsumer.ChainConsumer.configure_contour` - Configure the plots for the posterior surfaces.
+* :func:`chainconsumer.ChainConsumer.configure` - Configure ChainConsumer.
 * :func:`chainconsumer.ChainConsumer.configure_truth` - Configure how truth values are plotted.
 
 Diagnostic Methods

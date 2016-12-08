@@ -151,11 +151,11 @@ class ChainConsumer(object):
         self._init_params()
         return self
 
-    def configure(self, statistics="max", bins=None, flip=True, rainbow=None, colors=None,
-                  linestyles=None, linewidths=None, serif=True, plot_hists=True,
-                  max_ticks=5, kde=False, smooth=None, sigmas=None, cloud=None,
-                  shade=None, shade_alpha=None, color_params=None, plot_color_params=False, cmaps=None,
-                  summary=None, bar_shade=None, num_cloud=10000):  # pragma: no cover
+    def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
+                  serif=True, sigmas=None, summary=None, bins=None, rainbow=None,
+                  colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
+                  cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
+                  color_params=None, plot_color_params=False, cmaps=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -173,52 +173,56 @@ class ChainConsumer(object):
             statistics. Other available options are `"mean"` and `"cumulative"`. In the
             very, very rare case you want to enable different statistics for different
             chains, you can pass in a list of strings.
-        bins : int|float,list, optional
+        max_ticks : int, optional
+            The maximum number of ticks to use on the plots
+        plot_hists : bool, optional
+            Whether to plot marginalised distributions or not
+        flip : bool, optional
+            Set to false if, when plotting only two parameters, you do not want it to
+            rotate the histogram so that it is horizontal.
+        sigmas : np.array, optional
+            The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
+            and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
+            your surfaces to have a hole in them.
+        serif : bool, optional
+            Whether to display ticks and labels with serif font.
+        summary : bool, optional
+            If overridden, sets whether parameter summaries should be set as axis titles.
+            Will not work if you have multiple chains
+        bins : int|float,list[int|float], optional
             The number of bins to use. By default uses :math:`\frac{\sqrt{n}}{10}`, where
             :math:`n` are the number of data points. Giving an integer will set the number
             of bins to the given value. Giving a float will scale the number of bins, such
             that giving ``bins=1.5`` will result in using :math:`\frac{1.5\sqrt{n}}{10}` bins.
             Note this parameter is most useful if `kde=False` is also passed, so you
             can actually see the bins and not a KDE.
-        flip : bool, optional
-            Set to false if, when plotting only two parameters, you do not want it to
-            rotate the histogram so that it is horizontal.
-        rainbow : bool, optional
+
+        rainbow : bool|list[bool], optional
             Set to True to force use of rainbow colours
         colors : str(hex)|list[str(hex)], optional
             Provide a list of colours to use for each chain. If you provide more chains
             than colours, you *will* get the rainbow colour spectrum. If you only pass
             one colour, all chains are set to this colour. This probably won't look good.
-        linestyles : str, list[str], optional
+        linestyles : str|list[str], optional
             Provide a list of line styles to plot the contours and marginalsied
             distributions with. By default, this will become a list of solid lines. If a
             string is passed instead of a list, this style is used for all chains.
-        linewidths : float, list[float], optional
+        linewidths : float|list[float], optional
             Provide a list of line widths to plot the contours and marginalsied
             distributions with. By default, this is a width of 1. If a float
             is passed instead of a list, this width is used for all chains.
-        serif : bool, optional
-            Whether to display ticks and labels with serif font.
-        plot_hists : bool, optional
-            Whether to plot marginalised distributions or not
-        max_ticks : int, optional
-            The maximum number of ticks to use on the plots
-        kde : bool [optional]
+        kde : bool|list[bool], optional
             Whether to use a Gaussian KDE to smooth marginalised posteriors. If false, uses
             bins and linear interpolation, so ensure you have plenty of samples if your
             distribution is highly non-gaussian. Due to the slowness of performing a
             KDE on all data, it is often useful to disable this before producing final
             plots.
-        smooth : int, optional
+        smooth : int|list[int], optional
             Defaults to 3. How much to smooth the marginalised distributions using a gaussian filter.
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
             ``0``, ``False`` disables smoothing. For grid data, smoothing
             is set to 0 by default, not 3.
-        sigmas : np.array, optional
-            The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
-            and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
-            your surfaces to have a hole in them.
-        cloud : bool, optional
+        cloud : bool|list[bool], optional
             If set, overrides the default behaviour and plots the cloud or not
         shade : bool|list[bool] optional
             If set, overrides the default behaviour and plots filled contours or not. If a list of
@@ -226,14 +230,21 @@ class ChainConsumer(object):
         shade_alpha : float|list[float], optional
             Filled contour alpha value override. Default is 1.0. If a list is passed, you can set the
             shade opacity for specific chains.
-        summary : bool, optional
-            If overridden, sets whether parameter summaries should be set as axis titles.
-            Will not work if you have multiple chains
         bar_shade : bool|list[bool], optional
             If set to true, shades in confidence regions in under histogram. By default
             this happens if you less than 3 chains, but is disabled if you are comparing
             more chains. You can pass a list if you wish to shade some chains but not others.
-
+        num_cloud : int|list[int], optional
+            The number of scatter points to show when enabling `cloud` or setting one of the parameters
+            to colour scatter. Defaults to 15k per chain.
+        color_params : str|list[str], optional
+            The name of the parameter to use for the colour scatter. Defaults to none, for no colour.
+        plot_color_params : bool|list[bool], optional
+            Whether or not the colour parameter should also be plotted as a posterior surface.
+        cmaps : str|list[str]
+            The matplotlib colourmap to use in the `colour_param`. If you have multiple `color_param`s, you can
+            specific a different cmap for each variable. By default ChainConsumer will cycle between several
+            cmaps.
 
         Returns
         -------
@@ -360,6 +371,8 @@ class ChainConsumer(object):
         cloud = [cloud or c is not None for c in color_params]
 
         # Determine cloud points
+        if num_cloud is None:
+            num_cloud = 15000
         if isinstance(num_cloud, int) or isinstance(num_cloud, float):
             num_cloud = [int(num_cloud)] * num_chains
 
@@ -433,12 +446,15 @@ class ChainConsumer(object):
         return self
 
     def configure_general(self, **kwargs):  # pragma: no cover
+        """ Deprecated method. Left in only to provide a more useful error message. See `configure()`."""
         raise DeprecationWarning("Individual configurations have all be moved into the configure function")
 
     def configure_contour(self, **kwargs):  # pragma: no cover
+        """ Deprecated method. Left in only to provide a more useful error message. See `configure()`."""
         raise DeprecationWarning("Individual configurations have all be moved into the configure function")
 
     def configure_bar(self, **kwargs):  # pragma: no cover
+        """ Deprecated method. Left in only to provide a more useful error message. See `configure()`."""
         raise DeprecationWarning("Individual configurations have all be moved into the configure function")
 
     def configure_truth(self, **kwargs):  # pragma: no cover
@@ -1324,7 +1340,7 @@ class ChainConsumer(object):
                 ax.axvline(truth_value, **self.config_truth)
         return h
 
-    def _get_extent2(self, data, weight):
+    def _get_extent2(self, data, weight):  # pragma: no cover
         mean = np.average(data, weights=weight)
         std = np.sqrt(np.average((data - mean) ** 2, weights=weight))
         max_sigma = np.array(self.config["sigmas"]).max()
