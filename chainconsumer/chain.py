@@ -16,13 +16,15 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.13.3"
+    __version__ = "0.14.0"
 
     def __init__(self):
         logging.basicConfig()
         self.logger = logging.getLogger(__name__)
         self.all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
                             "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
+        self.cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
+        self.linestyles = ["-", '--', ':']
         self.chains = []
         self.walkers = []
         self.weights = []
@@ -32,21 +34,21 @@ class ChainConsumer(object):
         self.all_parameters = []
         self.grids = []
         self.default_parameters = None
-        self._configured_bar = False
-        self._configured_contour = False
-        self._configured_truth = False
-        self._configured_general = False
-        self.parameters_contour = {}
-        self.parameters_bar = {}
-        self.parameters_truth = {}
-        self.parameters_general = {}
+        self._init_params()
         self.summaries = {
             "max": self._get_parameter_summary_max,
             "mean": self._get_parameter_summary_mean,
             "cumulative": self._get_parameter_summary_cumulative
         }
 
-    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None, grid=False):
+    def _init_params(self):
+        self.config = {}
+        self.config_truth = {}
+        self._configured = False
+        self._configured_truth = False
+
+    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
+                  grid=False):
         """ Add a chain to the consumer.
 
         Parameters
@@ -146,15 +148,14 @@ class ChainConsumer(object):
                 self.all_parameters.append(p)
         self.parameters.append(parameters)
 
-        self._configured_bar = False
-        self._configured_contour = False
-        self._configured_general = False
-        self._configured_truth = False
+        self._init_params()
         return self
 
-    def configure_general(self, statistics="max", bins=None, flip=True, rainbow=None,
-                          colours=None, linestyles=None, linewidths=None, serif=True,
-                          plot_hists=True, max_ticks=5, kde=False, smooth=None):  # pragma: no cover
+    def configure(self, statistics="max", bins=None, flip=True, rainbow=None, colors=None,
+                  linestyles=None, linewidths=None, serif=True, plot_hists=True,
+                  max_ticks=5, kde=False, smooth=None, sigmas=None, cloud=None,
+                  shade=None, shade_alpha=None, color_params=None, plot_color_params=False, cmaps=None,
+                  summary=None, bar_shade=None, num_cloud=10000):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -184,7 +185,7 @@ class ChainConsumer(object):
             rotate the histogram so that it is horizontal.
         rainbow : bool, optional
             Set to True to force use of rainbow colours
-        colours : str(hex)|list[str(hex)], optional
+        colors : str(hex)|list[str(hex)], optional
             Provide a list of colours to use for each chain. If you provide more chains
             than colours, you *will* get the rainbow colour spectrum. If you only pass
             one colour, all chains are set to this colour. This probably won't look good.
@@ -213,92 +214,6 @@ class ChainConsumer(object):
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
             ``0``, ``False`` disables smoothing. For grid data, smoothing
             is set to 0 by default, not 3.
-
-
-        Returns
-        -------
-        ChainConsumer
-            Itself, to allow chaining calls.
-        """
-        assert rainbow is None or colours is None, \
-            "You cannot both ask for rainbow colours and then give explicit colours"
-
-        assert statistics is not None, "statistics should be a string or list of strings!"
-        if isinstance(statistics, str):
-            statistics = [statistics.lower()] * len(self.chains)
-        elif isinstance(statistics, list):
-            for i, l in enumerate(statistics):
-                statistics[i] = l.lower()
-        else:
-            raise ValueError("statistics is not a string or a list!")
-        for s in statistics:
-            assert s in ["max", "mean", "cumulative"], \
-                "statistics %s not recognised. Should be max, mean or cumulative" % s
-        self.parameters_general["statistics"] = statistics
-        if bins is None:
-            bins = self._get_bins()
-        elif isinstance(bins, list):
-            bins = [b2 if isinstance(b2, int) else np.floor(b2 * b1) for b1, b2 in zip(self._get_bins(), bins)]
-        elif isinstance(bins, float):
-            bins = [np.floor(b * bins) for b in self._get_bins()]
-        elif isinstance(bins, int):
-            bins = [bins] * len(self.chains)
-        else:
-            raise ValueError("bins value is not a recognised class (float or int)")
-        self.parameters_general["bins"] = bins
-        self.parameters_general["max_ticks"] = max_ticks
-        self.parameters_general["flip"] = flip
-        self.parameters_general["serif"] = serif
-        self.parameters_general["rainbow"] = rainbow
-        self.parameters_general["plot_hists"] = plot_hists
-        self.parameters_general["kde"] = kde
-        if smooth is None:
-            smooth = [0 if g or kde else 3 for g in self.grids]
-        else:
-            if smooth is not None and not smooth:
-                smooth = 0
-            if isinstance(smooth, list):
-                smooth = [0 if kde else s for s in smooth]
-            else:
-                smooth = [0 if kde else smooth for g in self.grids]
-        self.parameters_general["smooth"] = smooth
-        if colours is None:
-            if self.parameters_general.get("colours") is None:
-                self.parameters_general["colours"] = self.all_colours[:len(self.chains)]
-        else:
-            if isinstance(colours, str):
-                colours = [colours] * len(self.chains)
-            self.parameters_general["colours"] = colours
-        if linestyles is None:
-            if self.parameters_general.get("linestyles") is None:
-                self.parameters_general["linestyles"] = ["-"] * len(self.chains)
-        else:
-            if isinstance(linestyles, str):
-                linestyles = [linestyles] * len(self.chains)
-            self.parameters_general["linestyles"] = linestyles[:len(self.chains)]
-        if linewidths is None:
-            if self.parameters_general.get("linewidths") is None:
-                self.parameters_general["linewidths"] = [1.0] * len(self.chains)
-        else:
-            if isinstance(linewidths, float) or isinstance(linewidths, int):
-                linewidths = [linewidths] * len(self.chains)
-            self.parameters_general["linewidths"] = linewidths[:len(self.chains)]
-        self._configured_general = True
-        return self
-
-    def configure_contour(self, sigmas=None, cloud=None, shade=None,
-                          shade_alpha=None):  # pragma: no cover
-        """ Configure the default variables for the contour plots.
-
-        If you do not call this explicitly, the :func:`plot` method
-        will invoke this method automatically.
-
-        Please ensure that you call this method *after* adding all the relevant data to the
-        chain consumer, as the consume changes configuration values depending on
-        the supplied data.
-
-        Parameters
-        ----------
         sigmas : np.array, optional
             The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
             and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
@@ -311,6 +226,14 @@ class ChainConsumer(object):
         shade_alpha : float|list[float], optional
             Filled contour alpha value override. Default is 1.0. If a list is passed, you can set the
             shade opacity for specific chains.
+        summary : bool, optional
+            If overridden, sets whether parameter summaries should be set as axis titles.
+            Will not work if you have multiple chains
+        bar_shade : bool|list[bool], optional
+            If set to true, shades in confidence regions in under histogram. By default
+            this happens if you less than 3 chains, but is disabled if you are comparing
+            more chains. You can pass a list if you wish to shade some chains but not others.
+
 
         Returns
         -------
@@ -319,73 +242,204 @@ class ChainConsumer(object):
         """
         num_chains = len(self.chains)
 
-        if sigmas is None:
-            if num_chains == 1:
-                sigmas = np.array([0, 1, 2, 3])
-            elif num_chains < 4:
-                sigmas = np.array([0, 1, 2])
+        assert rainbow is None or colors is None, \
+            "You cannot both ask for rainbow colours and then give explicit colours"
+
+        # Determine statistics
+        assert statistics is not None, "statistics should be a string or list of strings!"
+        if isinstance(statistics, str):
+            statistics = [statistics.lower()] * len(self.chains)
+        elif isinstance(statistics, list):
+            for i, l in enumerate(statistics):
+                statistics[i] = l.lower()
+        else:
+            raise ValueError("statistics is not a string or a list!")
+        for s in statistics:
+            assert s in ["max", "mean", "cumulative"], \
+                "statistics %s not recognised. Should be max, mean or cumulative" % s
+
+        # Determine bins
+        if bins is None:
+            bins = self._get_bins()
+        elif isinstance(bins, list):
+            bins = [b2 if isinstance(b2, int) else np.floor(b2 * b1) for b1, b2 in zip(self._get_bins(), bins)]
+        elif isinstance(bins, float):
+            bins = [np.floor(b * bins) for b in self._get_bins()]
+        elif isinstance(bins, int):
+            bins = [bins] * len(self.chains)
+        else:
+            raise ValueError("bins value is not a recognised class (float or int)")
+
+        # Determine KDEs
+        if isinstance(kde, bool):
+            kde = [False if g else kde for g in self.grids]
+
+        # Determine smoothing
+        if smooth is None:
+            smooth = [0 if g or k else 3 for g, k in zip(self.grids, kde)]
+        else:
+            if smooth is not None and not smooth:
+                smooth = 0
+            if isinstance(smooth, list):
+                smooth = [0 if k else s for s, k in zip(smooth, kde)]
             else:
-                sigmas = np.array([0, 1, 2])
-        sigmas = np.sort(sigmas)
-        self.parameters_contour["sigmas"] = sigmas
+                smooth = [0 if k else smooth for k in kde]
+
+        # Determine color parameters
+        if color_params is None:
+            color_params = [None] * num_chains
+        else:
+            if isinstance(color_params, str):
+                color_params = [color_params if color_params in ps else None for ps in self.parameters]
+            elif isinstance(color_params, list) or isinstance(color_params, tuple):
+                for c, p in zip(color_params, self.parameters):
+                    if c is not None:
+                        assert c in p, "Color parameter %s not in parameters %s" % (c, p)
+        # Determine if we should plot color parameters
+        if isinstance(plot_color_params, bool):
+            plot_color_params = [plot_color_params] * len(color_params)
+
+        # Determine cmaps
+        if cmaps is None:
+            param_cmaps = {}
+            cmaps = []
+            i = 0
+            for cp in color_params:
+                if cp is None:
+                    cmaps.append(None)
+                elif cp in param_cmaps:
+                    cmaps.append(param_cmaps[cp])
+                else:
+                    param_cmaps[cp] = self.cmaps[i]
+                    cmaps.append(self.cmaps[i])
+                    i = (i + 1) % len(self.cmaps)
+
+        # Determine colours
+        if colors is None:
+            if rainbow:
+                colors = cm.rainbow(np.linspace(0, 1, num_chains))
+            else:
+                if num_chains > len(self.all_colours):
+                    num_needed_colours = np.sum([c is None for c in color_params])
+                    colour_list = cm.rainbow(np.linspace(0, 1, num_needed_colours))
+                else:
+                    colour_list = self.all_colours
+                colors = []
+                ci = 0
+                for c in color_params:
+                    if c:
+                        colors.append('#000000')
+                    else:
+                        colors.append(colour_list[ci])
+                        ci += 1
+        elif isinstance(colors, str):
+                colors = [colors] * len(self.chains)
+
+        # Determine linestyles
+        if linestyles is None:
+            i = 0
+            linestyles = []
+            for c in color_params:
+                if c is None:
+                    linestyles.append(self.linestyles[0])
+                else:
+                    linestyles.append(self.linestyles[i])
+                    i = (i + 1) % len(self.linestyles)
+        elif isinstance(linestyles, str):
+            linestyles = [linestyles] * len(self.chains)
+
+        # Determine linewidths
+        if linewidths is None:
+            linewidths = [1.0] * len(self.chains)
+        elif isinstance(linewidths, float) or isinstance(linewidths, int):
+            linewidths = [linewidths] * len(self.chains)
+
+        # Determine clouds
         if cloud is None:
             cloud = False
-        self.parameters_contour["cloud"] = cloud
+        cloud = [cloud or c is not None for c in color_params]
 
+        # Determine cloud points
+        if isinstance(num_cloud, int) or isinstance(num_cloud, float):
+            num_cloud = [int(num_cloud)] * num_chains
+
+        # Modify shade alpha based on how many chains we have
         if shade_alpha is None:
             if num_chains == 1:
                 shade_alpha = 1.0
             else:
                 shade_alpha = np.sqrt(1 / num_chains)
+        # Decrease the shading amount if there are colour scatter points
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
-                shade_alpha = [shade_alpha] * num_chains
+            shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
 
+        # Should we shade the contours
         if shade is None:
             shade = num_chains <= 2
         if isinstance(shade, bool):
-            shade = [shade] * num_chains
-        self.parameters_contour["shade"] = shade[:num_chains]
-        self.parameters_contour["shade_alpha"] = shade_alpha[:num_chains]
+            # If not overridden, do not shade chains with colour scatter points
+            shade = [shade and c is None for c in color_params]
 
-        self._configured_contour = True
-
-        return self
-
-    def configure_bar(self, summary=None, shade=None):  # pragma: no cover
-        """ Configure the bar plots showing the marginalised distributions.
-
-        If you do not call this explicitly, the :func:`plot` method will
-        invoke this method automatically.
-
-        Please ensure that you call this method *after* adding all the relevant data to the
-        chain consumer, as the consume changes configuration values depending on
-        the supplied data.
-
-        Parameters
-        ----------
-        summary : bool, optional
-            If overridden, sets whether parameter summaries should be set as axis titles.
-            Will not work if you have multiple chains
-        shade : bool|list[bool], optional
-            If set to true, shades in confidence regions in under histogram. By default
-            this happens if you less than 3 chains, but is disabled if you are comparing
-            more chains. You can pass a list if you wish to shade some chains but not others.
-
-        Returns
-        -------
-        ChainConsumer
-            Itself, to allow chaining calls.
-        """
+        # Figure out if we should display parameter summaries
         if summary is not None:
             summary = summary and len(self.chains) == 1
-        self.parameters_bar["summary"] = summary
-        if shade is None:
-            shade = len(self.chains) <= 2
-        if isinstance(shade, bool):
-            shade = [shade] * len(self.chains)
-        self.parameters_bar["shade"] = shade[:len(self.chains)]
-        self._configured_bar = True
+
+        # Figure out bar shading
+        if bar_shade is None:
+            bar_shade = len(self.chains) <= 2
+        if isinstance(bar_shade, bool):
+            bar_shade = [bar_shade] * len(self.chains)
+
+        # Figure out how many sigmas to plot
+        if sigmas is None:
+            if num_chains == 1:
+                sigmas = np.array([0, 1, 2, 3])
+            else:
+                sigmas = np.array([0, 1, 2])
+        sigmas = np.sort(sigmas)
+
+        # List options
+        self.config["shade"] = shade[:num_chains]
+        self.config["shade_alpha"] = shade_alpha[:num_chains]
+        self.config["bar_shade"] = bar_shade[:len(self.chains)]
+        self.config["bins"] = bins
+        self.config["kde"] = kde
+        self.config["cloud"] = cloud
+        self.config["linewidths"] = linewidths
+        self.config["linestyles"] = linestyles
+        self.config["colors"] = colors
+        self.config["smooth"] = smooth
+        self.config["color_params"] = color_params
+        self.config["plot_color_params"] = plot_color_params
+        self.config["cmaps"] = cmaps
+        self.config["num_cloud"] = num_cloud
+
+        # Verify we have enough options entered.
+        for key in self.config.keys():
+            val = self.config[key]
+            assert len(val) >= num_chains, \
+                "Only have %d options for %s, but have %d chains!" % (len(val), key, num_chains)
+
+        # Non list options
+        self.config["sigmas"] = sigmas
+        self.config["statistics"] = statistics
+        self.config["summary"] = summary
+        self.config["flip"] = flip
+        self.config["serif"] = serif
+        self.config["plot_hists"] = plot_hists
+        self.config["max_ticks"] = max_ticks
+
+        self._configured = True
         return self
+
+    def configure_general(self, **kwargs):  # pragma: no cover
+        raise DeprecationWarning("Individual configurations have all be moved into the configure function")
+
+    def configure_contour(self, **kwargs):  # pragma: no cover
+        raise DeprecationWarning("Individual configurations have all be moved into the configure function")
+
+    def configure_bar(self, **kwargs):  # pragma: no cover
+        raise DeprecationWarning("Individual configurations have all be moved into the configure function")
 
     def configure_truth(self, **kwargs):  # pragma: no cover
         """ Configure the arguments passed to the ``axvline`` and ``axhline``
@@ -414,7 +468,7 @@ class ChainConsumer(object):
             kwargs["dashes"] = (3, 3)
         if kwargs.get("color") is None:
             kwargs["color"] = "#000000"
-        self.parameters_truth = kwargs
+        self.config_truth = kwargs
         self._configured_truth = True
         return self
 
@@ -641,14 +695,8 @@ class ChainConsumer(object):
         cs = np.split(self.chains[i], num_walkers)
         ws = np.split(self.weights[i], num_walkers)
         con = ChainConsumer()
-        con._configured_bar = self._configured_bar
-        con._configured_contour = self._configured_contour
-        con._configured_truth = self._configured_truth
-        con._configured_general = self._configured_general
-        con.parameters_contour = self.parameters_contour
-        con.parameters_bar = self.parameters_bar
-        con.parameters_truth = self.parameters_truth
-        con.parameters_general = self.parameters_general
+        con._configured = self._configured
+        con.config = self.config
         for j, (c, w) in enumerate(zip(cs, ws)):
             con.add_chain(c, weights=w, name="Chain %d" % j, parameters=self.parameters[i])
         return con
@@ -691,32 +739,61 @@ class ChainConsumer(object):
 
         """
 
-        if not self._configured_general:
-            self.configure_general()
-        if not self._configured_bar:
-            self.configure_bar()
-        if not self._configured_contour:
-            self.configure_contour()
+        if not self._configured:
+            self.configure()
         if not self._configured_truth:
             self.configure_truth()
+
         if legend is None:
             legend = len(self.chains) > 1
+
+        # Get all parameters to plot, taking into account some of them
+        # might be excluded colour parameters
+        color_params = self.config["color_params"]
+        plot_color_params = self.config["plot_color_params"]
+        all_parameters = []
+        for cp, ps, pc in zip(color_params, self.parameters, plot_color_params):
+            for p in ps:
+                if (p != cp or pc) and p not in all_parameters:
+                    all_parameters.append(p)
+
+        # Calculate cmap extents
+        unique_color_params = list(set(color_params))
+        num_cax = len(unique_color_params)
+        if None in unique_color_params:
+            num_cax -= 1
+        color_param_extents = {}
+        for u in unique_color_params:
+            umin, umax = np.inf, -np.inf
+            for i, cp in enumerate(color_params):
+                if cp is not None and u == cp:
+                    data = self.chains[i][:, self.parameters[i].index(cp)]
+                    umin = min(umin, data.min())
+                    umax = max(umax, data.max())
+            color_param_extents[u] = (umin, umax)
+
         if parameters is None:
-            parameters = self.all_parameters
+            parameters = all_parameters
         elif isinstance(parameters, int):
             parameters = self.all_parameters[:parameters]
         if truth is not None and isinstance(truth, np.ndarray):
             truth = truth.tolist()
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
-        grow_size = 1.5
+        if isinstance(figsize, float):
+            grow_size = figsize
+            figsize = "GROW"
+        else:
+            grow_size = 1.0
+
         if isinstance(figsize, str):
             if figsize.upper() == "COLUMN":
-                figsize = (5, 5)
+                figsize = (5 + (1 if num_cax > 0 else 0), 5)
             elif figsize.upper() == "PAGE":
                 figsize = (10, 10)
             elif figsize.upper() == "GROW":
-                figsize = (grow_size * len(parameters), grow_size * len(parameters))
+                figsize = (grow_size * len(parameters) + num_cax * 1.0, grow_size * len(parameters))
+
             else:
                 raise ValueError("Unknown figure size %s" % figsize)
         elif isinstance(figsize, float):
@@ -736,43 +813,23 @@ class ChainConsumer(object):
         if extents is not None and isinstance(extents, list):
             extents = dict((p, e) for p, e in zip(parameters, extents))
 
-        plot_hists = self.parameters_general["plot_hists"]
-        flip = (len(parameters) == 2 and plot_hists and self.parameters_general["flip"])
+        plot_hists = self.config["plot_hists"]
+        flip = (len(parameters) == 2 and plot_hists and self.config["flip"])
 
         fig, axes, params1, params2, extents = self._get_figure(parameters, figsize=figsize,
-                                                                flip=flip, external_extents=extents)
-
-        num_bins = self.parameters_general["bins"]
-        smooths = self.parameters_general["smooth"]
-        self.logger.info("Plotting surfaces with %s bins" % num_bins)
+                                                                       flip=flip, external_extents=extents)
+        axl = axes.ravel().tolist()
+        summary = self.config["summary"]
         fit_values = self.get_summary(squeeze=False)
-        colours = self._get_colours(self.parameters_general["colours"],
-                                    rainbow=self.parameters_general["rainbow"])
-        linestyles = self.parameters_general["linestyles"]
-        shades = self.parameters_contour["shade"]
-        shade_alphas = self.parameters_contour["shade_alpha"]
-        summary = self.parameters_bar["summary"]
-        bar_shades = self.parameters_bar["shade"]
-        linewidths = self.parameters_general["linewidths"]
-        num_chains = len(self.chains)
-        assert len(linestyles) == num_chains, \
-            "Have %d linestyles and %d chains. Please address." % (len(linestyles), num_chains)
-        assert len(linewidths) == num_chains, \
-            "Have %d linewidths and %d chains. Please address." % (len(linewidths), num_chains)
-        assert len(bar_shades) == num_chains, \
-            "Have %d bar_shades and %d chains. Please address." % (len(bar_shades), num_chains)
-        assert len(shade_alphas) == num_chains, \
-            "Have %d shade_alphas and %d chains. Please address." % (len(shade_alphas), num_chains)
-        assert len(shades) == num_chains, \
-            "Have %d shades and %d chains. Please address." % (len(shades), num_chains)
 
         if summary is None:
             summary = len(parameters) < 5 and len(self.chains) == 1
         if len(self.chains) == 1:
-            self.logger.debug("Plotting surfaces for chain of dimenson %s" %
+            self.logger.debug("Plotting surfaces for chain of dimension %s" %
                               (self.chains[0].shape,))
         else:
             self.logger.debug("Plotting surfaces for %d chains" % len(self.chains))
+        cbar_done = []
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
                 if i < j:
@@ -781,15 +838,14 @@ class ChainConsumer(object):
                 do_flip = (flip and i == len(params1) - 1)
                 if plot_hists and i == j:
                     max_val = None
-                    for chain, weights, parameters, colour, bins, smooth, fit, ls, bs, lw, g in \
-                            zip(self.chains, self.weights, self.parameters, colours,
-                                num_bins, smooths, fit_values, linestyles, bar_shades, linewidths, self.grids):
+                    for ii, (chain, weights, parameters, fit, grid) in \
+                            enumerate(zip(self.chains, self.weights, self.parameters, fit_values, self.grids)):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
-                        m = self._plot_bars(ax, p1, chain[:, index], weights, colour, ls, bs, lw, g, bins=bins,
-                                            smooth=smooth, fit_values=fit[p1], flip=do_flip, summary=summary,
-                                            truth=truth, extents=extents[p1])
+
+                        m = self._plot_bars(ii, ax, p1, chain[:, index], weights, grid=grid, fit_values=fit[p1], flip=do_flip,
+                                            summary=summary, truth=truth, extents=extents[p1])
                         if max_val is None or m > max_val:
                             max_val = m
                     if do_flip:
@@ -798,20 +854,34 @@ class ChainConsumer(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for chain, parameters, bins, smooth, colour, ls, s, sa, lw, fit, weights, g in \
-                            zip(self.chains, self.parameters, num_bins, smooths, colours, linestyles, shades,
-                                shade_alphas, linewidths, fit_values, self.weights, self.grids):
+                    for ii, (chain, parameters, fit, weights, grid) in \
+                            enumerate(zip(self.chains, self.parameters, fit_values, self.weights, self.grids)):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
                         i2 = parameters.index(p2)
-                        self._plot_contour(ax, chain[:, i2], chain[:, i1], weights, p1, p2, colour, ls,
-                                           s, sa, lw, g, bins=bins, smooth=smooth, truth=truth)
+                        color_data = None
+                        extent = None
+                        if color_params[ii] is not None:
+                            color_index = parameters.index(color_params[ii])
+                            color_data = chain[:, color_index]
+                            extent = color_param_extents[color_params[ii]]
+                        h = self._plot_contour(ii, ax, chain[:, i2], chain[:, i1], weights, p1, p2,
+                                           grid, truth=truth, color_data=color_data, color_extent=extent)
+                        if h is not None and color_params[ii] not in cbar_done:
+                            cbar_done.append(color_params[ii])
+                            aspect = figsize[1] / 0.15
+                            fraction = 0.85 / figsize[0]
+                            cbar = fig.colorbar(h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False)
+                            cbar.set_label(color_params[ii], fontsize=14)
 
+        colors = self.config["colors"]
+        linestyles = self.config["linestyles"]
+        linewidths = self.config["linewidths"]
         if self.names is not None and legend:
             ax = axes[0, -1]
-            artists = [plt.Line2D((0, 1), (0, 0), color=c)
-                       for n, c in zip(self.names, colours) if n is not None]
+            artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
+                       for n, c, ls, lw in zip(self.names, colors, linestyles, linewidths) if n is not None]
             location = "center" if len(parameters) > 1 else 1
             ax.legend(artists, self.names, loc=location, frameon=False)
         fig.canvas.draw()
@@ -880,13 +950,9 @@ class ChainConsumer(object):
             the matplotlib figure created
 
         """
-        if not self._configured_general:
-            self.configure_general()
-        if not self._configured_bar:
-            self.configure_bar()
-        if not self._configured_contour:
-            self.configure_contour()
-        if not self._configured_truth:
+        if not self._configured:
+            self.configure()
+        if not self._configured:
             self.configure_truth()
 
         if truth is not None and isinstance(truth, np.ndarray):
@@ -952,7 +1018,7 @@ class ChainConsumer(object):
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
 
         plt.rc('text', usetex=True)
-        if self.parameters_general["serif"]:
+        if self.config["serif"]:
             plt.rc('font', family='serif')
         else:
             plt.rc('font', family='sans-serif')
@@ -1113,20 +1179,27 @@ class ChainConsumer(object):
         ax.set_xlim(0, x[-1])
         ax.set_ylabel(parameter)
         ax.scatter(x, data, c="#0345A1", s=2, marker=".", edgecolors="none", alpha=0.5)
-        max_ticks = self.parameters_general["max_ticks"]
+        max_ticks = self.config["max_ticks"]
         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
         if convolve is not None:
             filt = np.ones(convolve) / convolve
             filtered = np.convolve(data, filt, mode="same")
             ax.plot(x[:-1], filtered[:-1], ls=':', color="#FF0000", alpha=1)
         if truth is not None:
-            ax.axhline(truth, **self.parameters_truth)
+            ax.axhline(truth, **self.config_truth)
 
-    def _plot_bars(self, ax, parameter, chain_row, weights, colour, linestyle, bar_shade,
-                   linewidth, grid, bins=25, smooth=None, flip=False, summary=False, fit_values=None,
-                   truth=None, extents=None):  # pragma: no cover
+    def _plot_bars(self, iindex, ax, parameter, chain_row, weights, flip=False, summary=False, fit_values=None,
+                   truth=None, extents=None, grid=False):  # pragma: no cover
 
-        kde = self.parameters_general["kde"]
+        # Get values from config
+        kde = self.config["kde"][iindex]
+        colour = self.config["colors"][iindex]
+        linestyle = self.config["linestyles"][iindex]
+        bar_shade = self.config["bar_shade"][iindex]
+        linewidth = self.config["linewidths"][iindex]
+        bins = self.config["bins"][iindex]
+        smooth = self.config["smooth"][iindex]
+
         bins, smooth = self._get_smoothed_bins(smooth, bins)
         if grid:
             bins = self._get_grid_bins(chain_row)
@@ -1183,15 +1256,25 @@ class ChainConsumer(object):
             truth_value = truth.get(parameter)
             if truth_value is not None:
                 if flip:
-                    ax.axhline(truth_value, **self.parameters_truth)
+                    ax.axhline(truth_value, **self.config_truth)
                 else:
-                    ax.axvline(truth_value, **self.parameters_truth)
+                    ax.axvline(truth_value, **self.config_truth)
         return hist.max()
 
-    def _plot_contour(self, ax, x, y, w, px, py, colour, linestyle, shade,
-                      shade_alpha, linewidth, grid, bins=25, smooth=None, truth=None):  # pragma: no cover
+    def _plot_contour(self, iindex, ax, x, y, w, px, py, grid, truth=None, color_data=None, color_extent=None):  # pragma: no cover
 
-        levels = 1.0 - np.exp(-0.5 * self.parameters_contour["sigmas"] ** 2)
+        levels = 1.0 - np.exp(-0.5 * self.config["sigmas"] ** 2)
+        h = None
+        cloud = self.config["cloud"][iindex]
+        smooth = self.config["smooth"][iindex]
+        colour = self.config["colors"][iindex]
+        bins = self.config["bins"][iindex]
+        shade = self.config["shade"][iindex]
+        shade_alpha = self.config["shade_alpha"][iindex]
+        linestyle = self.config["linestyles"][iindex]
+        linewidth = self.config["linewidths"][iindex]
+        cmap = self.config["cmaps"][iindex]
+
         if grid:
             binsx = self._get_grid_bins(x)
             binsy = self._get_grid_bins(y)
@@ -1210,10 +1293,22 @@ class ChainConsumer(object):
             hist = gaussian_filter(hist, smooth, mode='constant')
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
-        if self.parameters_contour["cloud"]:
-            skip = max(1, int(x.size / 50000))
-            ax.scatter(x[::skip], y[::skip], s=10, alpha=0.3, c=colours[1],
-                       marker=".", edgecolors="none")
+        if cloud:
+            n = self.config["num_cloud"][iindex]
+            skip = max(1, int(x.size / n))
+            kwargs = {"c": colours[1], "alpha": 0.3}
+            if color_data is not None:
+                kwargs["c"] = color_data[::skip]
+                kwargs["cmap"] = cmap
+                kwargs["alpha"] = 1.0
+                if color_extent is not None:
+                    kwargs["vmin"] = color_extent[0]
+                    kwargs["vmax"] = color_extent[1]
+
+            h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", **kwargs)
+            if color_data is None:
+                h = None
+
         if shade:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
                         alpha=shade_alpha)
@@ -1223,32 +1318,38 @@ class ChainConsumer(object):
         if truth is not None:
             truth_value = truth.get(px)
             if truth_value is not None:
-                ax.axhline(truth_value, **self.parameters_truth)
+                ax.axhline(truth_value, **self.config_truth)
             truth_value = truth.get(py)
             if truth_value is not None:
-                ax.axvline(truth_value, **self.parameters_truth)
+                ax.axvline(truth_value, **self.config_truth)
+        return h
 
-    def _get_colours(self, colours, rainbow=False):  # pragma: no cover
-        num_chains = len(self.chains)
-        if rainbow or num_chains > len(colours):
-            colours = cm.rainbow(np.linspace(0, 1, num_chains))
-        else:
-            colours = colours[:num_chains]
-        return colours
-
-    @staticmethod
-    def _get_extent(data, weight):
+    def _get_extent2(self, data, weight):
         mean = np.average(data, weights=weight)
         std = np.sqrt(np.average((data - mean) ** 2, weights=weight))
-        return mean, std
+        max_sigma = np.array(self.config["sigmas"]).max()
+        sigma_extent = max(3, max_sigma + 1)
+        min_prop = mean - sigma_extent * std
+        max_prop = mean + sigma_extent * std
+        return min_prop, max_prop
+
+    def _get_extent(self, data, weight):
+        hist, be = np.histogram(data, weights=weight, bins=1000, normed=True)
+        bc = 0.5 * (be[1:] + be[:-1])
+        cdf = hist.cumsum()
+        cdf = cdf / cdf.max()
+        icdf = (1 - cdf)[::-1]
+        threshold = 1e-3
+        i1 = np.where(cdf > threshold)[0][0]
+        i2 = np.where(icdf > threshold)[0][0]
+
+        return bc[i1], bc[bc.size - i2]
 
     def _get_figure(self, all_parameters, flip, figsize=(5, 5),
                     external_extents=None):  # pragma: no cover
         n = len(all_parameters)
-        max_ticks = self.parameters_general["max_ticks"]
-        plot_hists = self.parameters_general["plot_hists"]
-        max_sigma = np.array(self.parameters_contour["sigmas"]).max()
-        sigma_extent = max(3, max_sigma + 1)
+        max_ticks = self.config["max_ticks"]
+        plot_hists = self.config["plot_hists"]
         if not plot_hists:
             n -= 1
 
@@ -1258,7 +1359,7 @@ class ChainConsumer(object):
             gridspec_kw = {}
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
 
-        if self.parameters_general["serif"]:
+        if self.config["serif"]:
             plt.rc('text', usetex=True)
             plt.rc('font', family='serif')
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
@@ -1282,9 +1383,7 @@ class ChainConsumer(object):
                         min_prop = chain[:, index].min()
                         max_prop = chain[:, index].max()
                     else:
-                        mean, std = self._get_extent(chain[:, index], w)
-                        min_prop = mean - sigma_extent * std
-                        max_prop = mean + sigma_extent * std
+                        min_prop, max_prop = self._get_extent(chain[:, index], w)
                     if min_val is None or min_prop < min_val:
                         min_val = min_prop
                     if max_val is None or max_prop > max_val:
@@ -1391,11 +1490,11 @@ class ChainConsumer(object):
         return bins
 
     def _get_smoothed_histogram(self, data, weights, chain_index, grid):
-        smooth = self.parameters_general["smooth"][chain_index]
+        smooth = self.config["smooth"][chain_index]
         if grid:
             bins = self._get_grid_bins(data)
         else:
-            bins = self.parameters_general['bins'][chain_index]
+            bins = self.config['bins'][chain_index]
             bins, smooth = self._get_smoothed_bins(smooth, bins)
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
@@ -1403,7 +1502,7 @@ class ChainConsumer(object):
         if smooth:
             hist = gaussian_filter(hist, smooth, mode='constant')
 
-        if self.parameters_general["kde"]:
+        if self.config["kde"][chain_index]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -1418,9 +1517,9 @@ class ChainConsumer(object):
         return xs, ys, cs
 
     def _get_parameter_summary(self, data, weights, parameter, chain_index, **kwargs):
-        if not self._configured_general:
-            self.configure_general()
-        method = self.summaries[self.parameters_general["statistics"][chain_index]]
+        if not self._configured:
+            self.configure()
+        method = self.summaries[self.config["statistics"][chain_index]]
         return method(data, weights, parameter, chain_index, **kwargs)
 
     def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):

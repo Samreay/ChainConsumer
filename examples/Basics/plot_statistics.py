@@ -24,21 +24,21 @@ parameters = ["$x$", "$y$"]
 
 
 # Now the normal way of giving data is passing a numpy array and parameter separately
-c = ChainConsumer().add_chain(data, parameters=parameters).configure_general(statistics="max")
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max")
 fig = c.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable cumulative statistics
 
-c = ChainConsumer().add_chain(data, parameters=parameters).configure_general(statistics="cumulative")
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="cumulative")
 fig = c.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable mean statistics
 
-c = ChainConsumer().add_chain(data, parameters=parameters).configure_general(statistics="mean")
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="mean")
 fig = c.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -51,8 +51,7 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer().add_chain(data, parameters=parameters)
 c.add_chain(data)
 c.add_chain(data)
-c.configure_general(statistics=["max", "mean", "cumulative"],
-                    linestyles=["-", "--", ":"], linewidths=[1, 2, 3])
-c.configure_bar(shade=True)
+c.configure(statistics=["max", "mean", "cumulative"],
+            linestyles=["-", "--", ":"], linewidths=[1, 2, 3], bar_shade=True)
 fig = c.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

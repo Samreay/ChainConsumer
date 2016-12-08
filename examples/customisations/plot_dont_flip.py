@@ -17,10 +17,11 @@ from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
     np.random.seed(0)
-    data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+    data = np.random.multivariate_normal([0.2, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+    data[:, 0] = np.abs(data[:, 0])
 
     c = ChainConsumer().add_chain(data, parameters=["$x_1$", "$x_2$"])
-    c.configure_general(flip=False, max_ticks=10, colours="#D32F2F")
+    c.configure(flip=False, max_ticks=10, colors="#D32F2F")
     fig = c.plot(figsize=(6, 6))
 
     fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

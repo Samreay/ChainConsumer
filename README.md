@@ -98,6 +98,12 @@ features requests thought up.
 
 ### Update History
 
+##### 0.14.0
+* Adding coloured scatter.
+* Disallowing grid data and KDE.
+* Adding more examples.
+* Consolidating all configures into one method.
+
 ##### 0.13.3
 * Removing ability to having vectorised dictionary inputs for grid data due to 2.7 compatibility issues.
 

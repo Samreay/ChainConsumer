@@ -20,7 +20,7 @@ class TestChain(object):
         tolerance = 2e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data[::10])
-        consumer.configure_general(kde=True)
+        consumer.configure(kde=True)
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -31,7 +31,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(smooth=0, bins=2.4)
+        consumer.configure(smooth=0, bins=2.4)
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -63,7 +63,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(bins=1.6)
+        consumer.configure(bins=1.6)
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -283,7 +283,7 @@ class TestChain(object):
         consumer.add_chain(data, walkers=num_walkers)
 
         c = consumer.divide_chain()
-        c.configure_general()
+        c.configure()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
@@ -299,7 +299,7 @@ class TestChain(object):
         consumer.add_chain(data, walkers=num_walkers)
 
         c = consumer.divide_chain(chain=0)
-        c.configure_general()
+        c.configure()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
@@ -314,7 +314,7 @@ class TestChain(object):
         num_walkers = 2
         consumer.add_chain(data, walkers=num_walkers, name="test")
         c = consumer.divide_chain(chain="test")
-        c.configure_general()
+        c.configure()
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
@@ -343,7 +343,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(statistics="max")
+        consumer.configure(statistics="max")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -354,7 +354,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(statistics="mean")
+        consumer.configure(statistics="mean")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -365,7 +365,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure_general(statistics="cumulative")
+        consumer.configure(statistics="cumulative")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -376,13 +376,13 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         with pytest.raises(AssertionError):
-            consumer.configure_general(statistics="monkey")
+            consumer.configure(statistics="monkey")
 
     def test_stats_max_skew(self):
         tolerance = 2e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure_general(statistics="max")
+        consumer.configure(statistics="max")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([1.01, 1.55, 2.72])
@@ -393,7 +393,7 @@ class TestChain(object):
         tolerance = 2e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure_general(statistics="mean")
+        consumer.configure(statistics="mean")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([1.27, 2.19, 3.11])
@@ -404,7 +404,7 @@ class TestChain(object):
         tolerance = 2e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure_general(statistics="cumulative")
+        consumer.configure(statistics="cumulative")
         summary = consumer.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([1.27, 2.01, 3.11])
@@ -416,7 +416,7 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
         consumer.add_chain(self.data_skew)
-        consumer.configure_general(statistics=["cumulative", "mean"])
+        consumer.configure(statistics=["cumulative", "mean"])
         summary = consumer.get_summary()
         actual0 = np.array(list(summary[0].values())[0])
         actual1 = np.array(list(summary[1].values())[0])
@@ -624,7 +624,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain([self.data, self.data2], parameters=['x', 'y'])
-        # consumer.configure_general(bins=1.6)
+        # consumer.configure(bins=1.6)
         summary = consumer.get_summary()
         actual1 = summary['x']
         actual2 = summary['y']

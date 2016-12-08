@@ -37,7 +37,7 @@ xs, ys = xx.flatten(), yy.flatten()
 pdf_flat = pdf.flatten()
 c = ChainConsumer()
 c.add_chain([xs, ys], parameters=["$x$", "$y$"], weights=pdf_flat, grid=True)
-c.configure_general(smooth=1)  # Notice how smoothing changes the results!
+c.configure(smooth=1)  # Notice how smoothing changes the results!
 fig = c.plot()
 
 fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
