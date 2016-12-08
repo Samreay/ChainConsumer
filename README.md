@@ -103,6 +103,7 @@ features requests thought up.
 * Disallowing grid data and KDE.
 * Adding more examples.
 * Consolidating all configures into one method.
+* Improved extent finding.
 
 ##### 0.13.3
 * Removing ability to having vectorised dictionary inputs for grid data due to 2.7 compatibility issues.
