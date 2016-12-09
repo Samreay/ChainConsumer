@@ -711,8 +711,6 @@ class ChainConsumer(object):
         cs = np.split(self.chains[i], num_walkers)
         ws = np.split(self.weights[i], num_walkers)
         con = ChainConsumer()
-        con._configured = self._configured
-        con.config = self.config
         for j, (c, w) in enumerate(zip(cs, ws)):
             con.add_chain(c, weights=w, name="Chain %d" % j, parameters=self.parameters[i])
         return con

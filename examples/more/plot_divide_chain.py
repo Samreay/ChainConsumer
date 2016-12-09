@@ -15,8 +15,6 @@ but the more options the better!
 In the below example, I assume the generated data was created using ten walkers.
 I introduce some fake shift in the data to badly emulate walker drift.
 
-Note that any configuration given to the parent ChainConsumer is passed on to the child
-instance.
 """
 
 import numpy as np
@@ -30,7 +28,6 @@ if __name__ == "__main__":
     data[:, 0] += np.linspace(0, 1, data.shape[0])
 
     c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"], walkers=5)
-    c.configure(flip=False)
     c2 = c.divide_chain()
     fig = c2.plot()
 
