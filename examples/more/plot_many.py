@@ -31,6 +31,6 @@ if __name__ == "__main__":
 
     c.configure(color_params="$H_0$", shade=[True, True, False],
                 shade_alpha=0.2, bar_shade=True, linestyles=["-", "--", "-"])
-    fig = c.plot(figsize=2.0, extents=[[0, 1.0], [0, 1.5]])
+    fig = c.plot(figsize=2.0)
 
     fig.set_size_inches(3.0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
