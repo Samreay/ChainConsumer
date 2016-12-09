@@ -40,6 +40,7 @@ class ChainConsumer(object):
             "mean": self._get_parameter_summary_mean,
             "cumulative": self._get_parameter_summary_cumulative
         }
+        self.gauss_mode = 'reflect'
 
     def _init_params(self):
         self.config = {}
@@ -1222,7 +1223,7 @@ class ChainConsumer(object):
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode='constant')
+            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
         if kde:
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -1255,17 +1256,23 @@ class ChainConsumer(object):
             lower = fit_values[0]
             upper = fit_values[2]
             if lower is not None and upper is not None:
+                if lower < edge_center.min():
+                    lower = edge_center.min()
+                if upper > edge_center.max():
+                    upper = edge_center.max()
                 x = np.linspace(lower, upper, 1000)
-                if lower > edge_center.min() and upper < edge_center.max():
-                    if flip:
-                        ax.fill_betweenx(x, np.zeros(x.shape), interpolator(x),
-                                         color=colour, alpha=0.2)
+                if flip:
+                    ax.fill_betweenx(x, np.zeros(x.shape), interpolator(x),
+                                     color=colour, alpha=0.2)
+                else:
+                    ax.fill_between(x, np.zeros(x.shape), interpolator(x),
+                                    color=colour, alpha=0.2)
+                if summary:
+                    if isinstance(parameter, str):
+                        ax.set_title(r"$%s = %s$" % (parameter.strip("$"),
+                                                     self.get_parameter_text(*fit_values)), fontsize=14)
                     else:
-                        ax.fill_between(x, np.zeros(x.shape), interpolator(x),
-                                        color=colour, alpha=0.2)
-                if summary and isinstance(parameter, str):
-                    ax.set_title(r"$%s = %s$" % (parameter.strip("$"),
-                                                 self.get_parameter_text(*fit_values)), fontsize=14)
+                        ax.set_title(r"$%s$" % (self.get_parameter_text(*fit_values)), fontsize=14)
         if truth is not None:
             truth_value = truth.get(parameter)
             if truth_value is not None:
@@ -1304,7 +1311,7 @@ class ChainConsumer(object):
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode='constant')
+            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
         if cloud:
@@ -1514,7 +1521,7 @@ class ChainConsumer(object):
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode='constant')
+            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
 
         if self.config["kde"][chain_index]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
@@ -1551,6 +1558,15 @@ class ChainConsumer(object):
 
     def _get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
         xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        n_pad = 1000
+        x_start = xs[0] * np.ones(n_pad)
+        x_end = xs[-1] * np.ones(n_pad)
+        y_start = np.linspace(0, ys[0], n_pad)
+        y_end = np.linspace(ys[-1], 0, n_pad)
+        xs = np.concatenate((x_start, xs, x_end))
+        ys = np.concatenate((y_start, ys, y_end))
+        cs = ys.cumsum()
+        cs = cs / cs.max()
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0

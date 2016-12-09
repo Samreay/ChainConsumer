@@ -350,6 +350,20 @@ class TestChain(object):
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
+    def test_stats_max_cliff(self):
+        tolerance = 5e-2
+        n = 100000
+        data = np.linspace(0, 10, n)
+        weights = norm.pdf(data, 1, 2)
+        consumer = ChainConsumer()
+        consumer.add_chain(data, weights=weights)
+        consumer.configure(statistics="max", bins=4.0, smooth=1)
+        summary = consumer.get_summary()
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([0.0, 1.0, 2.73])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
     def test_stats_mean_normal(self):
         tolerance = 5e-2
         consumer = ChainConsumer()

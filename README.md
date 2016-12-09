@@ -104,6 +104,9 @@ features requests thought up.
 * Adding more examples.
 * Consolidating all configures into one method.
 * Improved extent finding.
+* Updating smoothing to use reflect and not constant.
+* Improving `max` statistics being able to find ranges on cliff edges.
+* Printing parameter summaries without parameter labels.
 
 ##### 0.13.3
 * Removing ability to having vectorised dictionary inputs for grid data due to 2.7 compatibility issues.
