@@ -14,6 +14,12 @@ figures all done for you!
 
 [Click through to the online documentation](https://samreay.github.io/ChainConsumer)
 
+
+### Examples
+
+[Click here to see a ton of useful examples!](https://samreay.github.io/ChainConsumer/examples/index.html)
+
+
 ```python
 import numpy as np
 from chainconsumer import ChainConsumer
