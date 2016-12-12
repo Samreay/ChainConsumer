@@ -44,13 +44,21 @@ Contents
 Installation
 ------------
 
-ChainConsumer requires the following dependencies, along with a LaTeX installation:
+ChainConsumer requires the following dependencies, along with a LaTeX installation and `dvipng` (a maptlotlib dependency):
 
 .. literalinclude:: ../requirements.txt
 
 ChainConsumer can be installed as follows::
 
     pip install chainconsumer
+
+Common Issues
+-------------
+
+Users on some Linux platforms have reported issues rendering plots using ChainConsumer.
+The common error states that `dvipng: not found`, and as per `StackOverflow <http://stackoverflow.com/a/32915992/3339667>`_
+post, it can be solved by explicitly install the `matplotlib` dependency `dvipng` via `sudo apt-get install dvipng`.
+
 
 Citing
 ------
