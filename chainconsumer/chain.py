@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.14.0"
+    __version__ = "0.14.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -373,7 +373,7 @@ class ChainConsumer(object):
 
         # Determine cloud points
         if num_cloud is None:
-            num_cloud = 15000
+            num_cloud = 30000
         if isinstance(num_cloud, int) or isinstance(num_cloud, float):
             num_cloud = [int(num_cloud)] * num_chains
 
@@ -889,6 +889,7 @@ class ChainConsumer(object):
                             fraction = 0.85 / figsize[0]
                             cbar = fig.colorbar(h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False)
                             cbar.set_label(color_params[ii], fontsize=14)
+                            cbar.solids.set(alpha=1)
 
         colors = self.config["colors"]
         linestyles = self.config["linestyles"]
@@ -1321,7 +1322,6 @@ class ChainConsumer(object):
             if color_data is not None:
                 kwargs["c"] = color_data[::skip]
                 kwargs["cmap"] = cmap
-                kwargs["alpha"] = 1.0
                 if color_extent is not None:
                     kwargs["vmin"] = color_extent[0]
                     kwargs["vmax"] = color_extent[1]
