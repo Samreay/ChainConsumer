@@ -1335,6 +1335,33 @@ class ChainConsumer(object):
 
     def comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
                          aic=True, bic=True, dic=True, sort="bic", descending=True):  # pragma: no cover
+        """
+        Return a LaTeX ready table of model comparisons.
+
+        Parameters
+        ----------
+        caption : str, optional
+            The table caption to insert.
+        label : str, optional
+            The table label to insert.
+        hlines : bool, optional
+            Whether to insert hlines in the table or not.
+        aic : bool, optional
+            Whether to include a column for AICc or not.
+        bic : bool, optional
+            Whether to include a column for BIC or not.
+        dic : bool, optional
+            Whether to include a column for DIC or not.
+        sort : str, optional
+            How to sort the models. Should be one of "bic", "aic" or "dic".
+        descending : bool, optional
+            The sort order.
+
+        Returns
+        -------
+        str
+            A LaTeX table to be copied into your document.
+        """
 
         if sort == "bic":
             assert bic, "You cannot sort by BIC if you turn it off"
