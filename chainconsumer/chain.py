@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, griddata
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import matplotlib.cm as cm
 import statsmodels.api as sm
@@ -1241,13 +1241,46 @@ class ChainConsumer(object):
                 i += 1
         return bics_fin
 
+    def get_dic(self):
+        dics = []
+        dics_bool = []
+        for i, p in enumerate(self._posteriors):
+            if p is None:
+                dics_bool.append(False)
+                self._logger.warn("You need to set the posterior for chain %s to get the DIC" %
+                                  self._get_chain_name(i))
+            else:
+                dics_bool.append(True)
+                chain = self._chains[i]
+                num_params = chain.shape[1]
+                means = np.array([np.average(chain[:, ii], weights=self._weights[i]) for ii in range(num_params)])
+                d = -2 * p
+                d_of_mean = griddata(chain, d, means, method='nearest')[0]
+                mean_d = np.average(d, weights=self._weights[i])
+                p_d = mean_d - d_of_mean
+                dic = mean_d + p_d
+                dics.append(dic)
+
+        dics -= np.min(dics)
+        dics_fin = []
+        i = 0
+        for b in dics_bool:
+            if not b:
+                dics_fin.append(None)
+            else:
+                dics_fin.append(dics[i])
+                i += 1
+        return dics_fin
+
     def get_model_comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
-                                   aic=True, bic=True, sort="bic", descending=True):
+                                   aic=True, bic=True, dic=True, sort="bic", descending=True):  # pragma: no cover
 
         if sort == "bic":
             assert bic, "You cannot sort by BIC if you turn it off"
         if sort == "aic":
             assert aic, "You cannot sort by AIC if you turn it off"
+        if sort == "dic":
+            assert dic, "You cannot sort by DIC if you turn it off"
 
         if caption is None:
             caption = ""
@@ -1261,8 +1294,9 @@ class ChainConsumer(object):
         center_text = ""
         hline_text = "\\hline\n"
         if hlines:
-            center_text +=  hline_text
-        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") + end_text
+            center_text += hline_text
+        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") \
+                       + (" & DIC " if dic else "") + end_text
         if hlines:
             center_text += "\t" + hline_text
         if aic:
@@ -1273,8 +1307,20 @@ class ChainConsumer(object):
             bics = self.get_bic()
         else:
             bics = np.zeros(len(self._chains))
+        if dic:
+            dics = self.get_dic()
+        else:
+            dics = np.zeros(len(self._chains))
 
-        to_sort = bics if sort == "bic" else aics
+        if sort == "bic":
+            to_sort = bics
+        elif sort == "aic":
+            to_sort = aics
+        elif sort == "dic":
+            to_sort = dics
+        else:
+            raise ValueError("sort %s not recognised, must be dic, aic or dic" % sort)
+
         good = [i for i, t in enumerate(to_sort) if t is not None]
         names = [self._names[g] for g in good]
         aics = [aics[g] for g in good]
@@ -1292,6 +1338,8 @@ class ChainConsumer(object):
                 line += "  &  %5.1f  " % aics[i]
             if bic:
                 line += "  &  %5.1f  " % bics[i]
+            if dic:
+                line += "  &  %5.1f  " % dics[i]
             line += end_text
             center_text += line
         if hlines:
@@ -1730,7 +1778,7 @@ class ChainConsumer(object):
         return [x1, xs[startIndex], x2]
 
     def _get_latex_table(self, caption, label):
-        base_string = r"""\begin{table}[]
+        base_string = r"""\begin{table}
     \centering
     \caption{%s}
     \label{%s}
