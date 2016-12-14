@@ -32,6 +32,13 @@ Diagnostic Methods
 * :func:`chainconsumer.ChainConsumer.diagnostic_gelman_rubin` - Run the Gelman-Rubin statistic on your chains.
 * :func:`chainconsumer.ChainConsumer.diagnostic_geweke` - Run the Geweke statistic on your chains.
 
+Model Selection Methods
+-----------------------
+* :func:`chainconsumer.ChainConsumer.comparison_aic` - Return the AICc values for all chains.
+* :func:`chainconsumer.ChainConsumer.comparison_bic` - Return the BIC values for all chains.
+* :func:`chainconsumer.ChainConsumer.comparison_dic` - Return the DIC values for all chains.
+* :func:`chainconsumer.ChainConsumer.comparison_table` - Return a LaTeX table comparing models as per the above methods.
+
 
 The full documentation can be found below.
 

@@ -1180,7 +1180,29 @@ class ChainConsumer(object):
         print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
         return pvalue > threshold
 
-    def get_aic(self):
+    def comparison_aic(self):
+        r""" Returns the corrected Akaike Information Criterion (AICc) for all chains loaded into ChainConsumer.
+
+        If a chain does not have a posterior, number of data points, and number of free parameters
+        loaded, this method will return `None` for that chain. Formally, the AIC is defined as
+
+        .. math::
+            AIC \equiv -2\ln(P) + 2k,
+
+        where :math:`P` represents the posterior, and :math:`k` the number of model parameters. The AICc
+        is then defined as
+
+        .. math::
+            AIC_c \equiv AIC + \frac{2k(k+1)}{N-k-1},
+
+        where :math:`N` represents the number of independent data points used in the model fitting.
+        The AICc is a correction for the AIC to take into account finite chain sizes.
+
+        Returns
+        -------
+        list[float]
+            A list of all the AICc values - one per chain, in the order in which the chains were added.
+        """
         aics = []
         aics_bool = []
         for i, (p, n_data, n_free) in enumerate(zip(self._posteriors, self._num_data, self._num_free)):
@@ -1211,7 +1233,23 @@ class ChainConsumer(object):
                 i += 1
         return aics_fin
 
-    def get_bic(self):
+    def comparison_bic(self):
+        r""" Returns the corrected Bayesian Information Criterion (BIC) for all chains loaded into ChainConsumer.
+
+        If a chain does not have a posterior, number of data points, and number of free parameters
+        loaded, this method will return `None` for that chain. Formally, the BIC is defined as
+
+        .. math::
+            BIC \equiv -2\ln(P) + k \ln(N),
+
+        where :math:`P` represents the posterior, :math:`k` the number of model parameters and :math:`N`
+        the number of independent data points used in the model fitting.
+
+        Returns
+        -------
+        list[float]
+            A list of all the BIC values - one per chain, in the order in which the chains were added.
+        """
         bics = []
         bics_bool = []
         for i, (p, n_data, n_free) in enumerate(zip(self._posteriors, self._num_data, self._num_free)):
@@ -1241,7 +1279,30 @@ class ChainConsumer(object):
                 i += 1
         return bics_fin
 
-    def get_dic(self):
+    def comparison_dic(self):
+        r""" Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
+
+        If a chain does not have a posterior, this method will return `None` for that chain.
+        Formally, we follow Liddle (2007) and first define *Bayesian complexity* as
+
+        .. math::
+            p_D = \bar{D}(\theta) - D(\bar{\theta}),
+
+        where :math:`D(\theta) = -2\ln(P(\theta)) + C` is the deviance, where :math:`P` is the posterior
+        and :math:`C` a constant. From here the DIC is defined as
+
+        .. math::
+            DIC \equiv D(\bar{\theta}) + 2p_D = \bar{D}(\theta) + p_D.
+
+        Returns
+        -------
+        list[float]
+            A list of all the DIC values - one per chain, in the order in which the chains were added.
+
+        References
+        ----------
+        [1] Andrew R. Liddle, "Information criteria for astrophysical model selection", MNRAS (2007)
+        """
         dics = []
         dics_bool = []
         for i, p in enumerate(self._posteriors):
@@ -1272,8 +1333,8 @@ class ChainConsumer(object):
                 i += 1
         return dics_fin
 
-    def get_model_comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
-                                   aic=True, bic=True, dic=True, sort="bic", descending=True):  # pragma: no cover
+    def comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
+                         aic=True, bic=True, dic=True, sort="bic", descending=True):  # pragma: no cover
 
         if sort == "bic":
             assert bic, "You cannot sort by BIC if you turn it off"
@@ -1300,15 +1361,15 @@ class ChainConsumer(object):
         if hlines:
             center_text += "\t" + hline_text
         if aic:
-            aics = self.get_aic()
+            aics = self.comparison_aic()
         else:
             aics = np.zeros(len(self._chains))
         if bic:
-            bics = self.get_bic()
+            bics = self.comparison_bic()
         else:
             bics = np.zeros(len(self._chains))
         if dic:
-            dics = self.get_dic()
+            dics = self.comparison_dic()
         else:
             dics = np.zeros(len(self._chains))
 

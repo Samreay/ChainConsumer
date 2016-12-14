@@ -110,6 +110,15 @@ features requests thought up.
 
 ### Update History
 
+##### 0.15.0
+* Adding `usetex` to `configure` method.
+* When plotting walks, plots weights in log space if the mean weight is less than 0.1
+* Adding AIC
+* Adding BIC
+* Adding DIC
+* Adding method to output model comparison table.
+
+
 ##### 0.14.0
 * Adding coloured scatter.
 * Disallowing grid data and KDE.
