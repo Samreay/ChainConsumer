@@ -167,7 +167,7 @@ class ChainConsumer(object):
                   serif=True, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
-                  color_params=None, plot_color_params=False, cmaps=None):  # pragma: no cover
+                  color_params=None, plot_color_params=False, cmaps=None, usetex=True):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -257,6 +257,8 @@ class ChainConsumer(object):
             The matplotlib colourmap to use in the `colour_param`. If you have multiple `color_param`s, you can
             specific a different cmap for each variable. By default ChainConsumer will cycle between several
             cmaps.
+        usetex : bool, optional
+            Whether or not to parse text as LaTeX in plots.
 
         Returns
         -------
@@ -453,6 +455,7 @@ class ChainConsumer(object):
         self.config["serif"] = serif
         self.config["plot_hists"] = plot_hists
         self.config["max_ticks"] = max_ticks
+        self.config["usetex"] = usetex
 
         self._configured = True
         return self
@@ -1043,8 +1046,8 @@ class ChainConsumer(object):
         chain_parameters = self._parameters[chain]
 
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
-
-        plt.rc('text', usetex=True)
+        if self.config["usetex"]:
+            plt.rc('text', usetex=True)
         if self.config["serif"]:
             plt.rc('font', family='serif')
         else:
@@ -1446,9 +1449,9 @@ class ChainConsumer(object):
         else:
             gridspec_kw = {}
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
-
-        if self.config["serif"]:
+        if self.config["usetex"]:
             plt.rc('text', usetex=True)
+        if self.config["serif"]:
             plt.rc('font', family='serif')
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
 
