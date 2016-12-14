@@ -232,7 +232,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(data)
         summary = c.get_summary()
-        print(c.chains[0].shape)
+        print(c._chains[0].shape)
         deviations = np.abs([summary["x"][1] - 5, summary["y"][1] - 3])
         assert np.all(deviations < 0.1)
 
@@ -278,7 +278,7 @@ class TestChain(object):
                                np.random.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
         num_walkers = 2
-        print(consumer.walkers)
+        print(consumer._walkers)
 
         consumer.add_chain(data, walkers=num_walkers)
 
@@ -288,7 +288,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_index(self):
         np.random.seed(0)
@@ -304,7 +304,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_name(self):
         np.random.seed(0)
@@ -319,7 +319,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c.chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_fail(self):
         np.random.seed(0)

@@ -20,27 +20,29 @@ class ChainConsumer(object):
 
     def __init__(self):
         logging.basicConfig()
-        self.logger = logging.getLogger(__name__)
-        self.all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
+        self._logger = logging.getLogger(__name__)
+        self._all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
                             "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
-        self.cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
-        self.linestyles = ["-", '--', ':']
-        self.chains = []
-        self.walkers = []
-        self.weights = []
-        self.posteriors = []
-        self.names = []
-        self.parameters = []
-        self.all_parameters = []
-        self.grids = []
-        self.default_parameters = None
+        self._cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
+        self._linestyles = ["-", '--', ':']
+        self._chains = []
+        self._walkers = []
+        self._weights = []
+        self._posteriors = []
+        self._names = []
+        self._parameters = []
+        self._all_parameters = []
+        self._grids = []
+        self._num_free = []
+        self._num_data = []
+        self._default_parameters = None
         self._init_params()
-        self.summaries = {
+        self._summaries = {
             "max": self._get_parameter_summary_max,
             "mean": self._get_parameter_summary_mean,
             "cumulative": self._get_parameter_summary_cumulative
         }
-        self.gauss_mode = 'reflect'
+        self._gauss_mode = 'reflect'
 
     def _init_params(self):
         self.config = {}
@@ -49,7 +51,7 @@ class ChainConsumer(object):
         self._configured_truth = False
 
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
-                  grid=False):
+                  grid=False, num_free_params=None, num_eff_data_points=None):
         """ Add a chain to the consumer.
 
         Parameters
@@ -109,7 +111,7 @@ class ChainConsumer(object):
             if len(weights.shape) > 1:
                 assert not is_dict, "We cannot construct a meshgrid from a dictionary, as the parameters" \
                                     "are no longer ordered. Please pass in a flattened array instead."
-                self.logger.info("Constructing meshgrid for grid results")
+                self._logger.info("Constructing meshgrid for grid results")
                 meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
                 chain = np.vstack([m.flatten() for m in meshes]).T
                 weights = weights.flatten()
@@ -117,37 +119,40 @@ class ChainConsumer(object):
 
         if len(chain.shape) == 1:
             chain = chain[None].T
-        self.chains.append(chain)
-        self.names.append(name)
-        self.posteriors.append(posterior)
+        self._chains.append(chain)
+        self._names.append(name)
+        self._posteriors.append(posterior)
         assert walkers is None or chain.shape[0] % walkers == 0, \
             "The number of steps in the chain cannot be split evenly amongst the number of walkers"
-        self.walkers.append(walkers)
+        self._walkers.append(walkers)
         if weights is None:
-            self.weights.append(np.ones(chain.shape[0]))
+            self._weights.append(np.ones(chain.shape[0]))
         else:
-            self.weights.append(weights)
-        if self.default_parameters is None and parameters is not None:
-            self.default_parameters = parameters
+            self._weights.append(weights)
+        if self._default_parameters is None and parameters is not None:
+            self._default_parameters = parameters
 
-        self.grids.append(grid)
+        self._grids.append(grid)
 
         if parameters is None:
-            if self.default_parameters is not None:
-                assert chain.shape[1] == len(self.default_parameters), \
+            if self._default_parameters is not None:
+                assert chain.shape[1] == len(self._default_parameters), \
                     "Chain has %d dimensions, but default parameters have %d dimensions" \
-                    % (chain.shape[1], len(self.default_parameters))
-                parameters = self.default_parameters
-                self.logger.debug("Adding chain using default parameters")
+                    % (chain.shape[1], len(self._default_parameters))
+                parameters = self._default_parameters
+                self._logger.debug("Adding chain using default parameters")
             else:
-                self.logger.debug("Adding chain with no parameter names")
+                self._logger.debug("Adding chain with no parameter names")
                 parameters = [x for x in range(chain.shape[1])]
         else:
-            self.logger.debug("Adding chain with defined parameters")
+            self._logger.debug("Adding chain with defined parameters")
         for p in parameters:
-            if p not in self.all_parameters:
-                self.all_parameters.append(p)
-        self.parameters.append(parameters)
+            if p not in self._all_parameters:
+                self._all_parameters.append(p)
+        self._parameters.append(parameters)
+
+        self._num_data.append(num_eff_data_points)
+        self._num_free.append(num_free_params)
 
         self._init_params()
         return self
@@ -252,7 +257,7 @@ class ChainConsumer(object):
         ChainConsumer
             Itself, to allow chaining calls.
         """
-        num_chains = len(self.chains)
+        num_chains = len(self._chains)
 
         assert rainbow is None or colors is None, \
             "You cannot both ask for rainbow colours and then give explicit colours"
@@ -260,7 +265,7 @@ class ChainConsumer(object):
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
         if isinstance(statistics, str):
-            statistics = [statistics.lower()] * len(self.chains)
+            statistics = [statistics.lower()] * len(self._chains)
         elif isinstance(statistics, list):
             for i, l in enumerate(statistics):
                 statistics[i] = l.lower()
@@ -278,17 +283,17 @@ class ChainConsumer(object):
         elif isinstance(bins, float):
             bins = [np.floor(b * bins) for b in self._get_bins()]
         elif isinstance(bins, int):
-            bins = [bins] * len(self.chains)
+            bins = [bins] * len(self._chains)
         else:
             raise ValueError("bins value is not a recognised class (float or int)")
 
         # Determine KDEs
         if isinstance(kde, bool):
-            kde = [False if g else kde for g in self.grids]
+            kde = [False if g else kde for g in self._grids]
 
         # Determine smoothing
         if smooth is None:
-            smooth = [0 if g or k else 3 for g, k in zip(self.grids, kde)]
+            smooth = [0 if g or k else 3 for g, k in zip(self._grids, kde)]
         else:
             if smooth is not None and not smooth:
                 smooth = 0
@@ -302,9 +307,9 @@ class ChainConsumer(object):
             color_params = [None] * num_chains
         else:
             if isinstance(color_params, str):
-                color_params = [color_params if color_params in ps else None for ps in self.parameters]
+                color_params = [color_params if color_params in ps else None for ps in self._parameters]
             elif isinstance(color_params, list) or isinstance(color_params, tuple):
-                for c, p in zip(color_params, self.parameters):
+                for c, p in zip(color_params, self._parameters):
                     if c is not None:
                         assert c in p, "Color parameter %s not in parameters %s" % (c, p)
         # Determine if we should plot color parameters
@@ -322,20 +327,20 @@ class ChainConsumer(object):
                 elif cp in param_cmaps:
                     cmaps.append(param_cmaps[cp])
                 else:
-                    param_cmaps[cp] = self.cmaps[i]
-                    cmaps.append(self.cmaps[i])
-                    i = (i + 1) % len(self.cmaps)
+                    param_cmaps[cp] = self._cmaps[i]
+                    cmaps.append(self._cmaps[i])
+                    i = (i + 1) % len(self._cmaps)
 
         # Determine colours
         if colors is None:
             if rainbow:
                 colors = cm.rainbow(np.linspace(0, 1, num_chains))
             else:
-                if num_chains > len(self.all_colours):
+                if num_chains > len(self._all_colours):
                     num_needed_colours = np.sum([c is None for c in color_params])
                     colour_list = cm.rainbow(np.linspace(0, 1, num_needed_colours))
                 else:
-                    colour_list = self.all_colours
+                    colour_list = self._all_colours
                 colors = []
                 ci = 0
                 for c in color_params:
@@ -345,7 +350,7 @@ class ChainConsumer(object):
                         colors.append(colour_list[ci])
                         ci += 1
         elif isinstance(colors, str):
-                colors = [colors] * len(self.chains)
+                colors = [colors] * len(self._chains)
 
         # Determine linestyles
         if linestyles is None:
@@ -353,18 +358,18 @@ class ChainConsumer(object):
             linestyles = []
             for c in color_params:
                 if c is None:
-                    linestyles.append(self.linestyles[0])
+                    linestyles.append(self._linestyles[0])
                 else:
-                    linestyles.append(self.linestyles[i])
-                    i = (i + 1) % len(self.linestyles)
+                    linestyles.append(self._linestyles[i])
+                    i = (i + 1) % len(self._linestyles)
         elif isinstance(linestyles, str):
-            linestyles = [linestyles] * len(self.chains)
+            linestyles = [linestyles] * len(self._chains)
 
         # Determine linewidths
         if linewidths is None:
-            linewidths = [1.0] * len(self.chains)
+            linewidths = [1.0] * len(self._chains)
         elif isinstance(linewidths, float) or isinstance(linewidths, int):
-            linewidths = [linewidths] * len(self.chains)
+            linewidths = [linewidths] * len(self._chains)
 
         # Determine clouds
         if cloud is None:
@@ -396,13 +401,13 @@ class ChainConsumer(object):
 
         # Figure out if we should display parameter summaries
         if summary is not None:
-            summary = summary and len(self.chains) == 1
+            summary = summary and len(self._chains) == 1
 
         # Figure out bar shading
         if bar_shade is None:
-            bar_shade = len(self.chains) <= 2
+            bar_shade = len(self._chains) <= 2
         if isinstance(bar_shade, bool):
-            bar_shade = [bar_shade] * len(self.chains)
+            bar_shade = [bar_shade] * len(self._chains)
 
         # Figure out how many sigmas to plot
         if sigmas is None:
@@ -415,7 +420,7 @@ class ChainConsumer(object):
         # List options
         self.config["shade"] = shade[:num_chains]
         self.config["shade_alpha"] = shade_alpha[:num_chains]
-        self.config["bar_shade"] = bar_shade[:len(self.chains)]
+        self.config["bar_shade"] = bar_shade[:len(self._chains)]
         self.config["bins"] = bins
         self.config["kde"] = kde
         self.config["cloud"] = cloud
@@ -505,8 +510,8 @@ class ChainConsumer(object):
             One entry per chain, parameter bounds stored in dictionary with parameter as key
         """
         results = []
-        for ind, (chain, parameters, weights, g) in enumerate(zip(self.chains,
-                                                               self.parameters, self.weights, self.grids)):
+        for ind, (chain, parameters, weights, g) in enumerate(zip(self._chains,
+                                                                  self._parameters, self._weights, self._grids)):
             res = {}
             for i, p in enumerate(parameters):
                 summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
@@ -546,8 +551,8 @@ class ChainConsumer(object):
             the LaTeX table.
         """
         if parameters is None:
-            parameters = self.all_parameters
-        for i, name in enumerate(self.names):
+            parameters = self._all_parameters
+        for i, name in enumerate(self._names):
             assert name is not None, \
                 "Generating a LaTeX table requires all chains to have names." \
                 " Ensure you have `name=` in your `add_chain` call"
@@ -555,7 +560,7 @@ class ChainConsumer(object):
             assert isinstance(p, str), \
                 "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
-        num_chains = len(self.chains)
+        num_chains = len(self._chains)
         fit_values = self.get_summary(squeeze=False)
         if label is None:
             label = ""
@@ -580,7 +585,7 @@ class ChainConsumer(object):
         if hlines:
             center_text += hline_text + "\t\t"
         if transpose:
-            center_text += " & ".join(["Parameter"] + self.names) + end_text
+            center_text += " & ".join(["Parameter"] + self._names) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
             for p in parameters:
@@ -595,7 +600,7 @@ class ChainConsumer(object):
             center_text += " & ".join(["Model"] + parameters) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
-            for name, chain_res in zip(self.names, fit_values):
+            for name, chain_res in zip(self._names, fit_values):
                 arr = ["\t\t" + name]
                 for p in parameters:
                     if p in chain_res:
@@ -701,19 +706,19 @@ class ChainConsumer(object):
             ``num_walker`` chains.
         """
         if isinstance(chain, str):
-            assert chain in self.names, "No chain with name %s found" % chain
-            i = self.names.index(chain)
+            assert chain in self._names, "No chain with name %s found" % chain
+            i = self._names.index(chain)
         elif isinstance(chain, int):
             i = chain
         else:
             raise ValueError("Type %s not recognised. Please pass in an int or a string" % type(chain))
-        assert self.walkers[i] is not None, "The chain you have selected was not added with any walkers!"
-        num_walkers = self.walkers[i]
-        cs = np.split(self.chains[i], num_walkers)
-        ws = np.split(self.weights[i], num_walkers)
+        assert self._walkers[i] is not None, "The chain you have selected was not added with any walkers!"
+        num_walkers = self._walkers[i]
+        cs = np.split(self._chains[i], num_walkers)
+        ws = np.split(self._weights[i], num_walkers)
         con = ChainConsumer()
         for j, (c, w) in enumerate(zip(cs, ws)):
-            con.add_chain(c, weights=w, name="Chain %d" % j, parameters=self.parameters[i])
+            con.add_chain(c, weights=w, name="Chain %d" % j, parameters=self._parameters[i])
         return con
 
     def plot(self, figsize="GROW", parameters=None, extents=None, filename=None,
@@ -760,14 +765,14 @@ class ChainConsumer(object):
             self.configure_truth()
 
         if legend is None:
-            legend = len(self.chains) > 1
+            legend = len(self._chains) > 1
 
         # Get all parameters to plot, taking into account some of them
         # might be excluded colour parameters
         color_params = self.config["color_params"]
         plot_color_params = self.config["plot_color_params"]
         all_parameters = []
-        for cp, ps, pc in zip(color_params, self.parameters, plot_color_params):
+        for cp, ps, pc in zip(color_params, self._parameters, plot_color_params):
             for p in ps:
                 if (p != cp or pc) and p not in all_parameters:
                     all_parameters.append(p)
@@ -782,7 +787,7 @@ class ChainConsumer(object):
             umin, umax = np.inf, -np.inf
             for i, cp in enumerate(color_params):
                 if cp is not None and u == cp:
-                    data = self.chains[i][:, self.parameters[i].index(cp)]
+                    data = self._chains[i][:, self._parameters[i].index(cp)]
                     umin = min(umin, data.min())
                     umax = max(umax, data.max())
             color_param_extents[u] = (umin, umax)
@@ -790,7 +795,7 @@ class ChainConsumer(object):
         if parameters is None:
             parameters = all_parameters
         elif isinstance(parameters, int):
-            parameters = self.all_parameters[:parameters]
+            parameters = self._all_parameters[:parameters]
         if truth is not None and isinstance(truth, np.ndarray):
             truth = truth.tolist()
         if truth is not None and isinstance(truth, list):
@@ -838,12 +843,12 @@ class ChainConsumer(object):
         fit_values = self.get_summary(squeeze=False)
 
         if summary is None:
-            summary = len(parameters) < 5 and len(self.chains) == 1
-        if len(self.chains) == 1:
-            self.logger.debug("Plotting surfaces for chain of dimension %s" %
-                              (self.chains[0].shape,))
+            summary = len(parameters) < 5 and len(self._chains) == 1
+        if len(self._chains) == 1:
+            self._logger.debug("Plotting surfaces for chain of dimension %s" %
+                               (self._chains[0].shape,))
         else:
-            self.logger.debug("Plotting surfaces for %d chains" % len(self.chains))
+            self._logger.debug("Plotting surfaces for %d chains" % len(self._chains))
         cbar_done = []
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
@@ -854,7 +859,7 @@ class ChainConsumer(object):
                 if plot_hists and i == j:
                     max_val = None
                     for ii, (chain, weights, parameters, fit, grid) in \
-                            enumerate(zip(self.chains, self.weights, self.parameters, fit_values, self.grids)):
+                            enumerate(zip(self._chains, self._weights, self._parameters, fit_values, self._grids)):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
@@ -870,7 +875,7 @@ class ChainConsumer(object):
 
                 else:
                     for ii, (chain, parameters, fit, weights, grid) in \
-                            enumerate(zip(self.chains, self.parameters, fit_values, self.weights, self.grids)):
+                            enumerate(zip(self._chains, self._parameters, fit_values, self._weights, self._grids)):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
@@ -894,12 +899,12 @@ class ChainConsumer(object):
         colors = self.config["colors"]
         linestyles = self.config["linestyles"]
         linewidths = self.config["linewidths"]
-        if self.names is not None and legend:
+        if self._names is not None and legend:
             ax = axes[0, -1]
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
-                       for n, c, ls, lw in zip(self.names, colors, linestyles, linewidths) if n is not None]
+                       for n, c, ls, lw in zip(self._names, colors, linestyles, linewidths) if n is not None]
             location = "center" if len(parameters) > 1 else 1
-            ax.legend(artists, self.names, loc=location, frameon=False)
+            ax.legend(artists, self._names, loc=location, frameon=False)
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
@@ -975,9 +980,9 @@ class ChainConsumer(object):
             truth = truth.tolist()
 
         if parameters is None:
-            parameters = self.all_parameters
+            parameters = self._all_parameters
         elif isinstance(parameters, int):
-            parameters = self.all_parameters[:parameters]
+            parameters = self._all_parameters[:parameters]
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
 
@@ -1000,7 +1005,7 @@ class ChainConsumer(object):
             extents = {}
 
         if chain is None:
-            if len(self.chains) == 1:
+            if len(self._chains) == 1:
                 chain = 0
             else:
                 raise ValueError("You can only plot walks for one chain at a time. "
@@ -1008,16 +1013,16 @@ class ChainConsumer(object):
                                  "index or a chain name via the chain parameter")
 
         if isinstance(chain, str):
-            assert chain in self.names, \
-                "A chain with name %s is not found in available names: %s" % (chain, self.names)
-            chain = self.names.index(chain)
+            assert chain in self._names, \
+                "A chain with name %s is not found in available names: %s" % (chain, self._names)
+            chain = self._names.index(chain)
 
         n = len(parameters)
         extra = 0
         if plot_weights:
-            plot_weights = plot_weights and np.any(self.weights[chain] != 1.0)
+            plot_weights = plot_weights and np.any(self._weights[chain] != 1.0)
 
-        plot_posterior = plot_posterior and self.posteriors[chain] is not None
+        plot_posterior = plot_posterior and self._posteriors[chain] is not None
 
         if plot_weights:
             extra += 1
@@ -1027,9 +1032,9 @@ class ChainConsumer(object):
         if figsize is None:
             figsize = (8, 0.75 + (n + extra))
 
-        chain_data = self.chains[chain]
-        self.logger.debug("Plotting chain of size %s" % (chain_data.shape,))
-        chain_parameters = self.parameters[chain]
+        chain_data = self._chains[chain]
+        self._logger.debug("Plotting chain of size %s" % (chain_data.shape,))
+        chain_parameters = self._parameters[chain]
 
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
 
@@ -1049,9 +1054,9 @@ class ChainConsumer(object):
                                 extents=extents.get(p), convolve=convolve)
             else:
                 if i == 0 and plot_posterior:
-                    self._plot_walk(ax, "$\log(P)$", self.posteriors[chain] - self.posteriors[chain].max(), convolve=convolve)
+                    self._plot_walk(ax, "$\log(P)$", self._posteriors[chain] - self._posteriors[chain].max(), convolve=convolve)
                 else:
-                    self._plot_walk(ax, "$w$", self.weights[chain], convolve=convolve)
+                    self._plot_walk(ax, "$w$", self._weights[chain], convolve=convolve)
 
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
@@ -1096,13 +1101,13 @@ class ChainConsumer(object):
         this ratio deviates from unity by less than the supplied threshold.
         """
         if chain is None:
-            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            keys = [n if n is not None else i for i, n in enumerate(self._names)]
             return np.all([self.diagnostic_gelman_rubin(k, threshold=threshold) for k in keys])
         index = self._get_chain(chain)
-        num_walkers = self.walkers[index]
-        parameters = self.parameters[index]
-        name = self.names[index] if self.names[index] is not None else "%d" % index
-        chain = self.chains[index]
+        num_walkers = self._walkers[index]
+        parameters = self._parameters[index]
+        name = self._names[index] if self._names[index] is not None else "%d" % index
+        chain = self._chains[index]
         chains = np.split(chain, num_walkers)
         assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
         m = 1.0 * len(chains)
@@ -1145,12 +1150,12 @@ class ChainConsumer(object):
 
         """
         if chain is None:
-            keys = [n if n is not None else i for i, n in enumerate(self.names)]
+            keys = [n if n is not None else i for i, n in enumerate(self._names)]
             return np.all([self.diagnostic_geweke(k, threshold=threshold) for k in keys])
         index = self._get_chain(chain)
-        num_walkers = self.walkers[index]
-        name = self.names[index] if self.names[index] is not None else "%d" % index
-        chain = self.chains[index]
+        num_walkers = self._walkers[index]
+        name = self._names[index] if self._names[index] is not None else "%d" % index
+        chain = self._chains[index]
         chains = np.split(chain, num_walkers)
         n = 1.0 * chains[0].shape[0]
         n_start = int(np.floor(first * n))
@@ -1168,6 +1173,53 @@ class ChainConsumer(object):
         print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
         return pvalue > threshold
 
+    def get_aic(self):
+
+        # warn if chain doesnt have posterior / datanum / freeparams / name
+        # assert at least one chain has it
+        aics = []
+        aics_bool = []
+        for p, n_data, n_free in zip(self._posteriors, self._num_data, self._num_free):
+            if p is None or n_data is None or n_free is None:
+                aics_bool.append(False)
+            else:
+                aics_bool.append(True)
+                c_cor = (n_free * (n_free + 1) / (n_data - n_free - 1))
+                aics.append(2 * (n_free + c_cor - np.max(p)))
+        aics -= np.min(aics)
+        aics_fin = []
+        i = 0
+        for b in aics_bool:
+            if not b:
+                aics_fin.append(None)
+            else:
+                aics_fin.append(aics[i])
+                i += 1
+        return aics_fin
+
+    def get_bic(self):
+
+        # warn if chain doesnt have posterior / datanum / freeparams / name
+        # assert at least one chain has it
+        bics = []
+        bics_bool = []
+        for p, n_data, n_free in zip(self._posteriors, self._num_data, self._num_free):
+            if p is None or n_data is None or n_free is None:
+                bics_bool.append(False)
+            else:
+                bics_bool.append(True)
+                bics.append(2 * (n_free * np.log(n_data) - np.max(p)))
+        bics -= np.min(bics)
+        bics_fin = []
+        i = 0
+        for b in bics_bool:
+            if not b:
+                bics_fin.append(None)
+            else:
+                bics_fin.append(bics[i])
+                i += 1
+        return bics_fin
+
     # Method of estimating spectral density following PyMC.
     # See https://github.com/pymc-devs/pymc/blob/master/pymc/diagnostics.py
     def _spec(self, x, order=2):
@@ -1176,10 +1228,10 @@ class ChainConsumer(object):
 
     def _get_chain(self, chain):
         if isinstance(chain, str):
-            assert chain in self.names, "Chain %s not found!" % chain
-            index = self.names.index(chain)
+            assert chain in self._names, "Chain %s not found!" % chain
+            index = self._names.index(chain)
         elif isinstance(chain, int):
-            assert chain < len(self.chains), "Chain index %d not found!" % chain
+            assert chain < len(self._chains), "Chain index %d not found!" % chain
             index = chain
         else:
             raise ValueError("Type %s not recognised for chain" % type(chain))
@@ -1224,7 +1276,7 @@ class ChainConsumer(object):
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
+            hist = gaussian_filter(hist, smooth, mode=self._gauss_mode)
         if kde:
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
@@ -1312,7 +1364,7 @@ class ChainConsumer(object):
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
+            hist = gaussian_filter(hist, smooth, mode=self._gauss_mode)
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
         if cloud:
@@ -1396,11 +1448,11 @@ class ChainConsumer(object):
             if external_extents is not None and p in external_extents:
                 min_val, max_val = external_extents[p]
             else:
-                for i, (chain, parameters, w) in enumerate(zip(self.chains, self.parameters, self.weights)):
+                for i, (chain, parameters, w) in enumerate(zip(self._chains, self._parameters, self._weights)):
                     if p not in parameters:
                         continue
                     index = parameters.index(p)
-                    if self.grids[i]:
+                    if self._grids[i]:
                         min_prop = chain[:, index].min()
                         max_prop = chain[:, index].max()
                     else:
@@ -1457,7 +1509,7 @@ class ChainConsumer(object):
 
     def _get_bins(self):
         proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
-                    for chain in self.chains]
+                    for chain in self._chains]
         return proposal
 
     def _clamp(self, val, minimum=0, maximum=255):  # pragma: no cover
@@ -1521,7 +1573,7 @@ class ChainConsumer(object):
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.gauss_mode)
+            hist = gaussian_filter(hist, smooth, mode=self._gauss_mode)
 
         if self.config["kde"][chain_index]:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
@@ -1540,7 +1592,7 @@ class ChainConsumer(object):
     def _get_parameter_summary(self, data, weights, parameter, chain_index, **kwargs):
         if not self._configured:
             self.configure()
-        method = self.summaries[self.config["statistics"][chain_index]]
+        method = self._summaries[self.config["statistics"][chain_index]]
         return method(data, weights, parameter, chain_index, **kwargs)
 
     def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
@@ -1593,7 +1645,7 @@ class ChainConsumer(object):
                 elif area > desired_area:
                     minVal = mid
             except:
-                self.logger.warn("Parameter %s is not constrained" % parameter)
+                self._logger.warn("Parameter %s is not constrained" % parameter)
                 return [None, xs[startIndex], None]
 
         return [x1, xs[startIndex], x2]
