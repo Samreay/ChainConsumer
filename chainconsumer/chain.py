@@ -531,7 +531,7 @@ class ChainConsumer(object):
         return results
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
-                        label=None, hlines=True, blank_fill="--"):  # pragma: no cover
+                        label="tab:model_params", hlines=True, blank_fill="--"):  # pragma: no cover
         """ Generates a LaTeX table from parameter summaries.
 
         Parameters
@@ -576,13 +576,6 @@ class ChainConsumer(object):
         if caption is None:
             caption = ""
 
-        base_string = r"""\begin{table}[]
-        \centering
-        \caption{%s}
-        \label{%s}
-        \begin{tabular}{%s}
-        %s      \end{tabular}
-\end{table}"""
         end_text = " \\\\ \n"
         if transpose:
             column_text = "c" * (num_chains + 1)
@@ -1219,14 +1212,21 @@ class ChainConsumer(object):
         return aics_fin
 
     def get_bic(self):
-
-        # warn if chain doesnt have posterior / datanum / freeparams / name
-        # assert at least one chain has it
         bics = []
         bics_bool = []
-        for p, n_data, n_free in zip(self._posteriors, self._num_data, self._num_free):
+        for i, (p, n_data, n_free) in enumerate(zip(self._posteriors, self._num_data, self._num_free)):
             if p is None or n_data is None or n_free is None:
                 bics_bool.append(False)
+                missing = ""
+                if p is None:
+                    missing += "posterior, "
+                if n_data is None:
+                    missing += "num_eff_data_points, "
+                if n_free is None:
+                    missing += "num_free_params, "
+
+                self._logger.warn("You need to set %s for chain %s to get the AIC" %
+                                  (missing[:-2], self._get_chain_name(i)))
             else:
                 bics_bool.append(True)
                 bics.append(2 * (n_free * np.log(n_data) - np.max(p)))
@@ -1240,6 +1240,64 @@ class ChainConsumer(object):
                 bics_fin.append(bics[i])
                 i += 1
         return bics_fin
+
+    def get_model_comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
+                                   aic=True, bic=True, sort="bic", descending=True):
+
+        if sort == "bic":
+            assert bic, "You cannot sort by BIC if you turn it off"
+        if sort == "aic":
+            assert aic, "You cannot sort by AIC if you turn it off"
+
+        if caption is None:
+            caption = ""
+        if label is None:
+            label = ""
+
+        base_string = self._get_latex_table(caption, label)
+        end_text = " \\\\ \n"
+        num_cols = 1 + (1 if aic else 0) + (1 if bic else 0)
+        column_text = "c" * (num_cols + 1)
+        center_text = ""
+        hline_text = "\\hline\n"
+        if hlines:
+            center_text +=  hline_text
+        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") + end_text
+        if hlines:
+            center_text += "\t" + hline_text
+        if aic:
+            aics = self.get_aic()
+        else:
+            aics = np.zeros(len(self._chains))
+        if bic:
+            bics = self.get_bic()
+        else:
+            bics = np.zeros(len(self._chains))
+
+        to_sort = bics if sort == "bic" else aics
+        good = [i for i, t in enumerate(to_sort) if t is not None]
+        names = [self._names[g] for g in good]
+        aics = [aics[g] for g in good]
+        bics = [bics[g] for g in good]
+        to_sort = bics if sort == "bic" else aics
+
+        indexes = np.argsort(to_sort)
+
+        if descending:
+            indexes = indexes[::-1]
+
+        for i in indexes:
+            line = "\t" + names[i]
+            if aic:
+                line += "  &  %5.1f  " % aics[i]
+            if bic:
+                line += "  &  %5.1f  " % bics[i]
+            line += end_text
+            center_text += line
+        if hlines:
+            center_text += "\t" + hline_text
+
+        return base_string % (column_text, center_text)
 
     # Method of estimating spectral density following PyMC.
     # See https://github.com/pymc-devs/pymc/blob/master/pymc/diagnostics.py
@@ -1673,12 +1731,12 @@ class ChainConsumer(object):
 
     def _get_latex_table(self, caption, label):
         base_string = r"""\begin{table}[]
-                \centering
-                \caption{%s}
-                \label{%s}
-                \begin{tabular}{%s}
-                %s      \end{tabular}
-        \end{table}"""
+    \centering
+    \caption{%s}
+    \label{%s}
+    \begin{tabular}{%s}
+        %s    \end{tabular}
+\end{table}"""
         return base_string % (caption, label, "%s", "%s")
 
     def _get_chain_name(self, index):
