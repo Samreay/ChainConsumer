@@ -83,6 +83,12 @@ class ChainConsumer(object):
             be set to the posterior evaluation for the grid point. **Be careful** when using
             a coarse grid of setting a high smoothing value, as this may oversmooth the posterior
             surface and give unreasonably large parameter bounds.
+        num_eff_data_points : int|float, optional
+            The number of effective (independent) data points used in the model fitting. Not required
+            for plotting, but required if loading in multiple chains to perform model comparison.
+        num_free_params : int, optional
+            The number of degrees of freedom in your model. Not required for plotting, but required if
+            loading in multiple chains to perform model comparison.
 
         Returns
         -------
@@ -610,7 +616,7 @@ class ChainConsumer(object):
                 center_text += " & ".join(arr) + end_text
         if hlines:
             center_text += "\t\t" + hline_text
-        final_text = base_string % (caption, label, column_text, center_text)
+        final_text = self._get_latex_table(caption, label) % (column_text, center_text)
 
         return final_text
 
@@ -1154,6 +1160,8 @@ class ChainConsumer(object):
             return np.all([self.diagnostic_geweke(k, threshold=threshold) for k in keys])
         index = self._get_chain(chain)
         num_walkers = self._walkers[index]
+        assert num_walkers is not None and num_walkers > 0, \
+            "You need to specify the number of walkers to use the Geweke diagnostic."
         name = self._names[index] if self._names[index] is not None else "%d" % index
         chain = self._chains[index]
         chains = np.split(chain, num_walkers)
@@ -1174,14 +1182,21 @@ class ChainConsumer(object):
         return pvalue > threshold
 
     def get_aic(self):
-
-        # warn if chain doesnt have posterior / datanum / freeparams / name
-        # assert at least one chain has it
         aics = []
         aics_bool = []
-        for p, n_data, n_free in zip(self._posteriors, self._num_data, self._num_free):
+        for i, (p, n_data, n_free) in enumerate(zip(self._posteriors, self._num_data, self._num_free)):
             if p is None or n_data is None or n_free is None:
                 aics_bool.append(False)
+                missing = ""
+                if p is None:
+                    missing += "posterior, "
+                if n_data is None:
+                    missing += "num_eff_data_points, "
+                if n_free is None:
+                    missing += "num_free_params, "
+
+                self._logger.warn("You need to set %s for chain %s to get the AIC" %
+                                  (missing[:-2], self._get_chain_name(i)))
             else:
                 aics_bool.append(True)
                 c_cor = (n_free * (n_free + 1) / (n_data - n_free - 1))
@@ -1650,4 +1665,15 @@ class ChainConsumer(object):
 
         return [x1, xs[startIndex], x2]
 
+    def _get_latex_table(self, caption, label):
+        base_string = r"""\begin{table}[]
+                \centering
+                \caption{%s}
+                \label{%s}
+                \begin{tabular}{%s}
+                %s      \end{tabular}
+        \end{table}"""
+        return base_string % (caption, label, "%s", "%s")
 
+    def _get_chain_name(self, index):
+        return self._names[index] or index
