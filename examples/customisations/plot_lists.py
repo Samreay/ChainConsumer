@@ -34,4 +34,4 @@ if __name__ == "__main__":
                 shade_alpha=[0.2, 0.1, 0.0], bar_shade=[True, False, False])
     fig = c.plot()
 
-    fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -20,5 +20,5 @@ if __name__ == "__main__":
     c.configure(plot_hists=False)
     fig = c.plot()
 
-    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

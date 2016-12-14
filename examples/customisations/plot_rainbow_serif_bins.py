@@ -38,6 +38,6 @@ if __name__ == "__main__":
     c.add_chain(data3, name="C")
     c.add_chain(data4, name="D")
     c.configure(bins=50, rainbow=True)
-    fig = c.plot(figsize=0.75) # Also making the figure 75% of its original size, for fun
+    fig = c.plot(figsize=0.75)  # Also making the figure 75% of its original size, for fun
 
-    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

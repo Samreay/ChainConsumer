@@ -32,6 +32,6 @@ if __name__ == "__main__":
     c.configure(colors=["#B32222", "#D1D10D", "#455A64"], shade=True, shade_alpha=0.2, bar_shade=True)
     fig = c.plot()
 
-    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 

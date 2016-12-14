@@ -31,5 +31,5 @@ if __name__ == "__main__":
     ps = ["$x$", "$y$"]
     fig = ChainConsumer().add_chain(data, parameters=ps).plot_walks(truth=[0, 1], convolve=100)
 
-    fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

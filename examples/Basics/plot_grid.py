@@ -27,7 +27,7 @@ pdf = np.exp(-0.5 * (xx * xx + yy * yy / 4 + np.abs(xx * yy)))
 c = ChainConsumer()
 c.add_chain([x, y], parameters=["$x$", "$y$"], weights=pdf, grid=True)
 fig = c.plot()
-fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # If you have the flattened array already, you can also pass this
@@ -40,4 +40,4 @@ c.add_chain([xs, ys], parameters=["$x$", "$y$"], weights=pdf_flat, grid=True)
 c.configure(smooth=1)  # Notice how smoothing changes the results!
 fig = c.plot()
 
-fig.set_size_inches(3.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
