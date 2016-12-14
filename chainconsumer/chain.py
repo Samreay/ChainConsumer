@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.14.1"
+    __version__ = "0.15.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -1065,7 +1065,10 @@ class ChainConsumer(object):
                 if i == 0 and plot_posterior:
                     self._plot_walk(ax, "$\log(P)$", self._posteriors[chain] - self._posteriors[chain].max(), convolve=convolve)
                 else:
-                    self._plot_walk(ax, "$w$", self._weights[chain], convolve=convolve)
+                    if self._weights[chain].mean() < 0.1:
+                        self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(self._weights[chain]), convolve=convolve)
+                    else:
+                        self._plot_walk(ax, "$w$", self._weights[chain], convolve=convolve)
 
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
