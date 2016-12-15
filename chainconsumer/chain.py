@@ -1220,8 +1220,8 @@ class ChainConsumer(object):
                                   (missing[:-2], self._get_chain_name(i)))
             else:
                 aics_bool.append(True)
-                c_cor = (n_free * (n_free + 1) / (n_data - n_free - 1))
-                aics.append(2 * (n_free + c_cor - np.max(p)))
+                c_cor = (1.0 * n_free * (n_free + 1) / (n_data - n_free - 1))
+                aics.append(2.0 * (n_free + c_cor - np.max(p)))
         if len(aics) > 0:
             aics -= np.min(aics)
         aics_fin = []

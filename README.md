@@ -31,6 +31,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.15.1
+* Bugfix for python 2.7
+
+
 ##### 0.15.0
 * Adding `usetex` to `configure` method.
 * When plotting walks, plots weights in log space if the mean weight is less than 0.1
