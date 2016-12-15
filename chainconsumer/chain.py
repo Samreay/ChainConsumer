@@ -1284,7 +1284,8 @@ class ChainConsumer(object):
     def comparison_dic(self):
         r""" Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
 
-        If a chain does not have a posterior, this method will return `None` for that chain.
+        If a chain does not have a posterior, this method will return `None` for that chain. **Note that
+        the DIC metric is only valid on posterior surfaces which closely resemble multivariate normals!**
         Formally, we follow Liddle (2007) and first define *Bayesian complexity* as
 
         .. math::
