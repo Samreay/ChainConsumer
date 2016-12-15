@@ -1222,7 +1222,8 @@ class ChainConsumer(object):
                 aics_bool.append(True)
                 c_cor = (n_free * (n_free + 1) / (n_data - n_free - 1))
                 aics.append(2 * (n_free + c_cor - np.max(p)))
-        aics -= np.min(aics)
+        if len(aics) > 0:
+            aics -= np.min(aics)
         aics_fin = []
         i = 0
         for b in aics_bool:
@@ -1263,12 +1264,13 @@ class ChainConsumer(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warn("You need to set %s for chain %s to get the AIC" %
+                self._logger.warn("You need to set %s for chain %s to get the BIC" %
                                   (missing[:-2], self._get_chain_name(i)))
             else:
                 bics_bool.append(True)
-                bics.append(2 * (n_free * np.log(n_data) - np.max(p)))
-        bics -= np.min(bics)
+                bics.append(n_free * np.log(n_data) - 2 * np.max(p))
+        if len(bics) > 0:
+            bics -= np.min(bics)
         bics_fin = []
         i = 0
         for b in bics_bool:
@@ -1320,9 +1322,10 @@ class ChainConsumer(object):
                 mean_d = np.average(d, weights=self._weights[i])
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
+                print(mean_d, d_of_mean, dic)
                 dics.append(dic)
-
-        dics -= np.min(dics)
+        if len(dics) > 0:
+            dics -= np.min(dics)
         dics_fin = []
         i = 0
         for b in dics_bool:
@@ -1865,7 +1868,7 @@ class ChainConsumer(object):
 
         return [x1, xs[startIndex], x2]
 
-    def _get_latex_table(self, caption, label):
+    def _get_latex_table(self, caption, label):  # pragma: no cover
         base_string = r"""\begin{table}
     \centering
     \caption{%s}
