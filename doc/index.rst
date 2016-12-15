@@ -6,7 +6,9 @@ ChainConsumer is a python package designed to do one thing - consume the chains
 output from Monte Carlo processes like MCMC. ChainConsumer can utilise these chains
 to produce plots of the posterior surface inferred from the chain distributions,
 to plot the chains as walks (to check for mixing and convergence), and to output
-parameter summaries in the form of LaTeX tables.
+parameter summaries in the form of LaTeX tables. On top of all of this,
+if you have multiple models (chains), you can load them all in and perform some
+model comparison using AIC, BIC or DIC metrics.
 
 To get things started, here is a basic example:
 

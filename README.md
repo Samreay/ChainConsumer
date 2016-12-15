@@ -15,6 +15,19 @@ and perform some model selection!
 
 [Click through to the online documentation](https://samreay.github.io/ChainConsumer)
 
+### Installation
+
+Install via `pip`:
+    
+    pip install chainconsumer
+
+### Common Issues
+
+Users on some Linux platforms have reported issues rendering plots using ChainConsumer. 
+The common error states that `dvipng: not found`, and as per [StackOverflow](http://stackoverflow.com/a/32915992/3339667)
+post, it can be solved by explicitly install the `matplotlib` dependency `dvipng` via `sudo apt-get install dvipng`.
+
+
 
 ### Update History
 
