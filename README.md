@@ -8,105 +8,13 @@
 [![JOSS](http://joss.theoj.org/papers/10.21105/joss.00045/status.svg?style=flat)](http://dx.doi.org/10.21105/joss.00045)
 
 A new library to consume your fitting chains! Produce likelihood surfaces,
-plot your walks to check convergence, or even output a LaTeX table of the
+plot your walks to check convergence, output a LaTeX table of the
 marginalised parameter distributions with uncertainties and significant
-figures all done for you!
+figures all done for you, or throw in a bunch of chains from different models
+and perform some model selection!
 
 [Click through to the online documentation](https://samreay.github.io/ChainConsumer)
 
-
-### Examples
-
-[Click here to see a ton of useful examples!](https://samreay.github.io/ChainConsumer/examples/index.html)
-
-
-```python
-import numpy as np
-from chainconsumer import ChainConsumer
-
-mean = [0.0, 4.0]
-data = np.random.multivariate_normal(mean, [[1.0, 0.7], [0.7, 1.5]], size=100000)
-
-c = ChainConsumer()
-c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-c.plot(filename="example.png", figsize="column", truth=mean)
-```
-
-
-![Example plot](paper/example.png)
-
-You can plot walks:
-
-```
-c.plot_walks(filename="walks.png")
-```
-
-![Example walks](examples/resources/exampleWalk.png)
-
-And finally, you can also create LaTeX tables:
-
-```
-print(c.get_latex_table())
-```
-
-Which compiles to something as shown below:
-
-![Example rendered table](examples/resources/table.png)
-
------------
-
-### Installation
-
-Install via `pip`:
-    
-    pip install chainconsumer
-
-### Common Issues
-
-Users on some Linux platforms have reported issues rendering plots using ChainConsumer. 
-The common error states that `dvipng: not found`, and as per [StackOverflow](http://stackoverflow.com/a/32915992/3339667)
-post, it can be solved by explicitly install the `matplotlib` dependency `dvipng` via `sudo apt-get install dvipng`.
-
-
-----------
-
-## Contributing
-
-Users that wish to contribute to this project may do so in a number of ways.
-Firstly, for any feature requests, bugs or general ideas, please raise an issue
-via [Github](https://github.com/samreay/ChainConsumer/issues).
-
-If you wish to contribute code to the project, please simple fork the project on
-Github and then raise a pull request. Pull requests will be reviewed to determine
-whether the changes are major or minor in nature, and to ensure all changes are tested.
-
-----------
-
-## Citing
-
-For those that use ChainConsumer and would like to reference it, the
-following BibTeX is generated from the JOSS article:
-
-```
-@article{Hinton2016,
-  doi = {10.21105/joss.00045},
-  url = {http://dx.doi.org/10.21105/joss.00045},
-  year  = {2016},
-  month = {aug},
-  publisher = {The Open Journal},
-  volume = {1},
-  number = {4},
-  author = {Samuel Hinton},
-  title = {{ChainConsumer}},
-  journal = {{JOSS}}
-}
-```
-
-----------
-
-Please feel free to fork the project and open pull-requests, or
-raise an issue via Github if any bugs are encountered or 
-features requests thought up.
 
 ### Update History
 
