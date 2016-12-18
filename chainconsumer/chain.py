@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.1"
+    __version__ = "0.15.2"
 
     def __init__(self):
         logging.basicConfig()
@@ -1323,7 +1323,6 @@ class ChainConsumer(object):
                 mean_d = np.average(d, weights=self._weights[i])
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
-                print(mean_d, d_of_mean, dic)
                 dics.append(dic)
         if len(dics) > 0:
             dics -= np.min(dics)

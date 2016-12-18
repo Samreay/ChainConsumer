@@ -31,6 +31,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.15.2
+* Removing unnecessary debug output.
+
 ##### 0.15.1
 * Bugfix for python 2.7
 
