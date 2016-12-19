@@ -31,6 +31,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+
+##### 0.15.3
+* Adding ability to plot the walks of multiple chains together.
+
 ##### 0.15.2
 * Removing unnecessary debug output.
 

@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.2"
+    __version__ = "0.15.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -923,8 +923,8 @@ class ChainConsumer(object):
         return fig
 
     def plot_walks(self, parameters=None, truth=None, extents=None, display=False,
-                   filename=None, chain=None, convolve=None, figsize=None,
-                   plot_weights=True, plot_posterior=True): # pragma: no cover
+                   filename=None, chains=None, convolve=None, figsize=None,
+                   plot_weights=True, plot_posterior=True, log_weight=None): # pragma: no cover
         """ Plots the chain walk; the parameter values as a function of step index.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -953,7 +953,7 @@ class ChainConsumer(object):
             If set, shows the plot using ``plt.show()``
         filename : str, optional
             If set, saves the figure to the filename
-        chain : int|str, optional
+        chains : int|str, list[str|int], optional
             Used to specify which chain to show if more than one chain is loaded in.
             Can be an integer, specifying the
             chain index, or a str, specifying the chain name.
@@ -966,6 +966,9 @@ class ChainConsumer(object):
             If true, plots the weight if they are available
         plot_posterior : bool, optional
             If true, plots the log posterior if they are available
+        log_weight : bool, optional
+            Whether to display weights in log space or not. If None, the value is
+            inferred by the mean weights of the plotted chains.
 
         Returns
         -------
@@ -975,16 +978,26 @@ class ChainConsumer(object):
         """
         if not self._configured:
             self.configure()
-        if not self._configured:
+        if not self._configured_truth:
             self.configure_truth()
 
         if truth is not None and isinstance(truth, np.ndarray):
             truth = truth.tolist()
 
+        if chains is None:
+            chains = list(range(len(self._chains)))
+        else:
+            if isinstance(chains, str) or isinstance(chains, int):
+                chains = [chains]
+            chains = [self._get_chain(c) for c in chains]
+
+        all_parameters = list(set([p for i in chains for p in self._parameters[i]]))
+
         if parameters is None:
-            parameters = self._all_parameters
+            parameters = all_parameters
         elif isinstance(parameters, int):
-            parameters = self._all_parameters[:parameters]
+            parameters = self.all_parameters[:parameters]
+
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
 
@@ -1006,25 +1019,12 @@ class ChainConsumer(object):
         if extents is None:
             extents = {}
 
-        if chain is None:
-            if len(self._chains) == 1:
-                chain = 0
-            else:
-                raise ValueError("You can only plot walks for one chain at a time. "
-                                 "If you have multiple chains, please pass an "
-                                 "index or a chain name via the chain parameter")
-
-        if isinstance(chain, str):
-            assert chain in self._names, \
-                "A chain with name %s is not found in available names: %s" % (chain, self._names)
-            chain = self._names.index(chain)
-
         n = len(parameters)
         extra = 0
         if plot_weights:
-            plot_weights = plot_weights and np.any(self._weights[chain] != 1.0)
+            plot_weights = plot_weights and np.any([np.any(self._weights[c] != 1.0) for c in chains])
 
-        plot_posterior = plot_posterior and self._posteriors[chain] is not None
+        plot_posterior = plot_posterior and np.any([self._posteriors[c] is not None for c in chains])
 
         if plot_weights:
             extra += 1
@@ -1034,11 +1034,9 @@ class ChainConsumer(object):
         if figsize is None:
             figsize = (8, 0.75 + (n + extra))
 
-        chain_data = self._chains[chain]
-        self._logger.debug("Plotting chain of size %s" % (chain_data.shape,))
-        chain_parameters = self._parameters[chain]
-
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
+        colors = self.config["colors"]
+
         if self.config["usetex"]:
             plt.rc('text', usetex=True)
         if self.config["serif"]:
@@ -1049,19 +1047,29 @@ class ChainConsumer(object):
             ax = axes_row[0]
             if i >= extra:
                 p = parameters[i - n]
-                assert p in chain_parameters, \
-                    "Chain does not have parameter %s, it has %s" % (p, chain_parameters)
-                chain_row = chain_data[:, chain_parameters.index(p)]
-                self._plot_walk(ax, p, chain_row, truth=truth.get(p),
-                                extents=extents.get(p), convolve=convolve)
+                for index in chains:
+                    if p in self._parameters[index]:
+                        chain_row = self._chains[index][:, self._parameters[index].index(p)]
+                        self._plot_walk(ax, p, chain_row, truth=truth.get(p),
+                                        extents=extents.get(p), convolve=convolve, color=colors[index])
+                        truth[p] = None
             else:
                 if i == 0 and plot_posterior:
-                    self._plot_walk(ax, "$\log(P)$", self._posteriors[chain] - self._posteriors[chain].max(), convolve=convolve)
+                    for index in chains:
+                        if self._posteriors[index] is not None:
+                            self._plot_walk(ax, "$\log(P)$", self._posteriors[index] - self._posteriors[index].max(),
+                                            convolve=convolve, color=colors[index])
                 else:
-                    if self._weights[chain].mean() < 0.1:
-                        self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(self._weights[chain]), convolve=convolve)
+                    if log_weight is None:
+                        log_weight = np.any([self._weights[index].mean() < 0.1 for index in chains])
+                    if log_weight:
+                        for index in chains:
+                            self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(self._weights[index]),
+                                            convolve=convolve, color=colors[index])
                     else:
-                        self._plot_walk(ax, "$w$", self._weights[chain], convolve=convolve)
+                        for index in chains:
+                            self._plot_walk(ax, "$w$", self._weights[index],
+                                            convolve=convolve, color=colors[index])
 
         if filename is not None:
             fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
@@ -1456,7 +1464,7 @@ class ChainConsumer(object):
         return index
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
-                   convolve=None):  # pragma: no cover
+                   convolve=None, color=None):  # pragma: no cover
         if extents is not None:
             ax.set_ylim(extents)
         assert convolve is None or isinstance(convolve, int), \
@@ -1464,13 +1472,17 @@ class ChainConsumer(object):
         x = np.arange(data.size)
         ax.set_xlim(0, x[-1])
         ax.set_ylabel(parameter)
-        ax.scatter(x, data, c="#0345A1", s=2, marker=".", edgecolors="none", alpha=0.5)
+        if color is None:
+            color = "#0345A1"
+        ax.scatter(x, data, c=color, s=2, marker=".", edgecolors="none", alpha=0.5)
         max_ticks = self.config["max_ticks"]
         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+
         if convolve is not None:
+            color2 = self._scale_colour(color, 0.5)
             filt = np.ones(convolve) / convolve
             filtered = np.convolve(data, filt, mode="same")
-            ax.plot(x[:-1], filtered[:-1], ls=':', color="#FF0000", alpha=1)
+            ax.plot(x[:-1], filtered[:-1], ls=':', color=color2, alpha=1)
         if truth is not None:
             ax.axhline(truth, **self.config_truth)
 
