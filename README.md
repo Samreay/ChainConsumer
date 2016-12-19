@@ -31,6 +31,8 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.15.4
+* Adding ability to remove chains.
 
 ##### 0.15.3
 * Adding ability to plot the walks of multiple chains together.

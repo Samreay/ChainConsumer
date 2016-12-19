@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.3"
+    __version__ = "0.15.4"
 
     def __init__(self):
         logging.basicConfig()
@@ -161,6 +161,59 @@ class ChainConsumer(object):
         self._num_free.append(num_free_params)
 
         self._init_params()
+        return self
+
+    def remove_chain(self, chain=-1):
+        """
+        Removes a chain from ChainConsumer. Calling this will require any configurations set to be redone!
+
+        Parameters
+        ----------
+        chain : int|str, list[str]
+            The chain(s) to remove. You can pass in either the chain index, or the chain name, to remove it.
+            By default removes the last chain added.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
+        """
+        if isinstance(chain, str) or isinstance(chain, int):
+            chain = [chain]
+        elif isinstance(chain, list):
+            for c in chain:
+                assert isinstance(c, str), "If you specify a list, " \
+                                           "you must specify chain names, not indexes." \
+                                           "This is to avoid confusion when specifying," \
+                                           "for example, [0,0]. As this might be an error," \
+                                           "or a request to remove the first two chains."
+        for c in chain:
+            index = self._get_chain(c)
+            parameters = self._parameters[index]
+
+            del self._chains[index]
+            del self._names[index]
+            del self._weights[index]
+            del self._posteriors[index]
+            del self._parameters[index]
+            del self._grids[index]
+            del self._num_free[index]
+            del self._num_data[index]
+
+            # Recompute all_parameters
+            for p in parameters:
+                has = False
+                for ps in self._parameters:
+                    if p in ps:
+                        has = True
+                        break
+                if not has:
+                    i = self._all_parameters.index(p)
+                    del self._all_parameters[i]
+
+        # Need to reconfigure
+        self._init_params()
+
         return self
 
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
@@ -991,7 +1044,11 @@ class ChainConsumer(object):
                 chains = [chains]
             chains = [self._get_chain(c) for c in chains]
 
-        all_parameters = list(set([p for i in chains for p in self._parameters[i]]))
+        all_parameters2 = [p for i in chains for p in self._parameters[i]]
+        all_parameters = []
+        for p in all_parameters2:
+            if p not in all_parameters:
+                all_parameters.append(p)
 
         if parameters is None:
             parameters = all_parameters

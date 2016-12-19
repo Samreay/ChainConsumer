@@ -12,6 +12,7 @@ General Methods
 ---------------
 * :func:`chainconsumer.ChainConsumer.add_chain` - Add a chain!
 * :func:`chainconsumer.ChainConsumer.divide_chain` - Split a chain into multiple chains to inspect each walk.
+* :func:`chainconsumer.ChainConsumer.remove_chain` - Remove a chain.
 
 Plotting Methods
 ----------------
