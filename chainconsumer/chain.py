@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.5"
+    __version__ = "0.15.6"
 
     def __init__(self):
         logging.basicConfig()
@@ -181,10 +181,8 @@ class ChainConsumer(object):
         if isinstance(chain, str) or isinstance(chain, int):
             chain = [chain]
 
-        print(chain)
         chain = sorted([self._get_chain(c) for c in chain])[::-1]
         assert len(chain) == len(list(set(chain))), "Error, you are trying to remove a chain more than once."
-        print(chain)
 
         for index in chain:
             parameters = self._parameters[index]

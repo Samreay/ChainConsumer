@@ -31,6 +31,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.15.6
+* Removing unnecessary debug output.
+
 ##### 0.15.5
 * Can remove lists of chains properly now.
 
