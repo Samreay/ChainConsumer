@@ -923,6 +923,42 @@ class TestChain(object):
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
+    def test_remove_multiple_chains2(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
+        consumer.add_chain(self.data, parameters=["p2"], name="b")
+        consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
+        consumer.remove_chain(chain=[0, 2])
+        consumer.configure(bins=1.6)
+        summary = consumer.get_summary()
+        assert isinstance(summary, dict)
+        assert "p2" in summary
+        assert "p1" not in summary
+        assert "p3" not in summary
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
+    def test_remove_multiple_chains3(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
+        consumer.add_chain(self.data, parameters=["p2"], name="b")
+        consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
+        consumer.remove_chain(chain=["a", 2])
+        consumer.configure(bins=1.6)
+        summary = consumer.get_summary()
+        assert isinstance(summary, dict)
+        assert "p2" in summary
+        assert "p1" not in summary
+        assert "p3" not in summary
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
     def test_remove_multiple_chains_fails(self):
         with pytest.raises(AssertionError):
             ChainConsumer().add_chain(self.data).remove_chain(chain=[0, 0])

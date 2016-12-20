@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.4"
+    __version__ = "0.15.5"
 
     def __init__(self):
         logging.basicConfig()
@@ -169,7 +169,7 @@ class ChainConsumer(object):
 
         Parameters
         ----------
-        chain : int|str, list[str]
+        chain : int|str, list[str|int]
             The chain(s) to remove. You can pass in either the chain index, or the chain name, to remove it.
             By default removes the last chain added.
 
@@ -180,15 +180,13 @@ class ChainConsumer(object):
         """
         if isinstance(chain, str) or isinstance(chain, int):
             chain = [chain]
-        elif isinstance(chain, list):
-            for c in chain:
-                assert isinstance(c, str), "If you specify a list, " \
-                                           "you must specify chain names, not indexes." \
-                                           "This is to avoid confusion when specifying," \
-                                           "for example, [0,0]. As this might be an error," \
-                                           "or a request to remove the first two chains."
-        for c in chain:
-            index = self._get_chain(c)
+
+        print(chain)
+        chain = sorted([self._get_chain(c) for c in chain])[::-1]
+        assert len(chain) == len(list(set(chain))), "Error, you are trying to remove a chain more than once."
+        print(chain)
+
+        for index in chain:
             parameters = self._parameters[index]
 
             del self._chains[index]
