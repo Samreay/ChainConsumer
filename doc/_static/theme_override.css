@@ -1,0 +1,38 @@
+.wy-nav-top {
+    background-color: #DC3535 !important;
+}
+.wy-side-nav-search {
+    background-color: #DC3535 !important;
+}
+
+.wy-nav-side {
+    box-shadow: 0px 0px 15px 0px #444444;
+}
+
+table.borderless {
+    border: none !important;
+}
+
+table.borderless td {
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    border-right: none !important;
+}
+
+.bounding img {
+    padding: 5px;
+}
+
+table.borderless p {
+    text-align: center;
+}
+
+.wy-table-responsive {
+    overflow: auto !important;
+}
+
+.wy-nav-content {
+    max-width: 1000px !important;
+}

@@ -124,6 +124,10 @@ pygments_style = 'sphinx'
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+
+def setup(app):
+    app.add_stylesheet('theme_override.css')
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'default'
