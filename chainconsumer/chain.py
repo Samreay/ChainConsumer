@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.6"
+    __version__ = "0.15.7"
 
     def __init__(self):
         logging.basicConfig()
@@ -578,6 +578,72 @@ class ChainConsumer(object):
         if squeeze and len(results) == 1:
             return results[0]
         return results
+
+    def get_correlations(self, chain=0, parameters=None):
+        """
+        Takes a chain and returns the correlation between chain parameters.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            The chain index or name. Defaults to first chain.
+        parameters : list[str], optional
+            The list of parameters to compute correlations. Defaults to all parameters
+            for the given chain.
+
+        Returns
+        -------
+            tuple
+                The first index giving a list of parameter names, the second index being the
+                2D correlation matrix.
+        """
+        chain = self._get_chain(chain)
+        if parameters is None:
+            parameters = self._parameters[chain]
+
+        indexes = [self._parameters[chain].index(p) for p in parameters]
+        data = self._chains[chain][:, indexes]
+        correlations = np.atleast_2d(np.corrcoef(data, rowvar=0))
+
+        return parameters, correlations
+
+    def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations",
+                              label="tab:model_correlations"):
+        """
+        Gets a LaTeX table of parameter correlations.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            The chain index or name. Defaults to first chain.
+        parameters : list[str], optional
+            The list of parameters to compute correlations. Defaults to all parameters
+            for the given chain.
+        caption : str, optional
+            The LaTeX table caption.
+        label : str, optional
+            The LaTeX table label.
+
+        Returns
+        -------
+            str
+                The LaTeX table ready to go!
+        """
+        parameters, cor = self.get_correlations(chain=chain, parameters=parameters)
+        latex_table = self._get_latex_table(caption=caption, label=label)
+        column_def = "c|%s" % ("c" * len(parameters))
+        hline_text = "        \\hline\n"
+
+        table = ""
+        table += " & ".join([""] + parameters) + "\\\\ \n"
+        table += hline_text
+        for p, row in zip(parameters, cor):
+            table += "%12s " % p
+            for r in row:
+                table += " & %5.2f" % r
+            table += " \\\\ \n"
+        table += hline_text
+        return latex_table % (column_def, table)
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
                         label="tab:model_params", hlines=True, blank_fill="--"):  # pragma: no cover

@@ -14,13 +14,15 @@ General Methods
 * :func:`chainconsumer.ChainConsumer.divide_chain` - Split a chain into multiple chains to inspect each walk.
 * :func:`chainconsumer.ChainConsumer.remove_chain` - Remove a chain.
 
-Plotting Methods
-----------------
+Plotting and Summary Methods
+----------------------------
 * :func:`chainconsumer.ChainConsumer.plot` - Plot the posterior surfaces
 * :func:`chainconsumer.ChainConsumer.plot_walks` - Plot the walks to visually inspect convergence.
 * :func:`chainconsumer.ChainConsumer.get_latex_table` - Return a LaTeX table of the parameter summaries.
 * :func:`chainconsumer.ChainConsumer.get_parameter_text` - Return LaTeX text for specified parameter bounds.
 * :func:`chainconsumer.ChainConsumer.get_summary` - Get the parameter bounds for your chains.
+* :func:`chainconsumer.ChainConsumer.get_correlations` - Get the parameters and correlation matrix for a chain.
+* :func:`chainconsumer.ChainConsumer.get_correlation_table` - Get a chain's correlation matrix as a LaTeX table.
 
 
 Configuration Methods

@@ -264,7 +264,7 @@ class TestChain(object):
 
     def test_convergence_failure(self):
         data = np.concatenate((np.random.normal(loc=0.0, size=10000),
-                              np.random.normal(loc=4.0, size=10000)))
+                               np.random.normal(loc=4.0, size=10000)))
         consumer = ChainConsumer()
         consumer.add_chain(data)
         summary = consumer.get_summary()
@@ -455,14 +455,14 @@ class TestChain(object):
 
     def test_gelman_rubin_index(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                               np.random.normal(loc=1.0, size=100000))).T
+                          np.random.normal(loc=1.0, size=100000))).T
         consumer = ChainConsumer()
         consumer.add_chain(data, walkers=4)
         assert consumer.diagnostic_gelman_rubin(chain=0)
 
     def test_gelman_rubin_index_not_converged(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                               np.random.normal(loc=1.0, size=100000))).T
+                          np.random.normal(loc=1.0, size=100000))).T
         data[80000:, :] *= 2
         data[80000:, :] += 1
         consumer = ChainConsumer()
@@ -472,7 +472,7 @@ class TestChain(object):
 
     def test_gelman_rubin_index_not_converged(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                               np.random.normal(loc=1.0, size=100000))).T
+                          np.random.normal(loc=1.0, size=100000))).T
         data[:, 0] += np.linspace(0, 10, 100000)
         consumer = ChainConsumer()
 
@@ -481,7 +481,7 @@ class TestChain(object):
 
     def test_gelman_rubin_index_fails(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                               np.random.normal(loc=1.0, size=100000))).T
+                          np.random.normal(loc=1.0, size=100000))).T
         consumer = ChainConsumer()
         consumer.add_chain(data, walkers=4)
         with pytest.raises(AssertionError):
@@ -512,7 +512,7 @@ class TestChain(object):
 
     def test_gelman_rubin_default(self):
         data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                               np.random.normal(loc=1.0, size=100000))).T
+                          np.random.normal(loc=1.0, size=100000))).T
         consumer = ChainConsumer()
         consumer.add_chain(data, walkers=4, name="c1")
         consumer.add_chain(data, walkers=4, name="c2")
@@ -962,3 +962,66 @@ class TestChain(object):
     def test_remove_multiple_chains_fails(self):
         with pytest.raises(AssertionError):
             ChainConsumer().add_chain(self.data).remove_chain(chain=[0, 0])
+
+    def test_correlations_1d(self):
+        data = np.random.normal(0, 1, size=100000)
+        parameters = ["x"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        p, cor = c.get_correlations()
+        assert p[0] == "x"
+        print(cor)
+        assert np.isclose(cor[0, 0], 1)
+        assert cor.shape == (1, 1)
+
+    def test_correlations_2d(self):
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=100000)
+        parameters = ["x", "y"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        p, cor = c.get_correlations()
+        assert p[0] == "x"
+        assert p[1] == "y"
+        assert np.isclose(cor[0, 0], 1)
+        assert np.isclose(cor[1, 1], 1)
+        assert np.abs(cor[0, 1]) < 0.01
+        assert cor.shape == (2, 2)
+
+    def test_correlations_3d(self):
+        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=100000)
+        parameters = ["x", "y", "z"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters, name="chain1")
+        p, cor = c.get_correlations(chain="chain1", parameters=["y", "z", "x"])
+        assert p[0] == "y"
+        assert p[1] == "z"
+        assert p[2] == "x"
+        assert np.isclose(cor[0, 0], 1)
+        assert np.isclose(cor[1, 1], 1)
+        assert np.isclose(cor[2, 2], 1)
+        assert cor.shape == (3, 3)
+        assert np.abs(cor[0, 1] - 0.3) < 0.01
+        assert np.abs(cor[0, 2] - 0.5) < 0.01
+        assert np.abs(cor[1, 2] - 0.2) < 0.01
+
+    def test_correlation_latex_table(self):
+        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=100000)
+        parameters = ["x", "y", "z"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        latex_table = c.get_correlation_table()
+
+        actual = r"""\begin{table}
+            \centering
+            \caption{Parameter Correlations}
+            \label{tab:model_correlations}
+            \begin{tabular}{c|ccc}
+                 & x & y & z\\
+                \hline
+                   x  &  1.00 &  0.50 &  0.20 \\
+                   y  &  0.50 &  1.00 &  0.30 \\
+                   z  &  0.20 &  0.30 &  1.00 \\
+                \hline
+            \end{tabular}
+        \end{table}"""
+        assert latex_table.replace(" ", "") == actual.replace(" ", "")
