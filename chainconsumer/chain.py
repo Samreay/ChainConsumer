@@ -1901,9 +1901,9 @@ class ChainConsumer(object):
 
     def _get_smoothed_bins(self, smooth, bins, marginalsied=True):
         if smooth is None or not smooth or smooth == 0:
-            return bins, 0
+            return int(bins), 0
         else:
-            return ((3 if marginalsied else 2) * smooth * bins), smooth
+            return int((3 if marginalsied else 2) * smooth * bins), smooth
 
     def _get_grid_bins(self, data):
         bin_c = sorted(np.unique(data))
@@ -1918,6 +1918,7 @@ class ChainConsumer(object):
         else:
             bins = self.config['bins'][chain_index]
             bins, smooth = self._get_smoothed_bins(smooth, bins)
+        print("ZZZZ ", bins)
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
