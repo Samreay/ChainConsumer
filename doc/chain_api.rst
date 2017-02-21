@@ -23,6 +23,8 @@ Plotting and Summary Methods
 * :func:`chainconsumer.ChainConsumer.get_summary` - Get the parameter bounds for your chains.
 * :func:`chainconsumer.ChainConsumer.get_correlations` - Get the parameters and correlation matrix for a chain.
 * :func:`chainconsumer.ChainConsumer.get_correlation_table` - Get a chain's correlation matrix as a LaTeX table.
+* :func:`chainconsumer.ChainConsumer.get_covariance` - Get the parameters and covariance matrix for a chain.
+* :func:`chainconsumer.ChainConsumer.get_covariance_table` - Get a chain's covariance matrix as a LaTeX table.
 
 
 Configuration Methods

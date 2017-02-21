@@ -1,13 +1,13 @@
 """
-===========================
-Plot Parameter Correlations
-===========================
+=========================
+Plot Parameter Covariance
+=========================
 
-You can also get LaTeX tables for parameter correlations.
+You can also get LaTeX tables for parameter covariance.
 
 Turned into glorious LaTeX, we would get something like the following:
 
-.. figure::     ../../examples/resources/correlations.png
+.. figure::     ../../examples/resources/covariance.png
     :align:     center
     :width:     60%
 
@@ -22,12 +22,12 @@ from chainconsumer import ChainConsumer
 
 
 if __name__ == "__main__":
-    cov = [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]]
-    data = np.random.multivariate_normal([0, 0, 1], cov, size=100000)
+    cov = [[1.0, 0.5, 0.2], [0.5, 2.0, 0.3], [0.2, 0.3, 3.0]]
+    data = np.random.multivariate_normal([0, 0, 1], cov, size=1000000)
     parameters = ["x", "y", "z"]
     c = ChainConsumer()
     c.add_chain(data, parameters=parameters)
-    latex_table = c.get_correlation_table()
+    latex_table = c.get_covariance_table()
 
     print(latex_table)
 

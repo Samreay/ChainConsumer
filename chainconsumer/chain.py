@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.15.7"
+    __version__ = "0.16.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -607,8 +607,36 @@ class ChainConsumer(object):
 
         return parameters, correlations
 
+    def get_covariance(self, chain=0, parameters=None):
+        """
+        Takes a chain and returns the covariance between chain parameters.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            The chain index or name. Defaults to first chain.
+        parameters : list[str], optional
+            The list of parameters to compute correlations. Defaults to all parameters
+            for the given chain.
+
+        Returns
+        -------
+            tuple
+                The first index giving a list of parameter names, the second index being the
+                2D covariance matrix.
+        """
+        chain = self._get_chain(chain)
+        if parameters is None:
+            parameters = self._parameters[chain]
+
+        indexes = [self._parameters[chain].index(p) for p in parameters]
+        data = self._chains[chain][:, indexes]
+        correlations = np.atleast_2d(np.cov(data, rowvar=False))
+
+        return parameters, correlations
+
     def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations",
-                              label="tab:model_correlations"):
+                              label="tab:parameter_correlations"):
         """
         Gets a LaTeX table of parameter correlations.
 
@@ -630,6 +658,34 @@ class ChainConsumer(object):
                 The LaTeX table ready to go!
         """
         parameters, cor = self.get_correlations(chain=chain, parameters=parameters)
+        return self._get_2d_latex_table(parameters, cor, caption, label)
+
+    def get_covariance_table(self, chain=0, parameters=None, caption="Parameter Covariance",
+                              label="tab:parameter_covariance"):
+        """
+        Gets a LaTeX table of parameter covariance.
+
+        Parameters
+        ----------
+        chain : int|str, optional
+            The chain index or name. Defaults to first chain.
+        parameters : list[str], optional
+            The list of parameters to compute correlations. Defaults to all parameters
+            for the given chain.
+        caption : str, optional
+            The LaTeX table caption.
+        label : str, optional
+            The LaTeX table label.
+
+        Returns
+        -------
+            str
+                The LaTeX table ready to go!
+        """
+        parameters, cov = self.get_covariance(chain=chain, parameters=parameters)
+        return self._get_2d_latex_table(parameters, cov, caption, label)
+
+    def _get_2d_latex_table(self, parameters, matrix, caption, label):
         latex_table = self._get_latex_table(caption=caption, label=label)
         column_def = "c|%s" % ("c" * len(parameters))
         hline_text = "        \\hline\n"
@@ -637,8 +693,10 @@ class ChainConsumer(object):
         table = ""
         table += " & ".join([""] + parameters) + "\\\\ \n"
         table += hline_text
-        for p, row in zip(parameters, cor):
-            table += "%12s " % p
+        max_len = max([len(s) for s in parameters])
+        format_string = "        %%%ds" % max_len
+        for p, row in zip(parameters, matrix):
+            table += format_string % p
             for r in row:
                 table += " & %5.2f" % r
             table += " \\\\ \n"
@@ -1918,7 +1976,6 @@ class ChainConsumer(object):
         else:
             bins = self.config['bins'][chain_index]
             bins, smooth = self._get_smoothed_bins(smooth, bins)
-        print("ZZZZ ", bins)
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)

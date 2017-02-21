@@ -1014,13 +1014,77 @@ class TestChain(object):
         actual = r"""\begin{table}
             \centering
             \caption{Parameter Correlations}
-            \label{tab:model_correlations}
+            \label{tab:parameter_correlations}
             \begin{tabular}{c|ccc}
                  & x & y & z\\
                 \hline
                    x  &  1.00 &  0.50 &  0.20 \\
                    y  &  0.50 &  1.00 &  0.30 \\
                    z  &  0.20 &  0.30 &  1.00 \\
+                \hline
+            \end{tabular}
+        \end{table}"""
+        assert latex_table.replace(" ", "") == actual.replace(" ", "")
+
+    def test_covariance_1d(self):
+        data = np.random.normal(0, 2, size=1000000)
+        parameters = ["x"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        p, cor = c.get_covariance()
+        assert p[0] == "x"
+        assert np.isclose(cor[0, 0], 4, atol=5e-3)
+        assert cor.shape == (1, 1)
+
+    def test_covariance_2d(self):
+        data = np.random.multivariate_normal([0, 0], [[3, 0], [0, 9]], size=1000000)
+        parameters = ["x", "y"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        p, cor = c.get_covariance()
+        assert p[0] == "x"
+        assert p[1] == "y"
+        assert np.isclose(cor[0, 0], 3, atol=5e-3)
+        assert np.isclose(cor[1, 1], 9, atol=5e-3)
+        assert np.isclose(cor[0, 1], 0, atol=5e-3)
+        assert cor.shape == (2, 2)
+
+    def test_covariance_3d(self):
+        cov = [[3, 0.5, 0.2], [0.5, 4, 0.3], [0.2, 0.3, 5]]
+        data = np.random.multivariate_normal([0, 0, 1], cov, size=1000000)
+        parameters = ["x", "y", "z"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters, name="chain1")
+        p, cor = c.get_covariance(chain="chain1", parameters=["y", "z", "x"])
+        assert p[0] == "y"
+        assert p[1] == "z"
+        assert p[2] == "x"
+        assert np.isclose(cor[0, 0], 4, atol=5e-3)
+        assert np.isclose(cor[1, 1], 5, atol=5e-3)
+        assert np.isclose(cor[2, 2], 3, atol=5e-3)
+        assert cor.shape == (3, 3)
+        assert np.abs(cor[0, 1] - 0.3) < 0.01
+        assert np.abs(cor[0, 2] - 0.5) < 0.01
+        assert np.abs(cor[1, 2] - 0.2) < 0.01
+
+    def test_covariance_latex_table(self):
+        cov = [[2, 0.5, 0.2], [0.5, 3, 0.3], [0.2, 0.3, 4.0]]
+        data = np.random.multivariate_normal([0, 0, 1], cov, size=10000000)
+        parameters = ["x", "y", "z"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        latex_table = c.get_covariance_table()
+
+        actual = r"""\begin{table}
+            \centering
+            \caption{Parameter Covariance}
+            \label{tab:parameter_covariance}
+            \begin{tabular}{c|ccc}
+                 & x & y & z\\
+                \hline
+                   x  &  2.00 &  0.50 &  0.20 \\
+                   y  &  0.50 &  3.00 &  0.30 \\
+                   z  &  0.20 &  0.30 &  4.00 \\
                 \hline
             \end{tabular}
         \end{table}"""
