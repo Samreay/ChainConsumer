@@ -1089,3 +1089,7 @@ class TestChain(object):
             \end{tabular}
         \end{table}"""
         assert latex_table.replace(" ", "") == actual.replace(" ", "")
+
+    def test_fail_if_more_parameters_than_data(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data_combined, parameters=["x", "y", "z"])

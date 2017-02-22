@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.16.0"
+    __version__ = "0.16.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -152,6 +152,9 @@ class ChainConsumer(object):
                 parameters = [x for x in range(chain.shape[1])]
         else:
             self._logger.debug("Adding chain with defined parameters")
+            assert len(parameters) <= chain.shape[1], \
+                "Have only %d columns in chain, but have been given %d parameters names! " \
+                "Please double check this." % (chain.shape[1], len(parameters))
         for p in parameters:
             if p not in self._all_parameters:
                 self._all_parameters.append(p)
@@ -216,7 +219,8 @@ class ChainConsumer(object):
                   serif=True, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
-                  color_params=None, plot_color_params=False, cmaps=None, usetex=True):  # pragma: no cover
+                  color_params=None, plot_color_params=False, cmaps=None, usetex=True,
+                  diagonal_tick_labels=True, label_font_size=14, tick_font_size=12):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -308,6 +312,12 @@ class ChainConsumer(object):
             cmaps.
         usetex : bool, optional
             Whether or not to parse text as LaTeX in plots.
+        diagonal_tick_labels : bool, optional
+            Whether to display tick labels on a 45 degree angle.
+        label_font_size : int|float, optional
+            The font size for plot axis labels and axis titles if summaries are configured to display.
+        tick_font_size : int|float, optional
+            The font size for the tick labels in the plots.
 
         Returns
         -------
@@ -505,6 +515,9 @@ class ChainConsumer(object):
         self.config["plot_hists"] = plot_hists
         self.config["max_ticks"] = max_ticks
         self.config["usetex"] = usetex
+        self.config["diagonal_tick_labels"] = diagonal_tick_labels
+        self.config["label_font_size"] = label_font_size
+        self.config["tick_font_size"] = tick_font_size
 
         self._configured = True
         return self
@@ -1674,6 +1687,7 @@ class ChainConsumer(object):
         linewidth = self.config["linewidths"][iindex]
         bins = self.config["bins"][iindex]
         smooth = self.config["smooth"][iindex]
+        title_size = self.config["label_font_size"]
 
         bins, smooth = self._get_smoothed_bins(smooth, bins)
         if grid:
@@ -1730,9 +1744,9 @@ class ChainConsumer(object):
                 if summary:
                     if isinstance(parameter, str):
                         ax.set_title(r"$%s = %s$" % (parameter.strip("$"),
-                                                     self.get_parameter_text(*fit_values)), fontsize=14)
+                                                     self.get_parameter_text(*fit_values)), fontsize=title_size)
                     else:
-                        ax.set_title(r"$%s$" % (self.get_parameter_text(*fit_values)), fontsize=14)
+                        ax.set_title(r"$%s$" % (self.get_parameter_text(*fit_values)), fontsize=title_size)
         if truth is not None:
             truth_value = truth.get(parameter)
             if truth_value is not None:
@@ -1825,11 +1839,14 @@ class ChainConsumer(object):
 
         return bc[i1], bc[bc.size - i2]
 
-    def _get_figure(self, all_parameters, flip, figsize=(5, 5),
-                    external_extents=None):  # pragma: no cover
+    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.config["max_ticks"]
         plot_hists = self.config["plot_hists"]
+        label_font_size = self.config["label_font_size"]
+        tick_font_size = self.config["tick_font_size"]
+        diagonal_tick_labels = self.config["diagonal_tick_labels"]
+
         if not plot_hists:
             n -= 1
 
@@ -1891,19 +1908,21 @@ class ChainConsumer(object):
                     else:
                         display_x_ticks = True
                         if isinstance(p2, str):
-                            ax.set_xlabel(p2, fontsize=14)
+                            ax.set_xlabel(p2, fontsize=label_font_size)
                     if j != 0 or (plot_hists and i == 0):
                         ax.set_yticks([])
                     else:
                         display_y_ticks = True
                         if isinstance(p1, str):
-                            ax.set_ylabel(p1, fontsize=14)
+                            ax.set_ylabel(p1, fontsize=label_font_size)
                     if display_x_ticks:
-                        [l.set_rotation(45) for l in ax.get_xticklabels()]
+                        if diagonal_tick_labels:
+                            [l.set_rotation(45) and l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
                         ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
                         ax.xaxis.set_major_formatter(formatter)
                     if display_y_ticks:
-                        [l.set_rotation(45) for l in ax.get_yticklabels()]
+                        if diagonal_tick_labels:
+                            [l.set_rotation(45) and l.set_fontsize(tick_font_size) for l in ax.get_yticklabels()]
                         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
                         ax.yaxis.set_major_formatter(formatter)
                     if i != j or not plot_hists:
