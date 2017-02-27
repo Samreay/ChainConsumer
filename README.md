@@ -31,6 +31,19 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.16.2
+* Fixing bug where tick font size was only honoured when ticks were on an angle.
+
+##### 0.16.1
+* Adding ability to specify label font size, tick font size, and whether the ticks should be on an angle.
+
+##### 0.16.0
+* Bug fix for those with latest `numpy` which removed a deprecated method I was using.
+* Adding ability to get parameter covariance tables.
+
+##### 0.15.7
+* Adding ability to get parameter correlation tables.
+
 ##### 0.15.6
 * Removing unnecessary debug output.
 
