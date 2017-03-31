@@ -28,7 +28,7 @@ Statistics
 An area of some difference in analyses is how to generate summary statistics
 from marginalised posterior distributions. ChainConsumer comes equipped
 with the three different methods that can be configured with the
-`configure_general` method. The three methods are:
+`configure` method. The three methods are:
 
 Maximum Likelihood Statistics
    The default statistic used by ChainConsumer, maximum likelihood statistics
