@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.16.3"
+    __version__ = "0.16.4"
 
     def __init__(self):
         logging.basicConfig()
@@ -1859,6 +1859,8 @@ class ChainConsumer(object):
             plt.rc('text', usetex=True)
         if self.config["serif"]:
             plt.rc('font', family='serif')
+        else:
+            plt.rc('font', family='sans-serif')
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
 
         formatter = ScalarFormatter(useOffset=False) # useMathText=True

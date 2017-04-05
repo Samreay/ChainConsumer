@@ -10,9 +10,8 @@ more ticks added, and label size increased!
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal
 from chainconsumer import ChainConsumer
-
 
 if __name__ == "__main__":
     np.random.seed(0)
