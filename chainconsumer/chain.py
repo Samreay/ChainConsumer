@@ -1224,7 +1224,6 @@ class ChainConsumer(object):
         if figsize is None:
             figsize = (8, 0.75 + (n + extra))
 
-        fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
         colors = self.config["colors"]
 
         if self.config["usetex"]:
@@ -1233,6 +1232,9 @@ class ChainConsumer(object):
             plt.rc('font', family='serif')
         else:
             plt.rc('font', family='sans-serif')
+
+        fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
+
         for i, axes_row in enumerate(axes):
             ax = axes_row[0]
             if i >= extra:
@@ -1854,13 +1856,15 @@ class ChainConsumer(object):
             gridspec_kw = {'width_ratios': [3, 1], 'height_ratios': [1, 3]}
         else:
             gridspec_kw = {}
-        fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
+
         if self.config["usetex"]:
             plt.rc('text', usetex=True)
         if self.config["serif"]:
             plt.rc('font', family='serif')
         else:
             plt.rc('font', family='sans-serif')
+
+        fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
 
         formatter = ScalarFormatter(useOffset=False) # useMathText=True
