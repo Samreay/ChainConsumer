@@ -31,6 +31,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.16.4
+* Moving `rc` parameters before plot creation to fix issues with parallel plot generation.
+
 ##### 0.16.3
 * Fixing an integer division bug where python 2 contour shading was setting to 0 alpha.
 
