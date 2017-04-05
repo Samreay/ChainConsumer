@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.16.2"
+    __version__ = "0.16.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -454,7 +454,7 @@ class ChainConsumer(object):
             if num_chains == 1:
                 shade_alpha = 1.0
             else:
-                shade_alpha = np.sqrt(1 / num_chains)
+                shade_alpha = np.sqrt(1.0 / num_chains)
         # Decrease the shading amount if there are colour scatter points
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]

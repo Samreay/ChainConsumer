@@ -31,6 +31,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.16.3
+* Fixing an integer division bug where python 2 contour shading was setting to 0 alpha.
+
 ##### 0.16.2
 * Fixing bug where tick font size was only honoured when ticks were on an angle.
 
