@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
-from scipy.interpolate import interp1d, griddata
-from matplotlib.ticker import MaxNLocator, ScalarFormatter
+from scipy.interpolate import interp1d
 import matplotlib.cm as cm
 import statsmodels.api as sm
 from scipy.ndimage.filters import gaussian_filter
 
+from chainconsumer.comparisons import Comparison
+from chainconsumer.diagnostic import Diagnostic
 from chainconsumer.plotter import Plotter
 
 __all__ = ["ChainConsumer"]
@@ -44,7 +45,9 @@ class ChainConsumer(object):
         }
         self._gauss_mode = 'reflect'
 
-        self._plotter = Plotter()
+        self.plotter = Plotter(self)
+        self.diagnostic = Diagnostic(self)
+        self.comparison = Comparison(self)
 
     def _init_params(self):
         self.config = {}
@@ -898,117 +901,6 @@ class ChainConsumer(object):
             con.add_chain(c, weights=w, name="Chain %d" % j, parameters=self._parameters[i])
         return con
 
-    def plot(self, figsize="GROW", parameters=None, extents=None, filename=None,
-             display=False, truth=None, legend=None):  # pragma: no cover
-        """ Plot the chain!
-
-        Parameters
-        ----------
-        figsize : str|tuple(float)|float, optional
-            The figure size to generate. Accepts a regular two tuple of size in inches,
-            or one of several key words. The default value of ``COLUMN`` creates a figure
-            of appropriate size of insertion into an A4 LaTeX document in two-column mode.
-            ``PAGE`` creates a full page width figure. ``GROW`` creates an image that
-            scales with parameters (1.5 inches per parameter). String arguments are not
-            case sensitive. If you pass a float, it will scale the default ``GROW`` by
-            that amount, so ``2.0`` would result in a plot 3 inches per parameter.
-        parameters : list[str]|int, optional
-            If set, only creates a plot for those specific parameters (if list). If an
-            integer is given, only plots the fist so many parameters.
-        extents : list[tuple[float]] or dict[str], optional
-            Extents are given as two-tuples. You can pass in a list the same size as
-            parameters (or default parameters if you don't specify parameters),
-            or as a dictionary.
-        filename : str, optional
-            If set, saves the figure to this location
-        display : bool, optional
-            If True, shows the figure using ``plt.show()``.
-        truth : list[float] or dict[str], optional
-            A list of truth values corresponding to parameters, or a dictionary of
-            truth values indexed by key
-        legend : bool, optional
-            If true, creates a legend in your plot using the chain names.
-
-        Returns
-        -------
-        figure
-            the matplotlib figure
-
-        """
-
-        if not self._configured:
-            self.configure()
-        if not self._configured_truth:
-            self.configure_truth()
-
-        return self._plotter.plot(self, figsize=figsize,
-                                  parameters=parameters, extents=extents, filename=filename, display=display,
-                                  truth=truth, legend=legend)
-
-    def plot_walks(self, parameters=None, truth=None, extents=None, display=False,
-                   filename=None, chains=None, convolve=None, figsize=None,
-                   plot_weights=True, plot_posterior=True, log_weight=None): # pragma: no cover
-        """ Plots the chain walk; the parameter values as a function of step index.
-
-        This plot is more for a sanity or consistency check than for use with final results.
-        Plotting this before plotting with :func:`plot` allows you to quickly see if the
-        chains are well behaved, or if certain parameters are suspect
-        or require a greater burn in period.
-
-        The desired outcome is to see an unchanging distribution along the x-axis of the plot.
-        If there are obvious tails or features in the parameters, you probably want
-        to investigate.
-
-        See :class:`.dessn.chain.demoWalk.DemoWalk` for example usage.
-
-        Parameters
-        ----------
-        parameters : list[str]|int, optional
-            Specifiy a subset of parameters to plot. If not set, all parameters are plotted.
-            If an integer is given, only the first so many parameters are plotted.
-        truth : list[float]|dict[str], optional
-            A list of truth values corresponding to parameters, or a dictionary of
-            truth values keyed by the parameter.
-        extents : list[tuple]|dict[str], optional
-            A list of two-tuples for plot extents per parameter, or a dictionary of
-            extents keyed by the parameter.
-        display : bool, optional
-            If set, shows the plot using ``plt.show()``
-        filename : str, optional
-            If set, saves the figure to the filename
-        chains : int|str, list[str|int], optional
-            Used to specify which chain to show if more than one chain is loaded in.
-            Can be an integer, specifying the
-            chain index, or a str, specifying the chain name.
-        convolve : int, optional
-            If set, overplots a smoothed version of the steps using ``convolve`` as
-            the width of the smoothing filter.
-        figsize : tuple, optional
-            If set, sets the created figure size.
-        plot_weights : bool, optional
-            If true, plots the weight if they are available
-        plot_posterior : bool, optional
-            If true, plots the log posterior if they are available
-        log_weight : bool, optional
-            Whether to display weights in log space or not. If None, the value is
-            inferred by the mean weights of the plotted chains.
-
-        Returns
-        -------
-        figure
-            the matplotlib figure created
-
-        """
-        if not self._configured:
-            self.configure()
-        if not self._configured_truth:
-            self.configure_truth()
-
-        return self._plotter.plot_walks(self, parameters=parameters, truth=truth, extents=extents,
-                                        display=display, filename=filename, chains=chains, convolve=convolve,
-                                        figsize=figsize, plot_weights=plot_weights, plot_posterior=plot_posterior,
-                                        log_weight=log_weight)
-
     def _get_chain(self, chain):
         if isinstance(chain, str):
             assert chain in self._names, "Chain %s not found!" % chain
@@ -1020,60 +912,10 @@ class ChainConsumer(object):
             raise ValueError("Type %s not recognised for chain" % type(chain))
         return index
 
-    def _get_extent(self, data, weight):
-        hist, be = np.histogram(data, weights=weight, bins=1000, normed=True)
-        bc = 0.5 * (be[1:] + be[:-1])
-        cdf = hist.cumsum()
-        cdf = cdf / cdf.max()
-        icdf = (1 - cdf)[::-1]
-        threshold = 1e-3
-        i1 = np.where(cdf > threshold)[0][0]
-        i2 = np.where(icdf > threshold)[0][0]
-
-        return bc[i1], bc[bc.size - i2]
-
     def _get_bins(self):
         proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
                     for chain in self._chains]
         return proposal
-
-    def _clamp(self, val, minimum=0, maximum=255):  # pragma: no cover
-        if val < minimum:
-            return minimum
-        if val > maximum:
-            return maximum
-        return val
-
-    def _scale_colours(self, colour, num):  # pragma: no cover
-        # http://thadeusb.com/weblog/2010/10/10/python_scale_hex_color
-        scales = np.logspace(np.log(0.9), np.log(1.3), num)
-        colours = [self._scale_colour(colour, scale) for scale in scales]
-        return colours
-
-    def _scale_colour(self, colour, scalefactor):  # pragma: no cover
-        if isinstance(colour, np.ndarray):
-            r, g, b = colour[:3]*255.0
-        else:
-            hex = colour.strip('#')
-            if scalefactor < 0 or len(hex) != 6:
-                return hex
-            r, g, b = int(hex[:2], 16), int(hex[2:4], 16), int(hex[4:], 16)
-        r = self._clamp(int(r * scalefactor))
-        g = self._clamp(int(g * scalefactor))
-        b = self._clamp(int(b * scalefactor))
-        return "#%02x%02x%02x" % (r, g, b)
-
-    def _convert_to_stdev(self, sigma):  # pragma: no cover
-        # From astroML
-        shape = sigma.shape
-        sigma = sigma.ravel()
-        i_sort = np.argsort(sigma)[::-1]
-        i_unsort = np.argsort(i_sort)
-
-        sigma_cumsum = 1.0* sigma[i_sort].cumsum()
-        sigma_cumsum /= sigma_cumsum[-1]
-
-        return sigma_cumsum[i_unsort].reshape(shape)
 
     def _get_smoothed_bins(self, smooth, bins, marginalsied=True):
         if smooth is None or not smooth or smooth == 0:
