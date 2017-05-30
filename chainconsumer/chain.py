@@ -44,6 +44,7 @@ class ChainConsumer(object):
             "cumulative": self._get_parameter_summary_cumulative
         }
         self._gauss_mode = 'reflect'
+        self._configured = False
 
         self.plotter = Plotter(self)
         self.diagnostic = Diagnostic(self)
