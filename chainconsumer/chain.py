@@ -636,7 +636,7 @@ class ChainConsumer(object):
         return index
 
     def _get_bins(self):
-        proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
+        proposal = [max(30, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
                     for chain in self._chains]
         return proposal
 
