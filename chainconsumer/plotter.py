@@ -496,8 +496,9 @@ class Plotter(object):
             binsy = self.parent._get_grid_bins(y)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
         else:
-            bins, smooth = self.parent._get_smoothed_bins(smooth, bins, marginalsied=False)
-            hist, x_bins, y_bins = np.histogram2d(x, y, bins=bins, weights=w)
+            binsx, smooth = self.parent._get_smoothed_bins(smooth, bins, x, w, marginalsied=False)
+            binsy, _ = self.parent._get_smoothed_bins(smooth, bins, y, w, marginalsied=False)
+            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         colours = self._scale_colours(colour, len(levels))
         colours2 = [self._scale_colour(colours[0], 0.7)] + \
@@ -552,11 +553,10 @@ class Plotter(object):
         smooth = self.parent.config["smooth"][iindex]
         title_size = self.parent.config["label_font_size"]
 
-        bins, smooth = self.parent._get_smoothed_bins(smooth, bins)
+        bins, smooth = self.parent._get_smoothed_bins(smooth, bins, chain_row, weights)
         if grid:
             bins = self.parent._get_grid_bins(chain_row)
-        else:
-            bins = np.linspace(extents[0], extents[1], bins)
+
         hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         if smooth:
