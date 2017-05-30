@@ -1,12 +1,21 @@
 import logging
 import numpy as np
-from chainconsumer.helpers import get_parameter_text
+import statsmodels.api as sm
+from scipy.interpolate import interp1d
+from scipy.ndimage.filters import gaussian_filter
+from chainconsumer.helpers import get_parameter_text, get_smoothed_bins, get_grid_bins
 
 
-class Text(object):
+class Analysis(object):
     def __init__(self, parent):
         self.parent = parent
         self._logger = logging.getLogger(__name__)
+
+        self._summaries = {
+            "max": self.get_parameter_summary_max,
+            "mean": self.get_parameter_summary_mean,
+            "cumulative": self.get_parameter_summary_cumulative
+        }
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
                         label="tab:model_params", hlines=True, blank_fill="--"):  # pragma: no cover
@@ -93,6 +102,41 @@ class Text(object):
         final_text = self._get_latex_table(caption, label) % (column_text, center_text)
 
         return final_text
+
+    def get_summary(self, squeeze=True):
+        """  Gets a summary of the marginalised parameter distributions.
+
+        Parameters
+        ----------
+        squeeze : bool, optional
+            Squeeze the summaries. If you only have one chain, squeeze will not return
+            a length one list, just the single summary. If this is false, you will
+            get a length one list.
+
+        Returns
+        -------
+        list of dictionaries
+            One entry per chain, parameter bounds stored in dictionary with parameter as key
+        """
+        results = []
+        for ind, (chain, parameters, weights, g) in enumerate(zip(self.parent._chains,
+                                                                  self.parent._parameters,
+                                                                  self.parent._weights,
+                                                                  self.parent._grids)):
+            res = {}
+            for i, p in enumerate(parameters):
+                summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
+                res[p] = summary
+            results.append(res)
+        if squeeze and len(results) == 1:
+            return results[0]
+        return results
+
+    def _get_parameter_summary(self, data, weights, parameter, chain_index, **kwargs):
+        if not self.parent._configured:
+            self.parent.configure()
+        method = self._summaries[self.parent.config["statistics"][chain_index]]
+        return method(data, weights, parameter, chain_index, **kwargs)
 
     def get_correlations(self, chain=0, parameters=None):
         """
@@ -200,6 +244,33 @@ class Text(object):
         parameters, cov = self.get_covariance(chain=chain, parameters=parameters)
         return self._get_2d_latex_table(parameters, cov, caption, label)
 
+    def _get_smoothed_histogram(self, data, weights, chain_index, grid):
+        smooth = self.parent.config["smooth"][chain_index]
+        if grid:
+            bins = get_grid_bins(data)
+        else:
+            bins = self.parent.config['bins'][chain_index]
+            bins, smooth = get_smoothed_bins(smooth, bins, data, weights)
+        hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
+        edge_centers = 0.5 * (edges[1:] + edges[:-1])
+        xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
+        if smooth:
+            hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
+
+        if self.parent.config["kde"][chain_index]:
+            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
+            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
+                                           "If you would like weights, please vote for this issue: " \
+                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
+            pdf = sm.nonparametric.KDEUnivariate(data)
+            pdf.fit()
+            ys = interp1d(kde_xs, pdf.evaluate(kde_xs), kind="cubic")(xs)
+        else:
+            ys = interp1d(edge_centers, hist, kind="linear")(xs)
+        cs = ys.cumsum()
+        cs /= cs.max()
+        return xs, ys, cs
+
     def _get_2d_latex_table(self, parameters, matrix, caption, label):
         latex_table = self._get_latex_table(caption=caption, label=label)
         column_def = "c|%s" % ("c" * len(parameters))
@@ -227,3 +298,59 @@ class Text(object):
         %s    \end{tabular}
 \end{table}"""
         return base_string % (caption, label, "%s", "%s")
+
+    def get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+        bounds = interp1d(cs, xs)(vals)
+        bounds[1] = 0.5 * (bounds[0] + bounds[2])
+        return bounds
+
+    def get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+        bounds = interp1d(cs, xs)(vals)
+        return bounds
+
+    def get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        n_pad = 1000
+        x_start = xs[0] * np.ones(n_pad)
+        x_end = xs[-1] * np.ones(n_pad)
+        y_start = np.linspace(0, ys[0], n_pad)
+        y_end = np.linspace(ys[-1], 0, n_pad)
+        xs = np.concatenate((x_start, xs, x_end))
+        ys = np.concatenate((y_start, ys, y_end))
+        cs = ys.cumsum()
+        cs = cs / cs.max()
+        startIndex = ys.argmax()
+        maxVal = ys[startIndex]
+        minVal = 0
+        threshold = 0.001
+
+        x1 = None
+        x2 = None
+        count = 0
+        while x1 is None:
+            mid = (maxVal + minVal) / 2.0
+            count += 1
+            try:
+                if count > 50:
+                    raise Exception("Failed to converge")
+                i1 = startIndex - np.where(ys[:startIndex][::-1] < mid)[0][0]
+                i2 = startIndex + np.where(ys[startIndex:] < mid)[0][0]
+                area = cs[i2] - cs[i1]
+                deviation = np.abs(area - desired_area)
+                if deviation < threshold:
+                    x1 = xs[i1]
+                    x2 = xs[i2]
+                elif area < desired_area:
+                    maxVal = mid
+                elif area > desired_area:
+                    minVal = mid
+            except:
+                self._logger.warning("Parameter %s is not constrained" % parameter)
+                return [None, xs[startIndex], None]
+
+        return [x1, xs[startIndex], x2]
+

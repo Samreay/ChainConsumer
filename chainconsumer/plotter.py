@@ -553,50 +553,53 @@ class Plotter(object):
         smooth = self.parent.config["smooth"][iindex]
         title_size = self.parent.config["label_font_size"]
 
-        bins, smooth = self.parent._get_smoothed_bins(smooth, bins, chain_row, weights)
-        if grid:
-            bins = self.parent._get_grid_bins(chain_row)
+        xs, ys, cs = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
 
-        hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
-        edge_center = 0.5 * (edges[:-1] + edges[1:])
+        # bins, smooth = self.parent._get_smoothed_bins(smooth, bins, chain_row, weights)
+        # if grid:
+        #     bins = self.parent._get_grid_bins(chain_row)
+        #
+        # hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
+        # edge_center = 0.5 * (edges[:-1] + edges[1:])
+        #
+        # if smooth:
+        #     hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
+        # if kde:
+        #     assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
+        #                                    "If you would like weights, please vote for this issue: " \
+        #                                    "https://github.com/scikit-learn/scikit-learn/issues/4394"
+        #     pdf = sm.nonparametric.KDEUnivariate(chain_row)
+        #     pdf.fit()
+        #     xs = np.linspace(extents[0], extents[1], 100)
+        #     if flip:
+        #         ax.plot(pdf.evaluate(xs), xs, color=colour, ls=linestyle, lw=linewidth)
+        #     else:
+        #         ax.plot(xs, pdf.evaluate(xs), color=colour, ls=linestyle, lw=linewidth)
+        #     interpolator = pdf.evaluate
+        # else:
         if smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
-        if kde:
-            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
-                                           "If you would like weights, please vote for this issue: " \
-                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
-            pdf = sm.nonparametric.KDEUnivariate(chain_row)
-            pdf.fit()
-            xs = np.linspace(extents[0], extents[1], 100)
             if flip:
-                ax.plot(pdf.evaluate(xs), xs, color=colour, ls=linestyle, lw=linewidth)
+                ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth)
             else:
-                ax.plot(xs, pdf.evaluate(xs), color=colour, ls=linestyle, lw=linewidth)
-            interpolator = pdf.evaluate
+                ax.plot(xs, ys, color=colour, ls=linestyle, lw=linewidth)
         else:
-            if smooth:
-                if flip:
-                    ax.plot(hist, edge_center, color=colour, ls=linestyle, lw=linewidth)
-                else:
-                    ax.plot(edge_center, hist, color=colour, ls=linestyle, lw=linewidth)
+            if flip:
+                orientation = "horizontal"
             else:
-                if flip:
-                    orientation = "horizontal"
-                else:
-                    orientation = "vertical"
-                ax.hist(edge_center, weights=hist, bins=edges, histtype="step",
+                orientation = "vertical"
+                ax.hist(xs + 1e-10, weights=ys, bins=xs, histtype="step",
                         color=colour, orientation=orientation, ls=linestyle, lw=linewidth)
-            interp_type = "linear" if smooth else "nearest"
-            interpolator = interp1d(edge_center, hist, kind=interp_type)
+        interp_type = "linear" if smooth else "nearest"
+        interpolator = interp1d(xs, ys, kind=interp_type)
 
         if bar_shade and fit_values is not None:
             lower = fit_values[0]
             upper = fit_values[2]
             if lower is not None and upper is not None:
-                if lower < edge_center.min():
-                    lower = edge_center.min()
-                if upper > edge_center.max():
-                    upper = edge_center.max()
+                if lower < xs.min():
+                    lower = xs.min()
+                if upper > xs.max():
+                    upper = xs.max()
                 x = np.linspace(lower, upper, 1000)
                 if flip:
                     ax.fill_betweenx(x, np.zeros(x.shape), interpolator(x),
@@ -617,7 +620,9 @@ class Plotter(object):
                     ax.axhline(truth_value, **self.parent.config_truth)
                 else:
                     ax.axvline(truth_value, **self.parent.config_truth)
-        return hist.max()
+
+        # TODO: Check extents
+        return ys.max()
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
                    convolve=None, color=None):  # pragma: no cover

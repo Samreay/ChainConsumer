@@ -1,15 +1,14 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import logging
 from scipy.interpolate import interp1d
 import matplotlib.cm as cm
-import statsmodels.api as sm
-from scipy.ndimage.filters import gaussian_filter
+
 
 from chainconsumer.comparisons import Comparison
 from chainconsumer.diagnostic import Diagnostic
 from chainconsumer.plotter import Plotter
-from chainconsumer.helpers import get_extents
+from chainconsumer.helpers import get_extents, get_bins
+from chainconsumer.analysis import Analysis
 
 __all__ = ["ChainConsumer"]
 
@@ -39,17 +38,13 @@ class ChainConsumer(object):
         self._num_data = []
         self._default_parameters = None
         self._init_params()
-        self._summaries = {
-            "max": self._get_parameter_summary_max,
-            "mean": self._get_parameter_summary_mean,
-            "cumulative": self._get_parameter_summary_cumulative
-        }
         self._gauss_mode = 'reflect'
         self._configured = False
 
         self.plotter = Plotter(self)
         self.diagnostic = Diagnostic(self)
         self.comparison = Comparison(self)
+        self.analysis = Analysis(self)
 
     def _init_params(self):
         self.config = {}
@@ -350,11 +345,11 @@ class ChainConsumer(object):
 
         # Determine bins
         if bins is None:
-            bins = self._get_bins()
+            bins = get_bins(self._chains)
         elif isinstance(bins, list):
-            bins = [b2 if isinstance(b2, int) else np.floor(b2 * b1) for b1, b2 in zip(self._get_bins(), bins)]
+            bins = [b2 if isinstance(b2, int) else np.floor(b2 * b1) for b1, b2 in zip(get_bins(self._chains), bins)]
         elif isinstance(bins, float):
-            bins = [np.floor(b * bins) for b in self._get_bins()]
+            bins = [np.floor(b * bins) for b in get_bins(self._chains)]
         elif isinstance(bins, int):
             bins = [bins] * len(self._chains)
         else:
@@ -559,33 +554,6 @@ class ChainConsumer(object):
         self._configured_truth = True
         return self
 
-    def get_summary(self, squeeze=True):
-        """  Gets a summary of the marginalised parameter distributions.
-
-        Parameters
-        ----------
-        squeeze : bool, optional
-            Squeeze the summaries. If you only have one chain, squeeze will not return
-            a length one list, just the single summary. If this is false, you will
-            get a length one list.
-
-        Returns
-        -------
-        list of dictionaries
-            One entry per chain, parameter bounds stored in dictionary with parameter as key
-        """
-        results = []
-        for ind, (chain, parameters, weights, g) in enumerate(zip(self._chains,
-                                                                  self._parameters, self._weights, self._grids)):
-            res = {}
-            for i, p in enumerate(parameters):
-                summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
-                res[p] = summary
-            results.append(res)
-        if squeeze and len(results) == 1:
-            return results[0]
-        return results
-
     def divide_chain(self, chain=0):
         """
         Returns a ChainConsumer instance containing all the walks of a given chain
@@ -634,112 +602,6 @@ class ChainConsumer(object):
         else:
             raise ValueError("Type %s not recognised for chain" % type(chain))
         return index
-
-    def _get_bins(self):
-        proposal = [max(30, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
-                    for chain in self._chains]
-        return proposal
-
-    def _get_smoothed_bins(self, smooth, bins, data, weight, marginalsied=True):
-        minv, maxv = get_extents(data, weight)
-        if smooth is None or not smooth or smooth == 0:
-            return np.linspace(minv, maxv, int(bins)), 0
-        else:
-            return np.linspace(minv, maxv, int((3 if marginalsied else 2) * smooth * bins)), smooth
-
-    def _get_grid_bins(self, data):
-        bin_c = sorted(np.unique(data))
-        delta = 0.5 * (bin_c[1] - bin_c[0])
-        bins = np.concatenate((bin_c - delta, [bin_c[-1] + delta]))
-        return bins
-
-    def _get_smoothed_histogram(self, data, weights, chain_index, grid):
-        smooth = self.config["smooth"][chain_index]
-        if grid:
-            bins = self._get_grid_bins(data)
-        else:
-            bins = self.config['bins'][chain_index]
-            bins, smooth = self._get_smoothed_bins(smooth, bins, data, weights)
-        hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
-        edge_centers = 0.5 * (edges[1:] + edges[:-1])
-        xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
-        if smooth:
-            hist = gaussian_filter(hist, smooth, mode=self._gauss_mode)
-
-        if self.config["kde"][chain_index]:
-            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
-            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
-                                           "If you would like weights, please vote for this issue: " \
-                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
-            pdf = sm.nonparametric.KDEUnivariate(data)
-            pdf.fit()
-            ys = interp1d(kde_xs, pdf.evaluate(kde_xs), kind="cubic")(xs)
-        else:
-            ys = interp1d(edge_centers, hist, kind="linear")(xs)
-        cs = ys.cumsum()
-        cs /= cs.max()
-        return xs, ys, cs
-
-    def _get_parameter_summary(self, data, weights, parameter, chain_index, **kwargs):
-        if not self._configured:
-            self.configure()
-        method = self._summaries[self.config["statistics"][chain_index]]
-        return method(data, weights, parameter, chain_index, **kwargs)
-
-    def _get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
-        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
-        bounds = interp1d(cs, xs)(vals)
-        bounds[1] = 0.5 * (bounds[0] + bounds[2])
-        return bounds
-
-    def _get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
-        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
-        bounds = interp1d(cs, xs)(vals)
-        return bounds
-
-    def _get_parameter_summary_max(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
-        n_pad = 1000
-        x_start = xs[0] * np.ones(n_pad)
-        x_end = xs[-1] * np.ones(n_pad)
-        y_start = np.linspace(0, ys[0], n_pad)
-        y_end = np.linspace(ys[-1], 0, n_pad)
-        xs = np.concatenate((x_start, xs, x_end))
-        ys = np.concatenate((y_start, ys, y_end))
-        cs = ys.cumsum()
-        cs = cs / cs.max()
-        startIndex = ys.argmax()
-        maxVal = ys[startIndex]
-        minVal = 0
-        threshold = 0.001
-
-        x1 = None
-        x2 = None
-        count = 0
-        while x1 is None:
-            mid = (maxVal + minVal) / 2.0
-            count += 1
-            try:
-                if count > 50:
-                    raise Exception("Failed to converge")
-                i1 = startIndex - np.where(ys[:startIndex][::-1] < mid)[0][0]
-                i2 = startIndex + np.where(ys[startIndex:] < mid)[0][0]
-                area = cs[i2] - cs[i1]
-                deviation = np.abs(area - desired_area)
-                if deviation < threshold:
-                    x1 = xs[i1]
-                    x2 = xs[i2]
-                elif area < desired_area:
-                    maxVal = mid
-                elif area > desired_area:
-                    minVal = mid
-            except:
-                self._logger.warning("Parameter %s is not constrained" % parameter)
-                return [None, xs[startIndex], None]
-
-        return [x1, xs[startIndex], x2]
 
     def _get_chain_name(self, index):
         return self._names[index] or index
