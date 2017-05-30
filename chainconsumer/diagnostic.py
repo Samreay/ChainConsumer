@@ -9,7 +9,7 @@ class Diagnostic(object):
         self.parent = parent
         self._logger = logging.getLogger(__name__)
 
-    def diagnostic_gelman_rubin(self, chain=None, threshold=0.05):
+    def gelman_rubin(self, chain=None, threshold=0.05):
         r""" Runs the Gelman Rubin diagnostic on the supplied chains.
 
         Parameters
@@ -47,7 +47,7 @@ class Diagnostic(object):
         """
         if chain is None:
             keys = [n if n is not None else i for i, n in enumerate(self.parent._names)]
-            return np.all([self.diagnostic_gelman_rubin(k, threshold=threshold) for k in keys])
+            return np.all([self.gelman_rubin(k, threshold=threshold) for k in keys])
         index = self.parent._get_chain(chain)
         num_walkers = self.parent._walkers[index]
         parameters = self.parent._parameters[index]
@@ -71,7 +71,7 @@ class Diagnostic(object):
             print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
         return np.all(passed)
 
-    def diagnostic_geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
+    def geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
         """ Runs the Geweke diagnostic on the supplied chains.
 
         Parameters
@@ -96,7 +96,7 @@ class Diagnostic(object):
         """
         if chain is None:
             keys = [n if n is not None else i for i, n in enumerate(self.parent._names)]
-            return np.all([self.diagnostic_geweke(k, threshold=threshold) for k in keys])
+            return np.all([self.geweke(k, threshold=threshold) for k in keys])
         index = self.parent._get_chain(chain)
         num_walkers = self.parent._walkers[index]
         assert num_walkers is not None and num_walkers > 0, \

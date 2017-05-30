@@ -6,7 +6,7 @@ from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 import statsmodels.api as sm
 
-from chainconsumer.helpers import get_parameter_text, get_extents
+from chainconsumer.helpers import get_extents
 
 
 class Plotter(object):
@@ -133,7 +133,7 @@ class Plotter(object):
                                                                 flip=flip, external_extents=extents)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
-        fit_values = self.parent.get_summary(squeeze=False)
+        fit_values = self.parent.analysis.get_summary(squeeze=False)
 
         if summary is None:
             summary = len(parameters) < 5 and len(self.parent._chains) == 1
@@ -608,11 +608,11 @@ class Plotter(object):
                     ax.fill_between(x, np.zeros(x.shape), interpolator(x),
                                     color=colour, alpha=0.2)
                 if summary:
+                    t = self.parent.analysis.get_parameter_text(*fit_values)
                     if isinstance(parameter, str):
-                        ax.set_title(r"$%s = %s$" % (parameter.strip("$"),
-                                                     get_parameter_text(*fit_values)), fontsize=title_size)
+                        ax.set_title(r"$%s = %s$" % (parameter.strip("$"), t), fontsize=title_size)
                     else:
-                        ax.set_title(r"$%s$" % (get_parameter_text(*fit_values)), fontsize=title_size)
+                        ax.set_title(r"$%s$" % t, fontsize=title_size)
         if truth is not None:
             truth_value = truth.get(parameter)
             if truth_value is not None:

@@ -645,23 +645,23 @@ class ChainConsumer(object):
 
     def diagnostic_gelman_rubin(self, *args, **kwargs):
         self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.diagnostic_gelman_rubin instead")
-        self.diagnostic.diagnostic_gelman_rubin(*args, **kwargs)
+        self.diagnostic.gelman_rubin(*args, **kwargs)
 
     def diagnostic_geweke(self, *args, **kwargs):
         self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.diagnostic_geweke instead")
-        self.diagnostic.diagnostic_geweke(*args, **kwargs)
+        self.diagnostic.geweke(*args, **kwargs)
 
     def comparison_aic(self):
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_aic instead")
-        self.comparison.comparison_aic()
+        self.comparison.aic()
 
     def comparison_bic(self):
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_bic instead")
-        self.comparison.comparison_bic()
+        self.comparison.bic()
 
     def comparison_dic(self):
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_dic instead")
-        self.comparison.comparison_dic()
+        self.comparison.dic()
 
     def comparison_table(self, *args, **kwargs):
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_table instead")

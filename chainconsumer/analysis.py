@@ -258,7 +258,7 @@ class Analysis(object):
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
 
         if self.parent.config["kde"][chain_index]:
-            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins)))
+            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins.max())))
             assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
                                            "If you would like weights, please vote for this issue: " \
                                            "https://github.com/scikit-learn/scikit-learn/issues/4394"

@@ -8,7 +8,7 @@ class Comparison(object):
         self.parent = parent
         self._logger = logging.getLogger(__name__)
 
-    def comparison_dic(self):
+    def dic(self):
         r""" Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, this method will return `None` for that chain. **Note that
@@ -63,7 +63,7 @@ class Comparison(object):
                 i += 1
         return dics_fin
 
-    def comparison_bic(self):
+    def bic(self):
         r""" Returns the corrected Bayesian Information Criterion (BIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
@@ -110,7 +110,7 @@ class Comparison(object):
                 i += 1
         return bics_fin
 
-    def comparison_aic(self):
+    def aic(self):
         r""" Returns the corrected Akaike Information Criterion (AICc) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
@@ -219,15 +219,15 @@ class Comparison(object):
         if hlines:
             center_text += "\t" + hline_text
         if aic:
-            aics = self.comparison_aic()
+            aics = self.aic()
         else:
             aics = np.zeros(len(self.parent._chains))
         if bic:
-            bics = self.comparison_bic()
+            bics = self.bic()
         else:
             bics = np.zeros(len(self.parent._chains))
         if dic:
-            dics = self.comparison_dic()
+            dics = self.dic()
         else:
             dics = np.zeros(len(self.parent._chains))
 
