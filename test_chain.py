@@ -391,10 +391,10 @@ class TestChain(object):
             consumer.configure(statistics="monkey")
 
     def test_stats_max_skew(self):
-        tolerance = 2e-2
+        tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics="max")
+        consumer.configure(statistics="max", bins=0.6)
         summary = consumer.analysis.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([1.01, 1.55, 2.72])
@@ -402,7 +402,7 @@ class TestChain(object):
         assert np.all(diff < tolerance)
 
     def test_stats_mean_skew(self):
-        tolerance = 2e-2
+        tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
         consumer.configure(statistics="mean")
@@ -413,7 +413,7 @@ class TestChain(object):
         assert np.all(diff < tolerance)
 
     def test_stats_cum_skew(self):
-        tolerance = 2e-2
+        tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
         consumer.configure(statistics="cumulative")
@@ -424,7 +424,7 @@ class TestChain(object):
         assert np.all(diff < tolerance)
 
     def test_stats_list_skew(self):
-        tolerance = 2e-2
+        tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
         consumer.add_chain(self.data_skew)
@@ -440,7 +440,7 @@ class TestChain(object):
         assert np.all(diff1 < tolerance)
 
     def test_weights(self):
-        tolerance = 2e-2
+        tolerance = 3e-2
         samples = np.linspace(-4, 4, 200000)
         weights = norm.pdf(samples)
         c = ChainConsumer()
@@ -582,7 +582,7 @@ class TestChain(object):
         xs = np.random.normal(size=100000)
         weights = np.ones(xs.shape)
         low, high = get_extents(xs, weights)
-        threshold = 0.1
+        threshold = 0.2
         assert np.abs(low + 3) < threshold
         assert np.abs(high - 3) < threshold
 
@@ -1025,31 +1025,31 @@ class TestChain(object):
         assert latex_table.replace(" ", "") == actual.replace(" ", "")
 
     def test_covariance_1d(self):
-        data = np.random.normal(0, 2, size=1000000)
+        data = np.random.normal(0, 2, size=2000000)
         parameters = ["x"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
         p, cor = c.analysis.get_covariance()
         assert p[0] == "x"
-        assert np.isclose(cor[0, 0], 4, atol=5e-3)
+        assert np.isclose(cor[0, 0], 4, atol=1e-2)
         assert cor.shape == (1, 1)
 
     def test_covariance_2d(self):
-        data = np.random.multivariate_normal([0, 0], [[3, 0], [0, 9]], size=1000000)
+        data = np.random.multivariate_normal([0, 0], [[3, 0], [0, 9]], size=2000000)
         parameters = ["x", "y"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
         p, cor = c.analysis.get_covariance()
         assert p[0] == "x"
         assert p[1] == "y"
-        assert np.isclose(cor[0, 0], 3, atol=5e-3)
-        assert np.isclose(cor[1, 1], 9, atol=5e-3)
-        assert np.isclose(cor[0, 1], 0, atol=5e-3)
+        assert np.isclose(cor[0, 0], 3, atol=2e-2)
+        assert np.isclose(cor[1, 1], 9, atol=2e-2)
+        assert np.isclose(cor[0, 1], 0, atol=2e-2)
         assert cor.shape == (2, 2)
 
     def test_covariance_3d(self):
         cov = [[3, 0.5, 0.2], [0.5, 4, 0.3], [0.2, 0.3, 5]]
-        data = np.random.multivariate_normal([0, 0, 1], cov, size=1000000)
+        data = np.random.multivariate_normal([0, 0, 1], cov, size=2000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters, name="chain1")
@@ -1057,9 +1057,9 @@ class TestChain(object):
         assert p[0] == "y"
         assert p[1] == "z"
         assert p[2] == "x"
-        assert np.isclose(cor[0, 0], 4, atol=5e-3)
-        assert np.isclose(cor[1, 1], 5, atol=5e-3)
-        assert np.isclose(cor[2, 2], 3, atol=5e-3)
+        assert np.isclose(cor[0, 0], 4, atol=2e-2)
+        assert np.isclose(cor[1, 1], 5, atol=2e-2)
+        assert np.isclose(cor[2, 2], 3, atol=2e-2)
         assert cor.shape == (3, 3)
         assert np.abs(cor[0, 1] - 0.3) < 0.01
         assert np.abs(cor[0, 2] - 0.5) < 0.01
@@ -1067,7 +1067,7 @@ class TestChain(object):
 
     def test_covariance_latex_table(self):
         cov = [[2, 0.5, 0.2], [0.5, 3, 0.3], [0.2, 0.3, 4.0]]
-        data = np.random.multivariate_normal([0, 0, 1], cov, size=10000000)
+        data = np.random.multivariate_normal([0, 0, 1], cov, size=20000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
