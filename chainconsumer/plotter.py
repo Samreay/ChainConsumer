@@ -6,6 +6,8 @@ from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 import statsmodels.api as sm
 
+from chainconsumer.helpers import get_parameter_text, get_extents
+
 
 class Plotter(object):
     def __init__(self, parent):
@@ -420,7 +422,7 @@ class Plotter(object):
                         min_prop = chain[:, index].min()
                         max_prop = chain[:, index].max()
                     else:
-                        min_prop, max_prop = self._get_extent(chain[:, index], w)
+                        min_prop, max_prop = get_extents(chain[:, index], w)
                     if min_val is None or min_prop < min_val:
                         min_val = min_prop
                     if max_val is None or max_prop > max_val:
@@ -605,9 +607,9 @@ class Plotter(object):
                 if summary:
                     if isinstance(parameter, str):
                         ax.set_title(r"$%s = %s$" % (parameter.strip("$"),
-                                                     self.parent.get_parameter_text(*fit_values)), fontsize=title_size)
+                                                     get_parameter_text(*fit_values)), fontsize=title_size)
                     else:
-                        ax.set_title(r"$%s$" % (self.parent.get_parameter_text(*fit_values)), fontsize=title_size)
+                        ax.set_title(r"$%s$" % (get_parameter_text(*fit_values)), fontsize=title_size)
         if truth is not None:
             truth_value = truth.get(parameter)
             if truth_value is not None:
@@ -639,17 +641,6 @@ class Plotter(object):
             ax.plot(x[:-1], filtered[:-1], ls=':', color=color2, alpha=1)
         if truth is not None:
             ax.axhline(truth, **self.parent.config_truth)
-
-    def _get_extent(self, data, weight):
-        hist, be = np.histogram(data, weights=weight, bins=1000, normed=True)
-        bc = 0.5 * (be[1:] + be[:-1])
-        cdf = hist.cumsum()
-        cdf = cdf / cdf.max()
-        icdf = (1 - cdf)[::-1]
-        threshold = 1e-3
-        i1 = np.where(cdf > threshold)[0][0]
-        i2 = np.where(icdf > threshold)[0][0]
-        return bc[i1], bc[bc.size - i2]
 
     def _convert_to_stdev(self, sigma):  # pragma: no cover
         # From astroML
