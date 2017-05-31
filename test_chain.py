@@ -2,7 +2,7 @@ import os
 import tempfile
 
 import numpy as np
-from scipy.stats import skewnorm, norm, multivariate_normal
+from scipy.stats import skewnorm, norm
 import pytest
 
 from chainconsumer import ChainConsumer
@@ -64,7 +64,7 @@ class TestChain(object):
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(bins=1.0)
+        consumer.configure(bins=0.8)
         summary = consumer.analysis.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([3.5, 5.0, 6.5])
@@ -74,6 +74,7 @@ class TestChain(object):
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])
+        consumer.configure(bins=0.8)
         vals = consumer.analysis.get_summary()["a"]
         text = consumer.analysis.get_parameter_text(*vals)
         assert text == r"5.0\pm 1.5"
