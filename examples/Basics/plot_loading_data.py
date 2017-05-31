@@ -34,7 +34,7 @@ np.save(filename2, data)
 
 # Now the normal way of giving data is passing a numpy array and parameter separately
 c = ChainConsumer().add_chain(data, parameters=parameters)
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
@@ -42,7 +42,7 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 
 x, y = data[:, 0], data[:, 1]
 c = ChainConsumer().add_chain([x, y], parameters=parameters)
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 
@@ -51,19 +51,19 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 
 dictionary = {"$x$": data[:, 0], "$y$": data[:, 1]}
 c = ChainConsumer().add_chain(dictionary)
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can pass a filename in containing a text dump of the chain
 
 c = ChainConsumer().add_chain(filename1, parameters=parameters)
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can pass a filename for a file containing a binary numpy array
 
 c = ChainConsumer().add_chain(filename2, parameters=parameters)
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

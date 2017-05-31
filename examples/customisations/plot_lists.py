@@ -32,6 +32,6 @@ if __name__ == "__main__":
                 bins=[3.0, 1.0, 1.0], colors=["#1E88E5", "#D32F2F", "#111111"],
                 smooth=[0, 1, 2], shade=[True, True, False],
                 shade_alpha=[0.2, 0.1, 0.0], bar_shade=[True, False, False])
-    fig = c.plot()
+    fig = c.plotter.plot()
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

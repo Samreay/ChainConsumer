@@ -21,7 +21,7 @@ truth = normal(size=3)
 data = multivariate_normal(truth, 0.5 * (cov + cov.T), size=100000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\beta$"])
-fig = c.plot(truth=truth)
+fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
@@ -31,5 +31,5 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 
 
 c.configure_truth(color='w', ls=":", alpha=0.8)
-fig2 = c.plot(truth={"$x$": truth[0], "$y$": truth[1]})
+fig2 = c.plotter.plot(truth={"$x$": truth[0], "$y$": truth[1]})
 fig2.set_size_inches(4.5 + fig2.get_size_inches())  # Resize fig for doco. You don't need this.

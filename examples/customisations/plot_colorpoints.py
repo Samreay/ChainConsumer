@@ -25,6 +25,6 @@ if __name__ == "__main__":
 
     c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
     c.configure(color_params="$z$")
-    fig = c.plot(figsize=1.0)
+    fig = c.plotter.plot(figsize=1.0)
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

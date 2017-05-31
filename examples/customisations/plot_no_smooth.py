@@ -22,7 +22,7 @@ if __name__ == "__main__":
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x_1$", "$x_2$"])
     c.configure(smooth=0, linewidths=2, colors="#673AB7")
-    fig = c.plot(figsize="column", truth=[0.0, 4.0])
+    fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
 
     # If we wanted to save to file, we would instead have written
     # fig = c.plot(filename="location", figsize="column", truth=[0.0, 4.0])

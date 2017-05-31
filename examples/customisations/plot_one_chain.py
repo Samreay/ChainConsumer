@@ -21,6 +21,6 @@ if __name__ == "__main__":
     data = multivariate_normal(1e3 * normal(size=3), 0.5 * (cov + cov.T), size=100000)
 
     # If you pass in parameter labels and only one chain, you can also get parameter bounds
-    fig = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\epsilon$"]).plot()
+    fig = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\epsilon$"]).plotter.plot()
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

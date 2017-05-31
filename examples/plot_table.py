@@ -39,6 +39,5 @@ if __name__ == "__main__":
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x$", "$y$", r"$\alpha$", r"$\beta$"], name="Model A")
     c.add_chain(data2, parameters=["$x$", "$y$", r"$\alpha$", r"$\gamma$"], name="Model B")
-    table = c.get_latex_table(caption="The maximum likelihood results for the tested models",
-                              label="tab:example")
+    table = c.analysis.get_latex_table(caption="Results for the tested models", label="tab:example")
     print(table)

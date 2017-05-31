@@ -31,9 +31,9 @@ c.add_chain(data_good, walkers=10, name="good")
 c.add_chain(data_bad, walkers=10, name="bad")
 
 # Now, lets check our convergence using the Gelman-Rubin statistic
-gelman_rubin_converged = c.diagnostic_gelman_rubin()
+gelman_rubin_converged = c.diagnostic.gelman_rubin()
 # And also using the Geweke metric
-geweke_converged = c.diagnostic_geweke()
+geweke_converged = c.diagnostic.geweke()
 
 # Lets just output the results too
 print(gelman_rubin_converged, geweke_converged)
@@ -45,7 +45,7 @@ print(gelman_rubin_converged, geweke_converged)
 # on only the second chain we can pass in either the chain index, or the chain
 # name:
 
-print(c.diagnostic_geweke(chain="bad"))
+print(c.diagnostic.geweke(chain="bad"))
 
 ###############################################################################
 # Finally, note that the statistics are set to fail easily. For example,
