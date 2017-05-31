@@ -15,7 +15,7 @@ def get_extents(data, weight):
 
 
 def get_bins(chains):
-    proposal = [max(25, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.3)))
+    proposal = [max(20, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.3)))
                 for chain in chains]
     return proposal
 

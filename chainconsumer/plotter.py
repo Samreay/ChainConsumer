@@ -543,7 +543,6 @@ class Plotter(object):
                    truth=None, extents=None, grid=False):  # pragma: no cover
 
         # Get values from config
-        kde = self.parent.config["kde"][iindex]
         colour = self.parent.config["colors"][iindex]
         linestyle = self.parent.config["linestyles"][iindex]
         bar_shade = self.parent.config["bar_shade"][iindex]
@@ -552,30 +551,8 @@ class Plotter(object):
         smooth = self.parent.config["smooth"][iindex]
         title_size = self.parent.config["label_font_size"]
 
-        xs, ys, cs = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
-
-        # if grid:
-        #     bins = self.parent._get_grid_bins(chain_row)
-        #
-        # hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
-        # edge_center = 0.5 * (edges[:-1] + edges[1:])
-        #
-        # if smooth:
-        #     hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
-        # if kde:
-        #     assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
-        #                                    "If you would like weights, please vote for this issue: " \
-        #                                    "https://github.com/scikit-learn/scikit-learn/issues/4394"
-        #     pdf = sm.nonparametric.KDEUnivariate(chain_row)
-        #     pdf.fit()
-        #     xs = np.linspace(extents[0], extents[1], 100)
-        #     if flip:
-        #         ax.plot(pdf.evaluate(xs), xs, color=colour, ls=linestyle, lw=linewidth)
-        #     else:
-        #         ax.plot(xs, pdf.evaluate(xs), color=colour, ls=linestyle, lw=linewidth)
-        #     interpolator = pdf.evaluate
-        # else:
         if smooth:
+            xs, ys, cs = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
             if flip:
                 ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth)
             else:
@@ -585,7 +562,10 @@ class Plotter(object):
                 orientation = "horizontal"
             else:
                 orientation = "vertical"
-            bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
+            if grid:
+                bins = get_grid_bins(chain_row)
+            else:
+                bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
             hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
             edge_center = 0.5 * (edges[:-1] + edges[1:])
             xs, ys = edge_center, hist
@@ -622,8 +602,6 @@ class Plotter(object):
                     ax.axhline(truth_value, **self.parent.config_truth)
                 else:
                     ax.axvline(truth_value, **self.parent.config_truth)
-
-        # TODO: Check extents
         return ys.max()
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
