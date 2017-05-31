@@ -22,7 +22,7 @@ To get things started, here is a basic example:
 
     c = ChainConsumer()
     c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-    c.plot(filename="example.png", figsize="column", truth=mean)
+    c.plotter.plot(filename="example.png", figsize="column", truth=mean)
 
 
 The output figure is displayed below.
