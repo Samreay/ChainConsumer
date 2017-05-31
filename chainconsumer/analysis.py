@@ -312,8 +312,15 @@ class Analysis(object):
             return ""
         upper_error = upper - maximum
         lower_error = maximum - lower
-        resolution = min(np.floor(np.log10(np.abs(upper_error))),
-                         np.floor(np.log10(np.abs(lower_error))))
+        if upper_error != 0 and lower_error != 0:
+            resolution = min(np.floor(np.log10(np.abs(upper_error))),
+                            np.floor(np.log10(np.abs(lower_error))))
+        elif upper_error == 0 and lower_error != 0:
+            resolution = np.floor(np.log10(np.abs(lower_error)))
+        elif upper_error != 0 and lower_error == 0:
+            resolution = np.floor(np.log10(np.abs(upper_error)))
+        else:
+            resolution = np.floor(np.log10(np.abs(maximum)))
         factor = 0
         fmt = "%0.1f"
         r = 1

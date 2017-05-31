@@ -197,6 +197,24 @@ class TestChain(object):
         text = consumer.analysis.get_parameter_text(*p1)
         assert text == r"222.222\pm 0.011"
 
+    def test_output_format17(self):
+        p1 = [1.0, 1.0, 2.0]
+        consumer = ChainConsumer()
+        text = consumer.analysis.get_parameter_text(*p1)
+        assert text == r"1.0^{+1.0}_{-0.0}"
+
+    def test_output_format18(self):
+        p1 = [10000.0, 10000.0, 10000.0]
+        consumer = ChainConsumer()
+        text = consumer.analysis.get_parameter_text(*p1)
+        assert text == r"\left( 1.0\pm 0.0 \right) \times 10^{4}"
+
+    def test_output_format19(self):
+        p1 = [1.0, 2.0, 2.0]
+        consumer = ChainConsumer()
+        text = consumer.analysis.get_parameter_text(*p1)
+        assert text == r"2.0^{+0.0}_{-1.0}"
+
     def test_file_loading1(self):
         data = self.data[:1000]
         directory = tempfile._get_default_tempdir()
