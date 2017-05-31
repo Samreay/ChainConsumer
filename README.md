@@ -31,6 +31,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.16.5
+* Fixing bug in Gelman-Rubin diagnostic. Thanks Warren!
+
 ##### 0.16.4
 * Moving `rc` parameters before plot creation to fix issues with parallel plot generation.
 
