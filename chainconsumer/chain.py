@@ -609,62 +609,62 @@ class ChainConsumer(object):
     # Deprecated methods
     def plot(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.plotter.plot instead")
-        self.plotter.plot(*args, **kwargs)
+        return self.plotter.plot(*args, **kwargs)
 
     def plot_walks(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.plotter.plot_walks instead")
-        self.plotter.plot_walks(*args, **kwargs)
+        return self.plotter.plot_walks(*args, **kwargs)
 
     def get_latex_table(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_latex_table instead")
-        self.analysis.get_latex_table(*args, **kwargs)
+        return self.analysis.get_latex_table(*args, **kwargs)
 
     def get_parameter_text(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_parameter_text instead")
-        self.analysis.get_parameter_text(*args, **kwargs)
+        return self.analysis.get_parameter_text(*args, **kwargs)
 
     def get_summary(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_summary instead")
-        self.analysis.get_summary(*args, **kwargs)
+        return self.analysis.get_summary(*args, **kwargs)
 
     def get_correlations(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_correlations instead")
-        self.analysis.get_correlations(*args, **kwargs)
+        return self.analysis.get_correlations(*args, **kwargs)
 
     def get_correlation_table(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_correlation_table instead")
-        self.analysis.get_correlation_table(*args, **kwargs)
+        return self.analysis.get_correlation_table(*args, **kwargs)
 
     def get_covariance(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_covariance instead")
-        self.analysis.get_covariance(*args, **kwargs)
+        return self.analysis.get_covariance(*args, **kwargs)
 
     def get_covariance_table(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.analysis.get_covariance_table instead")
-        self.analysis.get_covariance_table(*args, **kwargs)
+        return self.analysis.get_covariance_table(*args, **kwargs)
 
     def diagnostic_gelman_rubin(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.gelman_rubin instead")
-        self.diagnostic.gelman_rubin(*args, **kwargs)
+        return self.diagnostic.gelman_rubin(*args, **kwargs)
 
     def diagnostic_geweke(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.geweke instead")
-        self.diagnostic.geweke(*args, **kwargs)
+        return self.diagnostic.geweke(*args, **kwargs)
 
     def comparison_aic(self):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.aic instead")
-        self.comparison.aic()
+        return self.comparison.aic()
 
     def comparison_bic(self):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.bic instead")
-        self.comparison.bic()
+        return self.comparison.bic()
 
     def comparison_dic(self):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.dic instead")
-        self.comparison.dic()
+        return self.comparison.dic()
 
     def comparison_table(self, *args, **kwargs):  # pragma: no cover
         self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_table instead")
-        self.comparison.comparison_table(*args, **kwargs)
+        return self.comparison.comparison_table(*args, **kwargs)
 
 

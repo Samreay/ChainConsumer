@@ -15,7 +15,7 @@ def get_extents(data, weight):
 
 
 def get_bins(chains):
-    proposal = [max(30, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
+    proposal = [max(25, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.3)))
                 for chain in chains]
     return proposal
 
@@ -29,7 +29,19 @@ def get_smoothed_bins(smooth, bins, data, weight, marginalsied=True):
 
 
 def get_grid_bins(data):
-    bin_c = sorted(np.unique(data))
+    bin_c = np.sort(np.unique(data))
     delta = 0.5 * (bin_c[1] - bin_c[0])
     bins = np.concatenate((bin_c - delta, [bin_c[-1] + delta]))
     return bins
+
+
+def get_latex_table_frame(caption, label):  # pragma: no cover
+    base_string = r"""\begin{table}
+    \centering
+    \caption{%s}
+    \label{%s}
+    \begin{tabular}{%s}
+        %s    \end{tabular}
+\end{table}"""
+    return base_string % (caption, label, "%s", "%s")
+

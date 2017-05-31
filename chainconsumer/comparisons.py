@@ -2,6 +2,8 @@ from scipy.interpolate import griddata
 import numpy as np
 import logging
 
+from chainconsumer.helpers import get_latex_table_frame
+
 
 class Comparison(object):
     def __init__(self, parent):
@@ -206,7 +208,7 @@ class Comparison(object):
         if label is None:
             label = ""
 
-        base_string = self.parent._get_latex_table(caption, label)
+        base_string = get_latex_table_frame(caption, label)
         end_text = " \\\\ \n"
         num_cols = 1 + (1 if aic else 0) + (1 if bic else 0)
         column_text = "c" * (num_cols + 1)

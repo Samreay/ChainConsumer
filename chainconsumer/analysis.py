@@ -3,7 +3,7 @@ import numpy as np
 import statsmodels.api as sm
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
-from chainconsumer.helpers import get_smoothed_bins, get_grid_bins
+from chainconsumer.helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
 
 
 class Analysis(object):
@@ -81,7 +81,7 @@ class Analysis(object):
                 arr = ["\t\t" + p]
                 for chain_res in fit_values:
                     if p in chain_res:
-                        arr.append(get_parameter_text(*chain_res[p], wrap=True))
+                        arr.append(self.get_parameter_text(*chain_res[p], wrap=True))
                     else:
                         arr.append(blank_fill)
                 center_text += " & ".join(arr) + end_text
@@ -93,13 +93,13 @@ class Analysis(object):
                 arr = ["\t\t" + name]
                 for p in parameters:
                     if p in chain_res:
-                        arr.append(get_parameter_text(*chain_res[p], wrap=True))
+                        arr.append(self.get_parameter_text(*chain_res[p], wrap=True))
                     else:
                         arr.append(blank_fill)
                 center_text += " & ".join(arr) + end_text
         if hlines:
             center_text += "\t\t" + hline_text
-        final_text = self._get_latex_table(caption, label) % (column_text, center_text)
+        final_text = get_latex_table_frame(caption, label) % (column_text, center_text)
 
         return final_text
 
@@ -272,7 +272,7 @@ class Analysis(object):
         return xs, ys, cs
 
     def _get_2d_latex_table(self, parameters, matrix, caption, label):
-        latex_table = self._get_latex_table(caption=caption, label=label)
+        latex_table = get_latex_table_frame(caption=caption, label=label)
         column_def = "c|%s" % ("c" * len(parameters))
         hline_text = "        \\hline\n"
 
@@ -288,16 +288,6 @@ class Analysis(object):
             table += " \\\\ \n"
         table += hline_text
         return latex_table % (column_def, table)
-
-    def _get_latex_table(self, caption, label):  # pragma: no cover
-        base_string = r"""\begin{table}
-    \centering
-    \caption{%s}
-    \label{%s}
-    \begin{tabular}{%s}
-        %s    \end{tabular}
-\end{table}"""
-        return base_string % (caption, label, "%s", "%s")
 
     def get_parameter_text(self, lower, maximum, upper, wrap=False):
         """ Generates LaTeX appropriate text from marginalised parameter bounds.

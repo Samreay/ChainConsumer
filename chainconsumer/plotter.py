@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
-import statsmodels.api as sm
 
-from chainconsumer.helpers import get_extents
+from chainconsumer.helpers import get_extents, get_smoothed_bins, get_grid_bins
 
 
 class Plotter(object):
@@ -492,12 +491,12 @@ class Plotter(object):
         cmap = self.parent.config["cmaps"][iindex]
 
         if grid:
-            binsx = self.parent._get_grid_bins(x)
-            binsy = self.parent._get_grid_bins(y)
+            binsx = get_grid_bins(x)
+            binsy = get_grid_bins(y)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
         else:
-            binsx, smooth = self.parent._get_smoothed_bins(smooth, bins, x, w, marginalsied=False)
-            binsy, _ = self.parent._get_smoothed_bins(smooth, bins, y, w, marginalsied=False)
+            binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalsied=False)
+            binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalsied=False)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         colours = self._scale_colours(colour, len(levels))
