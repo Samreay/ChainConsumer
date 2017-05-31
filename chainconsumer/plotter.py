@@ -79,9 +79,16 @@ class Plotter(object):
             umin, umax = np.inf, -np.inf
             for i, cp in enumerate(color_params):
                 if cp is not None and u == cp:
-                    data = self.parent._chains[i][:, self.parent._parameters[i].index(cp)]
-                    umin = min(umin, data.min())
-                    umax = max(umax, data.max())
+                    try:
+                        data = self.parent._chains[i][:, self.parent._parameters[i].index(cp)]
+                    except ValueError:
+                        if cp == "weights":
+                            data = self.parent._weights[i]
+                        elif cp == "posterior":
+                            data = self.parent._posteriors[i]
+                    if data is not None:
+                        umin = min(umin, data.min())
+                        umax = max(umax, data.max())
             color_param_extents[u] = (umin, umax)
 
         if parameters is None:
@@ -168,9 +175,9 @@ class Plotter(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for ii, (chain, parameters, fit, weights, grid) in \
+                    for ii, (chain, parameters, fit, weights, grid, posterior) in \
                             enumerate(zip(self.parent._chains, self.parent._parameters, fit_values,
-                                          self.parent._weights, self.parent._grids)):
+                                          self.parent._weights, self.parent._grids, self.parent._posteriors)):
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
@@ -178,8 +185,14 @@ class Plotter(object):
                         color_data = None
                         extent = None
                         if color_params[ii] is not None:
-                            color_index = parameters.index(color_params[ii])
-                            color_data = chain[:, color_index]
+                            try:
+                                color_index = parameters.index(color_params[ii])
+                                color_data = chain[:, color_index]
+                            except ValueError:
+                                if color_params[ii] == "weights":
+                                    color_data = weights
+                                elif color_params[ii] == "posterior":
+                                    color_data = posterior
                             extent = color_param_extents[color_params[ii]]
                         h = self._plot_contour(ii, ax, chain[:, i2], chain[:, i1], weights, p1, p2,
                                                grid, truth=truth, color_data=color_data, color_extent=extent)
@@ -188,7 +201,12 @@ class Plotter(object):
                             aspect = figsize[1] / 0.15
                             fraction = 0.85 / figsize[0]
                             cbar = fig.colorbar(h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False)
-                            cbar.set_label(color_params[ii], fontsize=14)
+                            label = color_params[ii]
+                            if label == "weights":
+                                label = "Weights"
+                            elif label == "posterior":
+                                label = "log(Posterior)"
+                            cbar.set_label(label, fontsize=14)
                             cbar.solids.set(alpha=1)
 
         colors = self.parent.config["colors"]
@@ -477,7 +495,6 @@ class Plotter(object):
         return fig, axes, params1, params2, extents
 
     def _plot_contour(self, iindex, ax, x, y, w, px, py, grid, truth=None, color_data=None, color_extent=None):  # pragma: no cover
-
         levels = 1.0 - np.exp(-0.5 * self.parent.config["sigmas"] ** 2)
         h = None
         cloud = self.parent.config["cloud"][iindex]
