@@ -59,11 +59,13 @@ class Diagnostic(object):
         n = 1.0 * chains[0].shape[0]
         all_mean = np.mean(chain, axis=0)
         chain_means = np.array([np.mean(c, axis=0) for c in chains])
-        chain_std = np.array([np.std(c, axis=0) for c in chains])
-        b = n / (m - 1) * ((chain_means - all_mean) ** 2).sum(axis=0)
-        w = (1 / m) * chain_std.sum(axis=0)
+        chain_var = np.array([np.var(c, axis=0, ddof=1) for c in chains])
+        b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
+        w = (1 / m) * chain_var.sum(axis=0)
         var = (n - 1) * w / n + b / n
-        R = np.sqrt(var / w)
+        v = var + b / (n * m)
+        R = np.sqrt(v / w)
+
         passed = np.abs(R - 1) < threshold
         print("Gelman-Rubin Statistic values for chain %s" % name)
         for p, v, pas in zip(parameters, R, passed):
