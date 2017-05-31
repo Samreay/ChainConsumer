@@ -644,23 +644,23 @@ class ChainConsumer(object):
         self.analysis.get_covariance_table(*args, **kwargs)
 
     def diagnostic_gelman_rubin(self, *args, **kwargs):  # pragma: no cover
-        self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.diagnostic_gelman_rubin instead")
+        self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.gelman_rubin instead")
         self.diagnostic.gelman_rubin(*args, **kwargs)
 
     def diagnostic_geweke(self, *args, **kwargs):  # pragma: no cover
-        self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.diagnostic_geweke instead")
+        self._logger.warning("This method is deprecated. Please use chainConsumer.diagnostic.geweke instead")
         self.diagnostic.geweke(*args, **kwargs)
 
     def comparison_aic(self):  # pragma: no cover
-        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_aic instead")
+        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.aic instead")
         self.comparison.aic()
 
     def comparison_bic(self):  # pragma: no cover
-        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_bic instead")
+        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.bic instead")
         self.comparison.bic()
 
     def comparison_dic(self):  # pragma: no cover
-        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.comparison_dic instead")
+        self._logger.warning("This method is deprecated. Please use chainConsumer.comparison.dic instead")
         self.comparison.dic()
 
     def comparison_table(self, *args, **kwargs):  # pragma: no cover
