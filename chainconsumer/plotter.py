@@ -554,7 +554,6 @@ class Plotter(object):
 
         xs, ys, cs = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
 
-        # bins, smooth = self.parent._get_smoothed_bins(smooth, bins, chain_row, weights)
         # if grid:
         #     bins = self.parent._get_grid_bins(chain_row)
         #
@@ -586,7 +585,11 @@ class Plotter(object):
                 orientation = "horizontal"
             else:
                 orientation = "vertical"
-                ax.hist(xs + 1e-10, weights=ys, bins=xs, histtype="step",
+            bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
+            hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
+            edge_center = 0.5 * (edges[:-1] + edges[1:])
+            xs, ys = edge_center, hist
+            ax.hist(xs, weights=ys, bins=bins, histtype="step",
                         color=colour, orientation=orientation, ls=linestyle, lw=linewidth)
         interp_type = "linear" if smooth else "nearest"
         interpolator = interp1d(xs, ys, kind=interp_type)
