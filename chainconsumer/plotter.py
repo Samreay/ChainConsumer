@@ -536,6 +536,8 @@ class Plotter(object):
                 if color_extent is not None:
                     kwargs["vmin"] = color_extent[0]
                     kwargs["vmax"] = color_extent[1]
+                    if color_extent[0] == color_extent[1]:
+                        kwargs["vmax"] = kwargs["vmin"] + 1.0
 
             h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", **kwargs)
             if color_data is None:

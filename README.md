@@ -36,6 +36,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 * Improve bin limits to reduce overly large bins.
 * Fixed issue generating text with one sided distributions.
 * Adding ability to specify weights or posterior as the colour parameter.
+* Color scatter with uniform weights doesn't have first plot a different color.
 
 ##### 0.16.5
 * Fixing bug in Gelman-Rubin diagnostic. Thanks Warren!
