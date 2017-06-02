@@ -413,7 +413,7 @@ class TestChain(object):
         tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics="max", bins=0.6)
+        consumer.configure(statistics="max")
         summary = consumer.analysis.get_summary()
         actual = np.array(list(summary.values())[0])
         expected = np.array([1.01, 1.55, 2.72])
