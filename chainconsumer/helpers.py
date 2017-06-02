@@ -25,7 +25,7 @@ def get_smoothed_bins(smooth, bins, data, weight, marginalsied=True):
     if smooth is None or not smooth or smooth == 0:
         return np.linspace(minv, maxv, int(bins)), 0
     else:
-        return np.linspace(minv, maxv, int((3 if marginalsied else 2) * smooth * bins)), smooth
+        return np.linspace(minv, maxv, int((2 if marginalsied else 2) * smooth * bins)), smooth
 
 
 def get_grid_bins(data):
