@@ -36,3 +36,14 @@ table.borderless p {
 .wy-nav-content {
     max-width: 1000px !important;
 }
+
+.rst-content dl.class > dt {
+    font-size: 1.2em;
+    margin-top: 30px !important;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.rst-content dl.method > dt {
+    width: 100%;
+}

@@ -23,6 +23,6 @@ if __name__ == "__main__":
     data = multivariate_normal(normal(size=6), 0.5 * (cov + cov.T), size=200000)
     parameters = ["$x$", "$y$", "$z$", "$a$", "$b$", "$c$"]
     c = ChainConsumer().add_chain(data, parameters=parameters).configure(colors="#388E3C")
-    fig = c.plot(parameters=parameters[:4], figsize="page")
+    fig = c.plotter.plot(parameters=parameters[:4], figsize="page")
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

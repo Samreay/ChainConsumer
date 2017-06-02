@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parameters = ["x", "y", "z"]
     c = ChainConsumer()
     c.add_chain(data, parameters=parameters)
-    latex_table = c.get_covariance_table()
+    latex_table = c.analysis.get_covariance_table()
 
     print(latex_table)
 

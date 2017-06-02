@@ -26,7 +26,7 @@ if __name__ == "__main__":
     fig = ChainConsumer()\
         .add_chain(data, parameters=["$x$", "$y$", r"$\epsilon$"], name="Test chain")\
         .add_chain(data2, name="Chain2")\
-        .add_chain(data3, name="Chain3")\
-        .plot()
+        .add_chain(data3, name="Chain3") \
+        .plotter.plot()
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -32,5 +32,5 @@ if __name__ == "__main__":
     c.add_chain(d1, posterior=p2, name="Model B", num_eff_data_points=n, num_free_params=5)
     c.add_chain(d1, posterior=p2, name="Model C", num_eff_data_points=n, num_free_params=4)
     c.add_chain(d1, posterior=p1, name="Model D", num_eff_data_points=n, num_free_params=14)
-    table = c.comparison_table(caption="Model comparisons!")
+    table = c.comparison.comparison_table(caption="Model comparisons!")
     print(table)

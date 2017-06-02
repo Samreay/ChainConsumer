@@ -32,14 +32,14 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 # Or we can enable cumulative statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="cumulative")
-fig = c.plot()
+fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable mean statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="mean")
-fig = c.plot()
+fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
@@ -53,5 +53,5 @@ c.add_chain(data)
 c.add_chain(data)
 c.configure(statistics=["max", "mean", "cumulative"],
             linestyles=["-", "--", ":"], linewidths=[1, 2, 3], bar_shade=True)
-fig = c.plot()
+fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -31,6 +31,15 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.17.0
+* Refactoring ChainConsumer due to growing size.
+* Improve bin limits to reduce overly large bins that form when some low-weight samples are located far away from the mean.
+* Fixed issue generating text with one sided distributions.
+* Adding ability to specify weights or posterior as the colour parameter.
+* Color scatter with uniform weights doesn't have first plot a different color.
+* Adding ability to control subplot spacing.
+* Adding method `plot_distributions` to quickly plot marginalised distributions.
+
 ##### 0.16.5
 * Fixing bug in Gelman-Rubin diagnostic. Thanks Warren!
 
