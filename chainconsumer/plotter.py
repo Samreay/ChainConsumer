@@ -248,8 +248,6 @@ class Plotter(object):
         If there are obvious tails or features in the parameters, you probably want
         to investigate.
 
-        See :class:`.dessn.chain.demoWalk.DemoWalk` for example usage.
-
         Parameters
         ----------
         parameters : list[str]|int, optional
@@ -395,7 +393,162 @@ class Plotter(object):
             plt.show()
         return fig
 
-    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None):  # pragma: no cover
+    def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
+                   filename=None, chains=None, col_wrap=4, figsize=None):
+        """ Plots the 1D parameter distributions for verification purposes.
+
+        This plot is more for a sanity or consistency check than for use with final results.
+        Plotting this before plotting with :func:`plot` allows you to quickly see if the
+        chains give well behaved distributions, or if certain parameters are suspect
+        or require a greater burn in period.
+
+
+        Parameters
+        ----------
+        parameters : list[str]|int, optional
+            Specifiy a subset of parameters to plot. If not set, all parameters are plotted.
+            If an integer is given, only the first so many parameters are plotted.
+        truth : list[float]|dict[str], optional
+            A list of truth values corresponding to parameters, or a dictionary of
+            truth values keyed by the parameter.
+        extents : list[tuple]|dict[str], optional
+            A list of two-tuples for plot extents per parameter, or a dictionary of
+            extents keyed by the parameter.
+        display : bool, optional
+            If set, shows the plot using ``plt.show()``
+        filename : str, optional
+            If set, saves the figure to the filename
+        chains : int|str, list[str|int], optional
+            Used to specify which chain to show if more than one chain is loaded in.
+            Can be an integer, specifying the
+            chain index, or a str, specifying the chain name.
+        col_wrap : int, optional
+            How many columns to plot before wrapping.
+        figsize : tuple(float)|float
+            Either a tuple specifying the figure size or a float scaling factor.
+            
+        Returns
+        -------
+        figure
+            the matplotlib figure created
+
+        """
+        if not self.parent._configured:
+            self.parent.configure()
+        if not self.parent._configured_truth:
+            self.parent.configure_truth()
+
+        if truth is not None and isinstance(truth, np.ndarray):
+            truth = truth.tolist()
+
+        if chains is None:
+            chains = list(range(len(self.parent._chains)))
+        else:
+            if isinstance(chains, str) or isinstance(chains, int):
+                chains = [chains]
+            chains = [self.parent._get_chain(c) for c in chains]
+
+        all_parameters2 = [p for i in chains for p in self.parent._parameters[i]]
+        all_parameters = []
+        for p in all_parameters2:
+            if p not in all_parameters:
+                all_parameters.append(p)
+
+        if parameters is None:
+            parameters = all_parameters
+        elif isinstance(parameters, int):
+            parameters = self.parent.all_parameters[:parameters]
+
+        if truth is not None and isinstance(truth, list):
+            truth = truth[:len(parameters)]
+
+        assert truth is None or isinstance(truth, dict) or \
+               (isinstance(truth, list) and len(truth) == len(parameters)), \
+            "Have a list of %d parameters and %d truth values" % (len(parameters), len(truth))
+
+        assert extents is None or isinstance(extents, dict) or \
+               (isinstance(extents, list) and len(extents) == len(parameters)), \
+            "Have a list of %d parameters and %d extent values" % (len(parameters), len(extents))
+
+        if truth is not None and isinstance(truth, list):
+            truth = dict((p, t) for p, t in zip(parameters, truth))
+        if truth is None:
+            truth = {}
+
+        if extents is not None and isinstance(extents, list):
+            extents = dict((p, e) for p, e in zip(parameters, extents))
+        if extents is None:
+            extents = {}
+
+        n = len(parameters)
+        num_cols = min(n, col_wrap)
+        num_rows = int(np.ceil(1.0 * n / col_wrap))
+
+        if figsize is None:
+            figsize = 1.0
+        if type(figsize) == float:
+            figsize_float = figsize
+            figsize = (num_cols * 2 * figsize, num_rows * 2 * figsize)
+        else:
+            figsize_float = 1.0
+
+        fit_values = self.parent.analysis.get_summary(squeeze=False)
+        summary = self.parent.config["summary"]
+        label_font_size = self.parent.config["label_font_size"]
+        tick_font_size = self.parent.config["tick_font_size"]
+        max_ticks = self.parent.config["max_ticks"]
+        diagonal_tick_labels = self.parent.config["diagonal_tick_labels"]
+
+        if summary is None:
+            summary = len(self.parent._chains) == 1
+
+        hspace = (0.8 if summary else 0.5) / figsize_float
+        fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=figsize, squeeze=False)
+        fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=hspace)
+
+        formatter = ScalarFormatter(useOffset=False)
+        formatter.set_powerlimits((-3, 4))
+
+        if self.parent.config["usetex"]:
+            plt.rc('text', usetex=True)
+        if self.parent.config["serif"]:
+            plt.rc('font', family='serif')
+        else:
+            plt.rc('font', family='sans-serif')
+
+        for i, ax in enumerate(axes.flatten()):
+            if i >= len(parameters):
+                ax.set_axis_off()
+                continue
+            p = parameters[i]
+
+            ax.set_yticks([])
+            if diagonal_tick_labels:
+                [l.set_rotation(45) for l in ax.get_xticklabels()]
+            [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
+            ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+            ax.xaxis.set_major_formatter(formatter)
+            ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
+            max_val = None
+            for index in chains:
+                if p in self.parent._parameters[index]:
+                    chain_row = self.parent._chains[index][:, self.parent._parameters[index].index(p)]
+                    weights = self.parent._weights[index]
+                    fit = fit_values[index][p]
+                    m = self._plot_bars(index, ax, p, chain_row, weights, grid=self.parent._grids[index],
+                                        fit_values=fit, summary=summary, truth=truth, extents=None)
+                    if max_val is None or m > max_val:
+                        max_val = m
+            ax.set_ylim(0, 1.1 * max_val)
+            ax.set_xlabel(p, fontsize=label_font_size)
+
+        if filename is not None:
+            fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+        if display:
+            plt.show()
+        return fig
+
+    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None, chains=None):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.parent.config["max_ticks"]
         spacing = self.parent.config["spacing"]
@@ -403,6 +556,9 @@ class Plotter(object):
         label_font_size = self.parent.config["label_font_size"]
         tick_font_size = self.parent.config["tick_font_size"]
         diagonal_tick_labels = self.parent.config["diagonal_tick_labels"]
+
+        if chains is None:
+            chains = list(range(len(self.parent._chains)))
 
         if not plot_hists:
             n -= 1
@@ -430,25 +586,10 @@ class Plotter(object):
 
         extents = {}
         for p in all_parameters:
-            min_val = None
-            max_val = None
             if external_extents is not None and p in external_extents:
-                min_val, max_val = external_extents[p]
+                extents[p] = external_extents[p]
             else:
-                for i, (chain, parameters, w) in enumerate(zip(self.parent._chains, self.parent._parameters, self.parent._weights)):
-                    if p not in parameters:
-                        continue
-                    index = parameters.index(p)
-                    if self.parent._grids[i]:
-                        min_prop = chain[:, index].min()
-                        max_prop = chain[:, index].max()
-                    else:
-                        min_prop, max_prop = get_extents(chain[:, index], w)
-                    if min_val is None or min_prop < min_val:
-                        min_val = min_prop
-                    if max_val is None or max_prop > max_val:
-                        max_val = max_prop
-            extents[p] = (min_val, max_val)
+                extents[p] = self._get_parameter_extents(p, chains)
 
         if plot_hists:
             params1 = all_parameters
@@ -497,6 +638,24 @@ class Plotter(object):
                     ax.set_xlim(extents[p2])
 
         return fig, axes, params1, params2, extents
+
+    def _get_parameter_extents(self, parameter, chain_indexes):
+        min_val, max_val = None, None
+        for i, (chain, parameters, w) in enumerate(
+                zip(self.parent._chains, self.parent._parameters, self.parent._weights)):
+            if parameter not in parameters or i not in chain_indexes:
+                continue
+            index = parameters.index(parameter)
+            if self.parent._grids[i]:
+                min_prop = chain[:, index].min()
+                max_prop = chain[:, index].max()
+            else:
+                min_prop, max_prop = get_extents(chain[:, index], w)
+            if min_val is None or min_prop < min_val:
+                min_val = min_prop
+            if max_val is None or max_prop > max_val:
+                max_val = max_prop
+        return min_val, max_val
 
     def _plot_contour(self, iindex, ax, x, y, w, px, py, grid, truth=None, color_data=None, color_extent=None):  # pragma: no cover
         levels = 1.0 - np.exp(-0.5 * self.parent.config["sigmas"] ** 2)

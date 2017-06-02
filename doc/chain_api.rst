@@ -30,6 +30,7 @@ used for generating plots.
 
 * :func:`chainconsumer.plotter.Plotter.plot` - Plot the posterior surfaces
 * :func:`chainconsumer.plotter.Plotter.plot_walks` - Plot the walks to visually inspect convergence.
+* :func:`chainconsumer.plotter.Plotter.plot_distributions` - Plot the marginalised distributions only.
 
 Analysis Class
 --------------
