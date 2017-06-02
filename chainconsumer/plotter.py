@@ -394,7 +394,7 @@ class Plotter(object):
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
-                   filename=None, chains=None, col_wrap=4, figsize=None):
+                   filename=None, chains=None, col_wrap=4, figsize=None):  # pragma: no cover
         """ Plots the 1D parameter distributions for verification purposes.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -644,7 +644,7 @@ class Plotter(object):
         for i, (chain, parameters, w) in enumerate(
                 zip(self.parent._chains, self.parent._parameters, self.parent._weights)):
             if parameter not in parameters or i not in chain_indexes:
-                continue
+                continue  # pragma: no cover
             index = parameters.index(parameter)
             if self.parent._grids[i]:
                 min_prop = chain[:, index].min()
