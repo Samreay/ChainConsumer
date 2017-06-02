@@ -222,7 +222,7 @@ class ChainConsumer(object):
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
                   color_params=None, plot_color_params=False, cmaps=None, usetex=True,
-                  diagonal_tick_labels=True, label_font_size=14, tick_font_size=12):  # pragma: no cover
+                  diagonal_tick_labels=True, label_font_size=14, tick_font_size=12, spacing=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -321,7 +321,10 @@ class ChainConsumer(object):
             The font size for plot axis labels and axis titles if summaries are configured to display.
         tick_font_size : int|float, optional
             The font size for the tick labels in the plots.
-
+        spacing : float, optional
+            The amount of spacing to add between plots. Defaults to `None`, which equates to 1.0 for less 
+            than 6 dimensions and 0.0 for higher dimensions.
+            
         Returns
         -------
         ChainConsumer
@@ -522,6 +525,7 @@ class ChainConsumer(object):
         self.config["diagonal_tick_labels"] = diagonal_tick_labels
         self.config["label_font_size"] = label_font_size
         self.config["tick_font_size"] = tick_font_size
+        self.config["spacing"] = spacing
 
         self._configured = True
         return self

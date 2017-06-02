@@ -398,6 +398,7 @@ class Plotter(object):
     def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.parent.config["max_ticks"]
+        spacing = self.parent.config["spacing"]
         plot_hists = self.parent.config["plot_hists"]
         label_font_size = self.parent.config["label_font_size"]
         tick_font_size = self.parent.config["tick_font_size"]
@@ -405,6 +406,9 @@ class Plotter(object):
 
         if not plot_hists:
             n -= 1
+
+        if spacing is None:
+            spacing = 1.0 if n < 6 else 0.0
 
         if n == 2 and plot_hists and flip:
             gridspec_kw = {'width_ratios': [3, 1], 'height_ratios': [1, 3]}
@@ -419,7 +423,7 @@ class Plotter(object):
             plt.rc('font', family='sans-serif')
 
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
-        fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=0.05)
+        fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05 * spacing, hspace=0.05 * spacing)
 
         formatter = ScalarFormatter(useOffset=False)
         formatter.set_powerlimits((-3, 4))
