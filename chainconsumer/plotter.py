@@ -621,14 +621,14 @@ class Plotter(object):
                             ax.set_ylabel(p1, fontsize=label_font_size)
                     if display_x_ticks:
                         if diagonal_tick_labels:
-                            [l.set_rotation(45) for l in ax.get_xticklabels()]
-                        [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
+                            _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
+                        _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
                         ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
                         ax.xaxis.set_major_formatter(formatter)
                     if display_y_ticks:
                         if diagonal_tick_labels:
-                            [l.set_rotation(45) for l in ax.get_yticklabels()]
-                        [l.set_fontsize(tick_font_size) for l in ax.get_yticklabels()]
+                            _ = [l.set_rotation(45) for l in ax.get_yticklabels()]
+                        _ = [l.set_fontsize(tick_font_size) for l in ax.get_yticklabels()]
                         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
                         ax.yaxis.set_major_formatter(formatter)
                     if i != j or not plot_hists:

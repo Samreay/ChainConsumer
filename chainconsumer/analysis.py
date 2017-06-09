@@ -402,7 +402,7 @@ class Analysis(object):
             count += 1
             try:
                 if count > 50:
-                    raise Exception("Failed to converge")
+                    raise RecursionError("Failed to converge")
                 i1 = startIndex - np.where(ys[:startIndex][::-1] < mid)[0][0]
                 i2 = startIndex + np.where(ys[startIndex:] < mid)[0][0]
                 area = cs[i2] - cs[i1]
@@ -414,7 +414,7 @@ class Analysis(object):
                     maxVal = mid
                 elif area > desired_area:
                     minVal = mid
-            except:
+            except RecursionError:
                 self._logger.warning("Parameter %s is not constrained" % parameter)
                 return [None, xs[startIndex], None]
 
