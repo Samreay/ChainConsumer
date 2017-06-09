@@ -31,7 +31,7 @@ install:
     - conda create --yes -n test python=$PYTHON_VERSION setuptools pip pytest pytest-cov
     - source activate test
     - pip install --only-binary=numpy,scipy,matplotlib numpy scipy matplotlib
-    - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery codecov
+    - pip install sphinx numpydoc sphinx_rtd_theme Pillow sphinx_gallery codecov codacy-coverage
     - pip install -r requirements.txt
     - ulimit -s unlimited
 
@@ -43,6 +43,8 @@ before_script:
 script:
     - python setup.py clean install
     - py.test --cov=chainconsumer -v
+    - coverage
+    - python-codacy-coverage -r coverage.xml
 
 after_success:
     - codecov

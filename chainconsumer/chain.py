@@ -322,7 +322,7 @@ class ChainConsumer(object):
         tick_font_size : int|float, optional
             The font size for the tick labels in the plots.
         spacing : float, optional
-            The amount of spacing to add between plots. Defaults to `None`, which equates to 1.0 for less 
+            The amount of spacing to add between plots. Defaults to `None`, which equates to 1.0 for less
             than 6 dimensions and 0.0 for higher dimensions.
             
         Returns
