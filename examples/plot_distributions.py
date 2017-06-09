@@ -15,9 +15,6 @@ from numpy.random import random, multivariate_normal
 from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
-    import numpy as np
-    from numpy.random import random, multivariate_normal
-    from chainconsumer import ChainConsumer
 
     np.random.seed(0)
     means, cov = np.arange(8), random(size=(8, 8))

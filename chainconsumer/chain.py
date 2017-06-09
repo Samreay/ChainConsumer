@@ -1,13 +1,12 @@
 import numpy as np
 import logging
-from scipy.interpolate import interp1d
 import matplotlib.cm as cm
 
 
 from chainconsumer.comparisons import Comparison
 from chainconsumer.diagnostic import Diagnostic
 from chainconsumer.plotter import Plotter
-from chainconsumer.helpers import get_extents, get_bins
+from chainconsumer.helpers import get_bins
 from chainconsumer.analysis import Analysis
 
 __all__ = ["ChainConsumer"]
@@ -17,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.17.0"
+    __version__ = "0.17.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -304,8 +303,8 @@ class ChainConsumer(object):
             The number of scatter points to show when enabling `cloud` or setting one of the parameters
             to colour scatter. Defaults to 15k per chain.
         color_params : str|list[str], optional
-            The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set 
-            to 'weights' or 'posterior' (without the quotes), and that is not a parameter in the chain, it will 
+            The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set
+            to 'weights' or 'posterior' (without the quotes), and that is not a parameter in the chain, it will
             use the weights or posterior, respectively, to colour the points.
         plot_color_params : bool|list[bool], optional
             Whether or not the colour parameter should also be plotted as a posterior surface.
@@ -324,7 +323,7 @@ class ChainConsumer(object):
         spacing : float, optional
             The amount of spacing to add between plots. Defaults to `None`, which equates to 1.0 for less
             than 6 dimensions and 0.0 for higher dimensions.
-            
+        
         Returns
         -------
         ChainConsumer

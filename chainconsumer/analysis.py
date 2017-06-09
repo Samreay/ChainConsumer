@@ -48,7 +48,7 @@ class Analysis(object):
         """
         if parameters is None:
             parameters = self.parent._all_parameters
-        for i, name in enumerate(self.parent._names):
+        for name in self.parent._names:
             assert name is not None, \
                 "Generating a LaTeX table requires all chains to have names." \
                 " Ensure you have `name=` in your `add_chain` call"
@@ -57,7 +57,7 @@ class Analysis(object):
                 "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
         num_chains = len(self.parent._chains)
-        fit_values = self.parent.get_summary(squeeze=False)
+        fit_values = self.get_summary(squeeze=False)
         if label is None:
             label = ""
         if caption is None:
@@ -366,14 +366,14 @@ class Analysis(object):
         return text
 
     def get_parameter_summary_mean(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        xs, _, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
         vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
         bounds = interp1d(cs, xs)(vals)
         bounds[1] = 0.5 * (bounds[0] + bounds[2])
         return bounds
 
     def get_parameter_summary_cumulative(self, data, weights, parameter, chain_index, desired_area=0.6827, grid=False):
-        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        xs, _, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
         vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
         bounds = interp1d(cs, xs)(vals)
         return bounds

@@ -118,7 +118,7 @@ class Diagnostic(object):
         var_end = np.array([self._spec(c[n_end:, i]) / c[n_end:, i].size
                             for c in chains for i in range(c.shape[1])])
         zs = (mean_start - mean_end) / (np.sqrt(var_start + var_end))
-        stat, pvalue = normaltest(zs)
+        _, pvalue = normaltest(zs)
         print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
         return pvalue > threshold
 

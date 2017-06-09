@@ -32,6 +32,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.17.1
+* Code quality improvements
+* Documentation update
+
 ##### 0.17.0
 * Refactoring ChainConsumer due to growing size.
 * Improve bin limits to reduce overly large bins that form when some low-weight samples are located far away from the mean.

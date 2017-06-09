@@ -3,7 +3,7 @@
 Subplot Spacing
 ===============
 
-By default ChainConsumer will reduce subplot whitespace when you hit 
+By default ChainConsumer will reduce subplot whitespace when you hit
 a certain dimensionality, but you can also customise this yourself.
 """
 

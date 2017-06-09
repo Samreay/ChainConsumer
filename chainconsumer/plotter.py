@@ -486,7 +486,7 @@ class Plotter(object):
 
         if figsize is None:
             figsize = 1.0
-        if type(figsize) == float:
+        if isinstance(figsize, float):
             figsize_float = figsize
             figsize = (num_cols * 2 * figsize, num_rows * 2 * figsize)
         else:
@@ -734,7 +734,7 @@ class Plotter(object):
         title_size = self.parent.config["label_font_size"]
 
         if smooth:
-            xs, ys, cs = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
+            xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
             if flip:
                 ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth)
             else:
@@ -838,10 +838,10 @@ class Plotter(object):
         if isinstance(colour, np.ndarray):
             r, g, b = colour[:3] * 255.0
         else:
-            hex = colour.strip('#')
-            if scalefactor < 0 or len(hex) != 6:
-                return hex
-            r, g, b = int(hex[:2], 16), int(hex[2:4], 16), int(hex[4:], 16)
+            hexx = colour.strip('#')
+            if scalefactor < 0 or len(hexx) != 6:
+                return hexx
+            r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)
         r = self._clamp(int(r * scalefactor))
         g = self._clamp(int(g * scalefactor))
         b = self._clamp(int(b * scalefactor))

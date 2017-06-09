@@ -25,9 +25,9 @@ if __name__ == "__main__":
     fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
 
     # If we wanted to save to file, we would instead have written
-    # fig = c.plot(filename="location", figsize="column", truth=[0.0, 4.0])
+    # fig = c.plotter.plot(filename="location", figsize="column", truth=[0.0, 4.0])
 
     # If we wanted to display the plot interactively...
-    # fig = c.plot(display=True, figsize="column", truth=[0.0, 4.0])
+    # fig = c.plotter.plot(display=True, figsize="column", truth=[0.0, 4.0])
 
     fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

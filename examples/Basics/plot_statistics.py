@@ -25,7 +25,7 @@ parameters = ["$x$", "$y$"]
 
 # Now the normal way of giving data is passing a numpy array and parameter separately
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max")
-fig = c.plot()
+fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
