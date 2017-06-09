@@ -43,7 +43,7 @@ before_script:
 script:
     - python setup.py clean install
     - py.test --cov=chainconsumer -v
-    - coverage
+    - coverage xml
     - python-codacy-coverage -r coverage.xml
 
 after_success:
