@@ -1,6 +1,6 @@
 # [ChainConsumer](https://samreay.github.io/ChainConsumer)
 
-[![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg?style=flat-square)](https://travis-ci.org/Samreay/ChainConsumer)
+[![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg)](https://travis-ci.org/Samreay/ChainConsumer)
 [![Coverage Status](https://codecov.io/gh/Samreay/ChainConsumer/branch/master/graph/badge.svg)](https://codecov.io/gh/Samreay/ChainConsumer)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/dessn/abc/blob/master/LICENSE)
 [![PyPi](https://img.shields.io/pypi/v/ChainConsumer.svg?style=flat)](https://pypi.python.org/pypi/ChainConsumer)
