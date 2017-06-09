@@ -524,8 +524,8 @@ class Plotter(object):
 
             ax.set_yticks([])
             if diagonal_tick_labels:
-                [l.set_rotation(45) for l in ax.get_xticklabels()]
-            [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
+                _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
+            _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
             ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
             ax.xaxis.set_major_formatter(formatter)
             ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
