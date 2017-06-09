@@ -1,5 +1,6 @@
 # [ChainConsumer](https://samreay.github.io/ChainConsumer)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/eefe9aa7d4904306877be1e17b952f39)](https://www.codacy.com/app/samuelreay/ChainConsumer?utm_source=github.com&utm_medium=referral&utm_content=Samreay/ChainConsumer&utm_campaign=badger)
 [![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg)](https://travis-ci.org/Samreay/ChainConsumer)
 [![Coverage Status](https://codecov.io/gh/Samreay/ChainConsumer/branch/master/graph/badge.svg)](https://codecov.io/gh/Samreay/ChainConsumer)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/dessn/abc/blob/master/LICENSE)
