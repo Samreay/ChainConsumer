@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.17.3
+* Default figure size is now 1.5 inches per parameter, instead of 1. Also decreasing default font size, so that printing summaries is less likely to overlap surfaces.
+
 ##### 0.17.2
 * Label font size now applies to legend.
 

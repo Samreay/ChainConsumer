@@ -16,7 +16,7 @@ class ChainConsumer(object):
     """ A class for consuming chains produced by an MCMC walk
 
     """
-    __version__ = "0.17.2"
+    __version__ = "0.17.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -221,7 +221,7 @@ class ChainConsumer(object):
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
                   color_params=None, plot_color_params=False, cmaps=None, usetex=True,
-                  diagonal_tick_labels=True, label_font_size=14, tick_font_size=12, spacing=None):  # pragma: no cover
+                  diagonal_tick_labels=True, label_font_size=12, tick_font_size=10, spacing=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 

@@ -99,11 +99,10 @@ class Plotter(object):
             truth = truth.tolist()
         if truth is not None and isinstance(truth, list):
             truth = truth[:len(parameters)]
+        grow_size = 1.5
         if isinstance(figsize, float):
-            grow_size = figsize
+            grow_size *= figsize
             figsize = "GROW"
-        else:
-            grow_size = 1.0
 
         if isinstance(figsize, str):
             if figsize.upper() == "COLUMN":
