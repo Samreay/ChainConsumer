@@ -212,12 +212,13 @@ class Plotter(object):
         colors = self.parent.config["colors"]
         linestyles = self.parent.config["linestyles"]
         linewidths = self.parent.config["linewidths"]
+        label_font_size = self.parent.config["label_font_size"]
         if self.parent._names is not None and legend:
             ax = axes[0, -1]
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
                        for n, c, ls, lw in zip(self.parent._names, colors, linestyles, linewidths) if n is not None]
             location = "center" if len(parameters) > 1 else 1
-            ax.legend(artists, self.parent._names, loc=location, frameon=False)
+            ax.legend(artists, self.parent._names, loc=location, frameon=False, fontsize=label_font_size)
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()

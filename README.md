@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.17.2
+* Label font size now applies to legend.
+
 ##### 0.17.1
 * Code quality improvements
 * Documentation update
