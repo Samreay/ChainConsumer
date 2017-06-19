@@ -1188,3 +1188,17 @@ class TestChain(object):
         minv, maxv = c.plotter._get_parameter_extents("x", [0])
         assert np.isclose(minv, -3, atol=0.001)
         assert np.isclose(maxv, 3, atol=0.001)
+
+    def test_covariant_covariance_calc(self):
+        data1 = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000)
+        data2 = np.random.multivariate_normal([0, 0], [[1, 1], [1, 1]], size=1000)
+        weights = np.concatenate((np.ones(1000), np.zeros(1000)))
+        data = np.concatenate((data1, data2))
+        c = ChainConsumer()
+        c.add_chain(data, weights=weights, parameters=["x"])
+        p, cor = c.analysis.get_covariance()
+        assert p[0] == "x"
+        assert np.isclose(cor[0, 0], 1, atol=1e-2)
+        assert np.isclose(cor[1, 1], 1, atol=1e-2)
+        assert np.isclose(cor[0, 1], 0, atol=1e-2)
+        assert cor.shape == (2, 2)

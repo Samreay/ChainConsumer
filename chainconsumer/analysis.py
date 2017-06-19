@@ -190,7 +190,7 @@ class Analysis(object):
 
         indexes = [self.parent._parameters[chain].index(p) for p in parameters]
         data = self.parent._chains[chain][:, indexes]
-        correlations = np.atleast_2d(np.cov(data, rowvar=False))
+        correlations = np.atleast_2d(np.cov(data, aweights=self.parent._weights[chain], rowvar=False))
 
         return parameters, correlations
 
