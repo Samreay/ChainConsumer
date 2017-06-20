@@ -1,9 +1,10 @@
 import logging
 import numpy as np
-import statsmodels.api as sm
+from scipy.integrate import simps
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 from chainconsumer.helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
+from chainconsumer.kde import MegKDE
 
 
 class Analysis(object):
@@ -251,20 +252,20 @@ class Analysis(object):
         else:
             bins = self.parent.config['bins'][chain_index]
             bins, smooth = get_smoothed_bins(smooth, bins, data, weights)
+
         hist, edges = np.histogram(data, bins=bins, normed=True, weights=weights)
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
+
         if smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
 
         if self.parent.config["kde"][chain_index]:
-            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(100, int(bins.max())))
-            assert np.all(weights == 1.0), "You can only use KDE if your weights are all one. " \
-                                           "If you would like weights, please vote for this issue: " \
-                                           "https://github.com/scikit-learn/scikit-learn/issues/4394"
-            pdf = sm.nonparametric.KDEUnivariate(data)
-            pdf.fit()
-            ys = interp1d(kde_xs, pdf.evaluate(kde_xs), kind="cubic")(xs)
+            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
+            ys = MegKDE(data, weights).evaluate(kde_xs)
+            area = simps(ys, x=kde_xs)
+            ys = ys / area
+            ys = interp1d(kde_xs, ys, kind="linear")(xs)
         else:
             ys = interp1d(edge_centers, hist, kind="linear")(xs)
         cs = ys.cumsum()

@@ -2,11 +2,12 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
+from numpy import meshgrid
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 
 from chainconsumer.helpers import get_extents, get_smoothed_bins, get_grid_bins
-
+from chainconsumer.kde import MegKDE
 
 class Plotter(object):
     def __init__(self, parent):
@@ -669,6 +670,7 @@ class Plotter(object):
         linestyle = self.parent.config["linestyles"][iindex]
         linewidth = self.parent.config["linewidths"][iindex]
         cmap = self.parent.config["cmaps"][iindex]
+        kde = self.parent.config["kde"][iindex]
 
         if grid:
             binsx = get_grid_bins(x)
@@ -685,7 +687,12 @@ class Plotter(object):
 
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
-        if smooth:
+        if kde:
+            xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
+            coords = np.vstack((xx.flatten(), yy.flatten())).T
+            data = np.vstack((x, y)).T
+            hist = MegKDE(data, w).evaluate(coords).reshape(hist.shape)
+        elif smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
@@ -731,9 +738,10 @@ class Plotter(object):
         linewidth = self.parent.config["linewidths"][iindex]
         bins = self.parent.config["bins"][iindex]
         smooth = self.parent.config["smooth"][iindex]
+        kde = self.parent.config["kde"][iindex]
         title_size = self.parent.config["label_font_size"]
 
-        if smooth:
+        if smooth or kde:
             xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain_row, weights, iindex, grid)
             if flip:
                 ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth)

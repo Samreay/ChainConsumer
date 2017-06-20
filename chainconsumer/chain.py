@@ -13,10 +13,11 @@ __all__ = ["ChainConsumer"]
 
 
 class ChainConsumer(object):
-    """ A class for consuming chains produced by an MCMC walk
+    """ A class for consuming chains produced by an MCMC walk. Or grid searches. To make plots, 
+    figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.17.4"
+    __version__ = "0.18.0"
 
     def __init__(self):
         logging.basicConfig()

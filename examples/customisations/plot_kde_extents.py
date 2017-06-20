@@ -6,9 +6,8 @@ Gaussian KDE and Extents
 Smooth marginalised distributions with a Gaussian KDE, and pick custom extents.
 
 
-Note that invoking the KDE on large data sets will significantly increase rendering time.
-Also note that you can only invoke KDE on chains without varying weights. This limitation will
-be lifted as soon as statsmodel, scipy or scikit-learn add a weighted Gaussian KDE.
+Note that invoking the KDE on large data sets will significantly increase rendering time when
+you have a large number of points.
 
 Also note that if you pass a floating point number to bins, it multiplies the default bin size
 (which is a function of number of steps in the chain) by that amount. If you give it an integer,

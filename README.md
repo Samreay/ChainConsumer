@@ -32,8 +32,11 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.18.0
+* Adding Matched Elliptical Gaussian Kernel Density Estimator to replace statsmodels KDE.
+
 ##### 0.17.4
-* FIxing bug in covariance calculation when getting the LaTeX table (did not affect contours)
+* Fixing bug in covariance calculation when getting the LaTeX table (did not affect contours)
 
 ##### 0.17.3
 * Default figure size is now 1.5 inches per parameter, instead of 1. Also decreasing default font size, so that printing summaries is less likely to overlap surfaces.
