@@ -17,7 +17,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.18.0"
+    __version__ = "0.19.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -305,8 +305,8 @@ class ChainConsumer(object):
             to colour scatter. Defaults to 15k per chain.
         color_params : str|list[str], optional
             The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set
-            to 'weights' or 'posterior' (without the quotes), and that is not a parameter in the chain, it will
-            use the weights or posterior, respectively, to colour the points.
+            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain, 
+            it will respectively  use the weights, log weights, or posterior, to colour the points.
         plot_color_params : bool|list[bool], optional
             Whether or not the colour parameter should also be plotted as a posterior surface.
         cmaps : str|list[str]
@@ -380,7 +380,7 @@ class ChainConsumer(object):
             color_params = [None] * num_chains
         else:
             if isinstance(color_params, str):
-                color_params = [color_params if color_params in ps + ["weights", "posterior"] else None for ps in self._parameters]
+                color_params = [color_params if color_params in ps + ["log_weights", "weights", "posterior"] else None for ps in self._parameters]
                 color_params = [None if c == "posterior" and self._posteriors[i] is None else c for i, c in enumerate(color_params)]
             elif isinstance(color_params, list) or isinstance(color_params, tuple):
                 for c, p in zip(color_params, self._parameters):

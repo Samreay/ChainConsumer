@@ -85,6 +85,8 @@ class Plotter(object):
                     except ValueError:
                         if cp == "weights":
                             data = self.parent._weights[i]
+                        elif cp == "log_weights":
+                            data = np.log(self.parent._weights[i])
                         elif cp == "posterior":
                             data = self.parent._posteriors[i]
                     if data is not None:
@@ -191,6 +193,8 @@ class Plotter(object):
                             except ValueError:
                                 if color_params[ii] == "weights":
                                     color_data = weights
+                                elif color_params[ii] == "log_weights":
+                                    color_data = np.log(weights)
                                 elif color_params[ii] == "posterior":
                                     color_data = posterior
                             extent = color_param_extents[color_params[ii]]
@@ -204,6 +208,8 @@ class Plotter(object):
                             label = color_params[ii]
                             if label == "weights":
                                 label = "Weights"
+                            elif label == "log_weights":
+                                label = "log(Weights)"
                             elif label == "posterior":
                                 label = "log(Posterior)"
                             cbar.set_label(label, fontsize=14)

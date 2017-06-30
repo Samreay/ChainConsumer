@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.19.0
+* Adding log_weights to the detected colour parameters.
+
 ##### 0.18.0
 * Adding Matched Elliptical Gaussian Kernel Density Estimator to replace statsmodels KDE.
 
