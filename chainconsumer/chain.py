@@ -218,7 +218,7 @@ class ChainConsumer(object):
         return self
 
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
-                  serif=True, sigmas=None, summary=None, bins=None, rainbow=None,
+                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
                   color_params=None, plot_color_params=False, cmaps=None, usetex=True,
@@ -247,6 +247,10 @@ class ChainConsumer(object):
         flip : bool, optional
             Set to false if, when plotting only two parameters, you do not want it to
             rotate the histogram so that it is horizontal.
+        sigma2d: bool, optional
+            Defaults to `True`. When `False`, uses :math:`\sigma` levels for 1D Gaussians - ie confidence
+            levels of 68% and 95%. When `True`, uses the confidence levels for 2D Gaussians, where 1 and 2
+            :math:`\sigma` represents 39% and 86% confidence levels respectively.
         sigmas : np.array, optional
             The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
             and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
@@ -514,6 +518,7 @@ class ChainConsumer(object):
                 "Only have %d options for %s, but have %d chains!" % (len(val), key, num_chains)
 
         # Non list options
+        self.config["sigma2d"] = sigma2d
         self.config["sigmas"] = sigmas
         self.config["statistics"] = statistics
         self.config["summary"] = summary

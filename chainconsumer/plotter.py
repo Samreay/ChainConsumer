@@ -5,9 +5,11 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 from numpy import meshgrid
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
+from scipy.stats import norm
 
 from chainconsumer.helpers import get_extents, get_smoothed_bins, get_grid_bins
 from chainconsumer.kde import MegKDE
+
 
 class Plotter(object):
     def __init__(self, parent):
@@ -664,9 +666,16 @@ class Plotter(object):
                 max_val = max_prop
         return min_val, max_val
 
+    def _get_levels(self):
+        sigma2d = self.parent.config["sigma2d"]
+        if sigma2d:
+            levels = 1.0 - np.exp(-0.5 * self.parent.config["sigmas"] ** 2)
+        else:
+            levels = 2 * norm.cdf(self.parent.config["sigmas"]) - 1.0
+        return levels
+
     def _plot_contour(self, iindex, ax, x, y, w, px, py, grid, truth=None, color_data=None, color_extent=None):  # pragma: no cover
-        levels = 1.0 - np.exp(-0.5 * self.parent.config["sigmas"] ** 2)
-        h = None
+        levels = self._get_levels()
         cloud = self.parent.config["cloud"][iindex]
         smooth = self.parent.config["smooth"][iindex]
         colour = self.parent.config["colors"][iindex]
@@ -677,6 +686,8 @@ class Plotter(object):
         linewidth = self.parent.config["linewidths"][iindex]
         cmap = self.parent.config["cmaps"][iindex]
         kde = self.parent.config["kde"][iindex]
+
+        h = None
 
         if grid:
             binsx = get_grid_bins(x)
@@ -830,7 +841,7 @@ class Plotter(object):
         i_sort = np.argsort(sigma)[::-1]
         i_unsort = np.argsort(i_sort)
 
-        sigma_cumsum = 1.0* sigma[i_sort].cumsum()
+        sigma_cumsum = 1.0 * sigma[i_sort].cumsum()
         sigma_cumsum /= sigma_cumsum[-1]
 
         return sigma_cumsum[i_unsort].reshape(shape)

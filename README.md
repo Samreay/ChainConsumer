@@ -34,6 +34,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ##### 0.19.0
 * Adding log_weights to the detected colour parameters.
+* Contours now support 1D Gaussian levels *and* 2D Gaussian levels thanks @matthewkirby).
 
 ##### 0.18.0
 * Adding Matched Elliptical Gaussian Kernel Density Estimator to replace statsmodels KDE.

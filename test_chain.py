@@ -1273,3 +1273,17 @@ class TestChain(object):
         assert np.isclose(std_x, 1.0, atol=0.1)
         assert np.isclose(mu_y, 1, atol=0.1)
         assert np.isclose(std_y, 0.75, atol=0.1)
+
+    def test_2d_levels(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(sigmas=[0, 1, 2], sigma2d=True)
+        levels = c.plotter._get_levels()
+        assert np.allclose(levels, [0, 0.39, 0.86], atol=0.01)
+
+    def test_1d_levels(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(sigmas=[0, 1, 2], sigma2d=False)
+        levels = c.plotter._get_levels()
+        assert np.allclose(levels, [0, 0.68, 0.95], atol=0.01)
