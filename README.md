@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.19.2
+* Legend gets placed in top right corner now when `plot_hsits` is `False` and there are only two parameters.
+
 ##### 0.19.1
 * `sigma2d` correctly defaults to `True` now.
 

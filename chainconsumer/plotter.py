@@ -225,7 +225,10 @@ class Plotter(object):
             ax = axes[0, -1]
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
                        for n, c, ls, lw in zip(self.parent._names, colors, linestyles, linewidths) if n is not None]
-            location = "center" if len(parameters) > 1 else 1
+            location = "center"
+            if (self.parent.config["plot_hists"] and len(parameters) > 1) \
+                    or (not self.parent.config["plot_hists"] and len(parameters) < 3):
+                location = "upper right"
             ax.legend(artists, self.parent._names, loc=location, frameon=False, fontsize=label_font_size)
         fig.canvas.draw()
         for ax in axes[-1, :]:
