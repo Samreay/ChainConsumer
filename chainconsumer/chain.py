@@ -481,7 +481,7 @@ class ChainConsumer(object):
 
         # Should we shade the contours
         if shade is None:
-            shade = num_chains <= 2
+            shade = num_chains <= 3
         if isinstance(shade, bool):
             # If not overridden, do not shade chains with colour scatter points
             shade = [shade and c is None for c in color_params]

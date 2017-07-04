@@ -1129,8 +1129,8 @@ class TestChain(object):
         consumer.configure()
         alphas = consumer.config["shade_alpha"]
         assert len(alphas) == 2
-        assert alphas[0] == np.sqrt(1.0 / 2.0)
-        assert alphas[1] == np.sqrt(1.0 / 2.0)
+        assert alphas[0] ==1.0 / 2.0
+        assert alphas[1] ==1.0 / 2.0
 
     def test_shade_alpha_algorithm3(self):
         consumer = ChainConsumer()
@@ -1140,9 +1140,9 @@ class TestChain(object):
         consumer.configure()
         alphas = consumer.config["shade_alpha"]
         assert len(alphas) == 3
-        assert alphas[0] == np.sqrt(1.0 / 3.0)
-        assert alphas[1] == np.sqrt(1.0 / 3.0)
-        assert alphas[2] == np.sqrt(1.0 / 3.0)
+        assert alphas[0] == 1.0 / 3.0
+        assert alphas[1] == 1.0 / 3.0
+        assert alphas[2] == 1.0 / 3.0
 
     def test_plotter_extents1(self):
         c = ChainConsumer()

@@ -34,6 +34,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ##### 0.19.3
 * Adding ability to plot contour levels, either in confidence levels or sigma.
+* Changed shading defaults.
 
 ##### 0.19.2
 * Legend gets placed in top right corner now when `plot_hsits` is `False` and there are only two parameters.
