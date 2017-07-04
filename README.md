@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.19.3
+* Adding ability to plot contour levels, either in confidence levels or sigma.
+
 ##### 0.19.2
 * Legend gets placed in top right corner now when `plot_hsits` is `False` and there are only two parameters.
 
@@ -107,7 +110,6 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 ##### 0.15.1
 * Bugfix for python 2.7
 
-
 ##### 0.15.0
 * Adding `usetex` to `configure` method.
 * When plotting walks, plots weights in log space if the mean weight is less than 0.1
@@ -115,7 +117,6 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 * Adding BIC
 * Adding DIC
 * Adding method to output model comparison table.
-
 
 ##### 0.14.0
 * Adding coloured scatter.
@@ -185,7 +186,6 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ##### 0.9.6
 * Updating package setup scripts.
-
 
 ##### 0.9.5
 * Adding markdown paper.

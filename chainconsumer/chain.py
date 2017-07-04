@@ -17,7 +17,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.19.2"
+    __version__ = "0.19.3"
 
     def __init__(self):
         logging.basicConfig()
@@ -222,7 +222,8 @@ class ChainConsumer(object):
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
                   color_params=None, plot_color_params=False, cmaps=None, usetex=True,
-                  diagonal_tick_labels=True, label_font_size=12, tick_font_size=10, spacing=None):  # pragma: no cover
+                  diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
+                  spacing=None, contour_labels=None, contour_label_font_size=10):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -328,7 +329,12 @@ class ChainConsumer(object):
         spacing : float, optional
             The amount of spacing to add between plots. Defaults to `None`, which equates to 1.0 for less
             than 6 dimensions and 0.0 for higher dimensions.
-        
+        contour_labels : string, optional
+            If unset do not plot contour labels. If set to "confidence", label the using confidence
+            intervals. If set to "sigma", labels using sigma.
+        contour_label_font_size : int|float, optional
+            The font size for contour labels, if they are enabled.
+            
         Returns
         -------
         ChainConsumer
@@ -463,9 +469,12 @@ class ChainConsumer(object):
         # Modify shade alpha based on how many chains we have
         if shade_alpha is None:
             if num_chains == 1:
-                shade_alpha = 1.0
+                if contour_labels is not None:
+                    shade_alpha = 0.75
+                else:
+                    shade_alpha = 1.0
             else:
-                shade_alpha = np.sqrt(1.0 / num_chains)
+                shade_alpha = 1.0 / num_chains
         # Decrease the shading amount if there are colour scatter points
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
@@ -494,6 +503,13 @@ class ChainConsumer(object):
             else:
                 sigmas = np.array([0, 1, 2])
         sigmas = np.sort(sigmas)
+
+        if contour_labels is not None:
+            assert isinstance(contour_labels, str), "contour_labels parameter should be a string"
+            contour_labels = contour_labels.lower()
+            assert contour_labels in ["sigma", "confidence"], "contour_labels should be either sigma or confidence"
+        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float),\
+            "contour_label_font_size needs to be numeric"
 
         # List options
         self.config["shade"] = shade[:num_chains]
@@ -531,6 +547,8 @@ class ChainConsumer(object):
         self.config["label_font_size"] = label_font_size
         self.config["tick_font_size"] = tick_font_size
         self.config["spacing"] = spacing
+        self.config["contour_labels"] = contour_labels
+        self.config["contour_label_font_size"] = contour_label_font_size
 
         self._configured = True
         return self

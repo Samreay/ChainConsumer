@@ -689,6 +689,7 @@ class Plotter(object):
         linewidth = self.parent.config["linewidths"][iindex]
         cmap = self.parent.config["cmaps"][iindex]
         kde = self.parent.config["kde"][iindex]
+        contour_labels = self.parent.config["contour_labels"]
 
         h = None
 
@@ -736,9 +737,16 @@ class Plotter(object):
         if shade:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
                         alpha=shade_alpha)
-        ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2,
+        con = ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2,
                    linestyles=linestyle, linewidths=linewidth)
 
+        if contour_labels is not None:
+            if contour_labels == "sigma":
+                sigmas = self.parent.config["sigmas"]
+                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(con.levels, sigmas)])
+            else:
+                fmt = dict([(l, '%d\\%%' % (100 * l)) for l in con.levels])
+            ax.clabel(con, con.levels, inline=True, fmt=fmt, fontsize=self.parent.config["contour_label_font_size"])
         if truth is not None:
             truth_value = truth.get(px)
             if truth_value is not None:
