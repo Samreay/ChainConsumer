@@ -218,7 +218,7 @@ class ChainConsumer(object):
         return self
 
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
-                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, rainbow=None,
+                  serif=True, sigma2d=True, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
                   color_params=None, plot_color_params=False, cmaps=None, usetex=True,
