@@ -3,7 +3,7 @@
 Confidence Levels
 =================
 
-When setting the :math:`\sigma` levels for ChainConsumer, we need to be careful
+When setting the sigma levels for ChainConsumer, we need to be careful
 if we are talking about 1D or 2D Gaussians. For 1D Gaussians, 1 and 2 :math:`\sigma` correspond
 to 68% and 95% confidence levels. However, for a a 2D Gaussian, integrating over 1 and 2 :math:`\sigma`
 levels gives 39% and 86% confidence levels.

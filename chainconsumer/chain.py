@@ -492,7 +492,7 @@ class ChainConsumer(object):
 
         # Figure out bar shading
         if bar_shade is None:
-            bar_shade = len(self._chains) <= 2
+            bar_shade = len(self._chains) <= 3
         if isinstance(bar_shade, bool):
             bar_shade = [bar_shade] * len(self._chains)
 
