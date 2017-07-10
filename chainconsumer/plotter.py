@@ -17,7 +17,7 @@ class Plotter(object):
         self._logger = logging.getLogger(__name__)
 
     def plot(self, figsize="GROW", parameters=None, extents=None, filename=None,
-             display=False, truth=None, legend=None):  # pragma: no cover
+             display=False, truth=None, legend=None, blind=None):  # pragma: no cover
         """ Plot the chain!
 
         Parameters
@@ -46,6 +46,9 @@ class Plotter(object):
             truth values indexed by key
         legend : bool, optional
             If true, creates a legend in your plot using the chain names.
+        blind : bool|string|list[string], optional
+            Whether to blind axes values. Can be set to `True` to blind all parameters,
+            or can pass in a string (or list of strings) which specify the parameters to blind.
 
         Returns
         -------
@@ -136,11 +139,18 @@ class Plotter(object):
         if extents is not None and isinstance(extents, list):
             extents = dict((p, e) for p, e in zip(parameters, extents))
 
+        if blind is None:
+            blind = []
+        elif isinstance(blind, str):
+            blind = [blind]
+        elif isinstance(blind, bool) and blind:
+            blind = parameters
+
         plot_hists = self.parent.config["plot_hists"]
         flip = (len(parameters) == 2 and plot_hists and self.parent.config["flip"])
 
-        fig, axes, params1, params2, extents = self._get_figure(parameters, figsize=figsize,
-                                                                flip=flip, external_extents=extents)
+        fig, axes, params1, params2, extents = self._get_figure(parameters, figsize=figsize, flip=flip,
+                                                                external_extents=extents, blind=blind)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
         fit_values = self.parent.analysis.get_summary(squeeze=False)
@@ -167,10 +177,10 @@ class Plotter(object):
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
-
+                        param_summary = summary and p1 not in blind
                         m = self._plot_bars(ii, ax, p1, chain[:, index], weights, grid=grid, fit_values=fit[p1],
                                             flip=do_flip,
-                                            summary=summary, truth=truth, extents=extents[p1])
+                                            summary=param_summary, truth=truth, extents=extents[p1])
                         if max_val is None or m > max_val:
                             max_val = m
                     if do_flip:
@@ -406,7 +416,7 @@ class Plotter(object):
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
-                   filename=None, chains=None, col_wrap=4, figsize=None):  # pragma: no cover
+                   filename=None, chains=None, col_wrap=4, figsize=None, blind=None):  # pragma: no cover
         """ Plots the 1D parameter distributions for verification purposes.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -436,8 +446,11 @@ class Plotter(object):
             chain index, or a str, specifying the chain name.
         col_wrap : int, optional
             How many columns to plot before wrapping.
-        figsize : tuple(float)|float
+        figsize : tuple(float)|float, optional
             Either a tuple specifying the figure size or a float scaling factor.
+        blind : bool|string|list[string], optional
+            Whether to blind axes values. Can be set to `True` to blind all parameters,
+            or can pass in a string (or list of strings) which specify the parameters to blind.
             
         Returns
         -------
@@ -492,6 +505,13 @@ class Plotter(object):
         if extents is None:
             extents = {}
 
+        if blind is None:
+            blind = []
+        elif isinstance(blind, str):
+            blind = [blind]
+        elif isinstance(blind, bool) and blind:
+            blind = parameters
+
         n = len(parameters)
         num_cols = min(n, col_wrap)
         num_rows = int(np.ceil(1.0 * n / col_wrap))
@@ -535,11 +555,14 @@ class Plotter(object):
             p = parameters[i]
 
             ax.set_yticks([])
-            if diagonal_tick_labels:
-                _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
-            _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
-            ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-            ax.xaxis.set_major_formatter(formatter)
+            if p in blind:
+                ax.set_xticks([])
+            else:
+                if diagonal_tick_labels:
+                    _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
+                _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
+                ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                ax.xaxis.set_major_formatter(formatter)
             ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
             max_val = None
             for index in chains:
@@ -547,8 +570,9 @@ class Plotter(object):
                     chain_row = self.parent._chains[index][:, self.parent._parameters[index].index(p)]
                     weights = self.parent._weights[index]
                     fit = fit_values[index][p]
+                    param_summary = summary and p not in blind
                     m = self._plot_bars(index, ax, p, chain_row, weights, grid=self.parent._grids[index],
-                                        fit_values=fit, summary=summary, truth=truth, extents=None)
+                                        fit_values=fit, summary=param_summary, truth=truth, extents=None)
                     if max_val is None or m > max_val:
                         max_val = m
             ax.set_ylim(0, 1.1 * max_val)
@@ -560,7 +584,8 @@ class Plotter(object):
             plt.show()
         return fig
 
-    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None, chains=None):  # pragma: no cover
+    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None,
+                    chains=None, blind=None):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.parent.config["max_ticks"]
         spacing = self.parent.config["spacing"]
@@ -568,6 +593,8 @@ class Plotter(object):
         label_font_size = self.parent.config["label_font_size"]
         tick_font_size = self.parent.config["tick_font_size"]
         diagonal_tick_labels = self.parent.config["diagonal_tick_labels"]
+        if blind is None:
+            blind = []
 
         if chains is None:
             chains = list(range(len(self.parent._chains)))
@@ -622,13 +649,19 @@ class Plotter(object):
                     if i != n - 1 or (flip and j == n - 1):
                         ax.set_xticks([])
                     else:
-                        display_x_ticks = True
+                        if p2 in blind:
+                            ax.set_xticks([])
+                        else:
+                            display_x_ticks = True
                         if isinstance(p2, str):
                             ax.set_xlabel(p2, fontsize=label_font_size)
                     if j != 0 or (plot_hists and i == 0):
                         ax.set_yticks([])
                     else:
-                        display_y_ticks = True
+                        if p1 in blind:
+                            ax.set_yticks([])
+                        else:
+                            display_y_ticks = True
                         if isinstance(p1, str):
                             ax.set_ylabel(p1, fontsize=label_font_size)
                     if display_x_ticks:

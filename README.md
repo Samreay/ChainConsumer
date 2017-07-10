@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.19.4
+* Adding ability to blind parameters.
+
 ##### 0.19.3
 * Adding ability to plot contour levels, either in confidence levels or sigma.
 * Changed shading defaults.
