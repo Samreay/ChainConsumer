@@ -21,9 +21,8 @@ from chainconsumer import ChainConsumer
 
 # Lets create some data here to set things up
 np.random.seed(4)
-cov = 0.2 * normal(size=(2, 2)) + np.identity(2)
-truth = normal(size=2)
-data = multivariate_normal(truth, 0.5 * (cov + cov.T), size=100000)
+truth = [0, 5]
+data = multivariate_normal(truth, np.eye(2), size=100000)
 parameters = ["$x$", "$y$"]
 directory = tempfile._get_default_tempdir()
 filename = next(tempfile._get_candidate_names())

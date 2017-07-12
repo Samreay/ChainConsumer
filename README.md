@@ -32,6 +32,13 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.20.0
+* Increase control over legend with kwargs.
+* Can specify legend subplot location.
+* Increased legend options with coloured text.
+* Added `shade_gradient` option.
+* Increase the amount of default extent given.
+
 ##### 0.19.4
 * Adding ability to blind parameters.
 

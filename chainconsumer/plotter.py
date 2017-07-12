@@ -65,6 +65,8 @@ class Plotter(object):
         if legend is None:
             legend = len(self.parent._chains) > 1
 
+        legend = legend and len([n for n in self.parent._names if n]) > 0
+
         # Get all parameters to plot, taking into account some of them
         # might be excluded colour parameters
         color_params = self.parent.config["color_params"]
@@ -179,8 +181,7 @@ class Plotter(object):
                         index = parameters.index(p1)
                         param_summary = summary and p1 not in blind
                         m = self._plot_bars(ii, ax, p1, chain[:, index], weights, grid=grid, fit_values=fit[p1],
-                                            flip=do_flip,
-                                            summary=param_summary, truth=truth, extents=extents[p1])
+                                            flip=do_flip, summary=param_summary, truth=truth)
                         if max_val is None or m > max_val:
                             max_val = m
                     if do_flip:
@@ -230,16 +231,37 @@ class Plotter(object):
         colors = self.parent.config["colors"]
         linestyles = self.parent.config["linestyles"]
         linewidths = self.parent.config["linewidths"]
-        label_font_size = self.parent.config["label_font_size"]
+        legend_kwargs = self.parent.config["legend_kwargs"]
+        legend_artists = self.parent.config["legend_artists"]
+        legend_color_text = self.parent.config["legend_color_text"]
+        legend_location = self.parent.config["legend_location"]
+        if legend_location is None:
+            if not flip or len(parameters) > 2:
+                legend_location = (0, -1)
+            else:
+                legend_location = (-1, 0)
+        outside = (legend_location[0] >= legend_location[1])
         if self.parent._names is not None and legend:
-            ax = axes[0, -1]
+            ax = axes[legend_location[0], legend_location[1]]
+            if "markerfirst" not in legend_kwargs:
+                # If we have legend inside a used subplot, switch marker order
+                legend_kwargs["markerfirst"] = outside or not legend_artists
+            linewidths2 = linewidths if legend_artists else [0]*len(linewidths)
+            linestyles2 = linestyles if legend_artists else ["-"]*len(linestyles)
+
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
-                       for n, c, ls, lw in zip(self.parent._names, colors, linestyles, linewidths) if n is not None]
-            location = "center"
-            if (self.parent.config["plot_hists"] and len(parameters) > 1) \
-                    or (not self.parent.config["plot_hists"] and len(parameters) < 3):
-                location = "upper right"
-            ax.legend(artists, self.parent._names, loc=location, frameon=False, fontsize=label_font_size)
+                       for n, c, ls, lw in zip(self.parent._names, colors, linestyles2, linewidths2) if n is not None]
+            leg = ax.legend(artists, self.parent._names, **legend_kwargs)
+            if legend_color_text:
+                for text, c in zip(leg.get_texts(), colors):
+                    text.set_weight("medium")
+                    text.set_color(c)
+            if not outside:
+                loc = legend_kwargs.get("loc") or ""
+                if "right" in loc.lower():
+                    vp = leg._legend_box._children[-1]._children[0]
+                    vp.align = "right"
+
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
@@ -374,6 +396,8 @@ class Plotter(object):
 
         if self.parent.config["usetex"]:
             plt.rc('text', usetex=True)
+        else:
+            plt.rc('text', usetex=False)
         if self.parent.config["serif"]:
             plt.rc('font', family='serif')
         else:
@@ -451,7 +475,7 @@ class Plotter(object):
         blind : bool|string|list[string], optional
             Whether to blind axes values. Can be set to `True` to blind all parameters,
             or can pass in a string (or list of strings) which specify the parameters to blind.
-            
+
         Returns
         -------
         figure
@@ -543,6 +567,8 @@ class Plotter(object):
 
         if self.parent.config["usetex"]:
             plt.rc('text', usetex=True)
+        else:
+            plt.rc('text', usetex=False)
         if self.parent.config["serif"]:
             plt.rc('font', family='serif')
         else:
@@ -572,7 +598,7 @@ class Plotter(object):
                     fit = fit_values[index][p]
                     param_summary = summary and p not in blind
                     m = self._plot_bars(index, ax, p, chain_row, weights, grid=self.parent._grids[index],
-                                        fit_values=fit, summary=param_summary, truth=truth, extents=None)
+                                        fit_values=fit, summary=param_summary, truth=truth)
                     if max_val is None or m > max_val:
                         max_val = m
             ax.set_ylim(0, 1.1 * max_val)
@@ -612,6 +638,8 @@ class Plotter(object):
 
         if self.parent.config["usetex"]:
             plt.rc('text', usetex=True)
+        else:
+            plt.rc('text', usetex=False)
         if self.parent.config["serif"]:
             plt.rc('font', family='serif')
         else:
@@ -718,6 +746,7 @@ class Plotter(object):
         bins = self.parent.config["bins"][iindex]
         shade = self.parent.config["shade"][iindex]
         shade_alpha = self.parent.config["shade_alpha"][iindex]
+        shade_gradient = self.parent.config["shade_gradient"][iindex]
         linestyle = self.parent.config["linestyles"][iindex]
         linewidth = self.parent.config["linewidths"][iindex]
         cmap = self.parent.config["cmaps"][iindex]
@@ -735,17 +764,20 @@ class Plotter(object):
             binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalsied=False)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
-        colours = self._scale_colours(colour, len(levels))
+        colours = self._scale_colours(colour, len(levels), shade_gradient)
         colours2 = [self._scale_colour(colours[0], 0.7)] + \
                    [self._scale_colour(c, 0.8) for c in colours[:-1]]
 
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
         if kde:
+            nn = x_centers.size * 2  # Double samples for KDE because smooth
+            x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
+            y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
             xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
             coords = np.vstack((xx.flatten(), yy.flatten())).T
             data = np.vstack((x, y)).T
-            hist = MegKDE(data, w).evaluate(coords).reshape(hist.shape)
+            hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
         elif smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
         hist[hist == 0] = 1E-16
@@ -790,7 +822,7 @@ class Plotter(object):
         return h
 
     def _plot_bars(self, iindex, ax, parameter, chain_row, weights, flip=False, summary=False, fit_values=None,
-                   truth=None, extents=None, grid=False):  # pragma: no cover
+                   truth=None, grid=False):  # pragma: no cover
 
         # Get values from config
         colour = self.parent.config["colors"][iindex]
@@ -897,9 +929,10 @@ class Plotter(object):
             return maximum
         return val
 
-    def _scale_colours(self, colour, num):  # pragma: no cover
+    def _scale_colours(self, colour, num, shade_gradient):  # pragma: no cover
         # http://thadeusb.com/weblog/2010/10/10/python_scale_hex_color
-        scales = np.logspace(np.log(0.9), np.log(1.3), num)
+        minv, maxv = 1 - 0.1 * shade_gradient, 1 + 0.3 * shade_gradient
+        scales = np.logspace(np.log(minv), np.log(maxv), num)
         colours = [self._scale_colour(colour, scale) for scale in scales]
         return colours
 

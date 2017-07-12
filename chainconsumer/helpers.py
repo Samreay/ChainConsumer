@@ -7,14 +7,14 @@ def get_extents(data, weight):
     cdf = hist.cumsum()
     cdf = cdf / cdf.max()
     icdf = (1 - cdf)[::-1]
-    threshold = 1e-3
+    threshold = 8e-4
     i1 = np.where(cdf > threshold)[0][0]
     i2 = np.where(icdf > threshold)[0][0]
     return bc[i1], bc[-i2]
 
 
 def get_bins(chains):
-    proposal = [max(25, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
+    proposal = [max(30, np.floor(1.0 * np.power(chain.shape[0] / chain.shape[1], 0.25)))
                 for chain in chains]
     return proposal
 

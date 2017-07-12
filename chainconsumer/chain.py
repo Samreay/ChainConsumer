@@ -8,6 +8,7 @@ from chainconsumer.diagnostic import Diagnostic
 from chainconsumer.plotter import Plotter
 from chainconsumer.helpers import get_bins
 from chainconsumer.analysis import Analysis
+from chainconsumer.colors import Colors
 
 __all__ = ["ChainConsumer"]
 
@@ -17,13 +18,13 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.19.4"
+    __version__ = "0.20.0"
 
     def __init__(self):
         logging.basicConfig()
         self._logger = logging.getLogger(__name__)
-        self._all_colours = ["#1E88E5", "#D32F2F", "#4CAF50", "#673AB7", "#FFC107",
-                            "#795548", "#64B5F6", "#8BC34A", "#757575", "#CDDC39"]
+        self.color_finder = Colors()
+        self._all_colours = self.color_finder.get_default()
         self._cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
         self._linestyles = ["-", '--', ':']
         self._chains = []
@@ -220,10 +221,12 @@ class ChainConsumer(object):
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
                   serif=True, sigma2d=True, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
-                  cloud=None, shade=None, shade_alpha=None, bar_shade=None, num_cloud=None,
-                  color_params=None, plot_color_params=False, cmaps=None, usetex=True,
+                  cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
+                  num_cloud=None, color_params=None, plot_color_params=False, cmaps=None, usetex=True,
                   diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
-                  spacing=None, contour_labels=None, contour_label_font_size=10):  # pragma: no cover
+                  spacing=None, contour_labels=None, contour_label_font_size=10,
+                  legend_kwargs=None, legend_location=None, legend_artists=None,
+                  legend_color_text=True):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -282,12 +285,12 @@ class ChainConsumer(object):
             Provide a list of line widths to plot the contours and marginalsied
             distributions with. By default, this is a width of 1. If a float
             is passed instead of a list, this width is used for all chains.
-        kde : bool|list[bool], optional
+        kde : bool|float|list[bool|float], optional
             Whether to use a Gaussian KDE to smooth marginalised posteriors. If false, uses
             bins and linear interpolation, so ensure you have plenty of samples if your
             distribution is highly non-gaussian. Due to the slowness of performing a
             KDE on all data, it is often useful to disable this before producing final
-            plots.
+            plots. If float, scales the width of the KDE bandpass manually.
         smooth : int|list[int], optional
             Defaults to 3. How much to smooth the marginalised distributions using a gaussian filter.
             If ``kde`` is set to true, this parameter is ignored. Setting it to either
@@ -301,6 +304,8 @@ class ChainConsumer(object):
         shade_alpha : float|list[float], optional
             Filled contour alpha value override. Default is 1.0. If a list is passed, you can set the
             shade opacity for specific chains.
+        shade_gradient : float|list[float], optional
+            How much to vary colours in different contour levels.
         bar_shade : bool|list[bool], optional
             If set to true, shades in confidence regions in under histogram. By default
             this happens if you less than 3 chains, but is disabled if you are comparing
@@ -334,6 +339,19 @@ class ChainConsumer(object):
             intervals. If set to "sigma", labels using sigma.
         contour_label_font_size : int|float, optional
             The font size for contour labels, if they are enabled.
+        legend_kwargs : dict, optional
+            Extra arguments to pass to the legend api.
+        legend_location : tuple(int,int), optional
+            Specifies the subplot in which to locate the legend. By default, this will be (0, -1),
+            corresponding to the top right subplot if there are more than two parameters,
+            and the bottom left plot for only two parameters with flip on.
+            For having the legend in the primary subplot
+            in the bottom left, set to (-1,0).
+        legend_artists : bool, optional
+            Whether to include hide artists in the legend. If all linestyles and line widths are identical,
+            this will default to false (as only the colours change). Otherwise it will be true.
+        legend_color_text : bool, optional
+            Whether to colour the legend text.
             
         Returns
         -------
@@ -358,6 +376,10 @@ class ChainConsumer(object):
             assert s in ["max", "mean", "cumulative"], \
                 "statistics %s not recognised. Should be max, mean or cumulative" % s
 
+        # Determine KDEs
+        if isinstance(kde, bool) or isinstance(kde, float):
+            kde = [False if g else kde for g in self._grids]
+
         # Determine bins
         if bins is None:
             bins = get_bins(self._chains)
@@ -369,10 +391,6 @@ class ChainConsumer(object):
             bins = [bins] * len(self._chains)
         else:
             raise ValueError("bins value is not a recognised class (float or int)")
-
-        # Determine KDEs
-        if isinstance(kde, bool):
-            kde = [False if g else kde for g in self._grids]
 
         # Determine smoothing
         if smooth is None:
@@ -435,6 +453,7 @@ class ChainConsumer(object):
                         ci += 1
         elif isinstance(colors, str):
                 colors = [colors] * len(self._chains)
+        colors = self.color_finder.get_formatted(colors)
 
         # Determine linestyles
         if linestyles is None:
@@ -486,6 +505,14 @@ class ChainConsumer(object):
             # If not overridden, do not shade chains with colour scatter points
             shade = [shade and c is None for c in color_params]
 
+        if shade_gradient is None:
+            shade_gradient = 1.0
+        if isinstance(shade_gradient, float):
+            shade_gradient = [shade_gradient] * num_chains
+        elif isinstance(shade_gradient, list):
+            assert len(shade_gradient) == num_chains, \
+                "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains)
+
         # Figure out if we should display parameter summaries
         if summary is not None:
             summary = summary and len(self._chains) == 1
@@ -511,9 +538,26 @@ class ChainConsumer(object):
         assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float),\
             "contour_label_font_size needs to be numeric"
 
+        if legend_artists is None:
+            legend_artists = len(set(linestyles)) > 1 or len(set(linewidths)) > 1
+
+        if legend_kwargs is not None:
+            assert isinstance(legend_kwargs, dict), "legend_kwargs should be a dict"
+        else:
+            legend_kwargs = {}
+        # Default to top right corner
+        if "loc" not in legend_kwargs:
+            legend_kwargs["loc"] = "upper right"
+        # Default to no frame
+        if "frameon" not in legend_kwargs:
+            legend_kwargs["frameon"] = False
+        if "fontsize" not in legend_kwargs:
+            legend_kwargs["fontsize"] = label_font_size
+
         # List options
         self.config["shade"] = shade[:num_chains]
         self.config["shade_alpha"] = shade_alpha[:num_chains]
+        self.config["shade_gradient"] = shade_gradient
         self.config["bar_shade"] = bar_shade[:len(self._chains)]
         self.config["bins"] = bins
         self.config["kde"] = kde
@@ -549,6 +593,10 @@ class ChainConsumer(object):
         self.config["spacing"] = spacing
         self.config["contour_labels"] = contour_labels
         self.config["contour_label_font_size"] = contour_label_font_size
+        self.config["legend_location"] = legend_location
+        self.config["legend_kwargs"] = legend_kwargs
+        self.config["legend_artists"] = legend_artists
+        self.config["legend_color_text"] = legend_color_text
 
         self._configured = True
         return self

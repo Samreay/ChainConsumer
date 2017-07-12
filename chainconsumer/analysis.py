@@ -259,10 +259,10 @@ class Analysis(object):
 
         if smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
-
-        if self.parent.config["kde"][chain_index]:
+        kde = self.parent.config["kde"][chain_index]
+        if kde:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
-            ys = MegKDE(data, weights).evaluate(kde_xs)
+            ys = MegKDE(data, weights, factor=kde).evaluate(kde_xs)
             area = simps(ys, x=kde_xs)
             ys = ys / area
             ys = interp1d(kde_xs, ys, kind="linear")(xs)
