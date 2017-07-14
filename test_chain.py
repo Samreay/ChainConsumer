@@ -605,37 +605,16 @@ class TestChain(object):
         weights = np.ones(xs.shape)
         low, high = get_extents(xs, weights)
         threshold = 0.2
-        assert np.abs(low + 3.1) < threshold
-        assert np.abs(high - 3.1) < threshold
+        assert np.abs(low + 3.6) < threshold
+        assert np.abs(high - 3.6) < threshold
 
     def test_extents_weighted(self):
         xs = np.random.uniform(low=-4, high=4, size=100000)
         weights = norm.pdf(xs)
         low, high = get_extents(xs, weights)
         threshold = 0.1
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        print(low, high)
-        assert np.abs(low + 3.1) < threshold
-        assert np.abs(high - 3.1) < threshold
+        assert np.abs(low + 3.6) < threshold
+        assert np.abs(high - 3.6) < threshold
 
     def test_grid_list_input(self):
         x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)

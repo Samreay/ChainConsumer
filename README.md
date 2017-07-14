@@ -32,6 +32,13 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.21.0
+* Increasing extents again.
+* Updating legend defaults.
+* Code refactor.
+* Can now specify which chains to plot when plotting contours.
+* Adding watermark text.
+
 ##### 0.20.0
 * Increase control over legend with kwargs.
 * Can specify legend subplot location.

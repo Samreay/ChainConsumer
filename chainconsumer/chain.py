@@ -18,7 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.20.0"
+    __version__ = "0.21.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -226,7 +226,7 @@ class ChainConsumer(object):
                   diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
                   spacing=None, contour_labels=None, contour_label_font_size=10,
                   legend_kwargs=None, legend_location=None, legend_artists=None,
-                  legend_color_text=True):  # pragma: no cover
+                  legend_color_text=True, watermark_text_kwargs=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -352,6 +352,8 @@ class ChainConsumer(object):
             this will default to false (as only the colours change). Otherwise it will be true.
         legend_color_text : bool, optional
             Whether to colour the legend text.
+        watermark_text_kwargs : dict, optional
+            Options to pass to the fontdict propery when generating text for the watermark.
             
         Returns
         -------
@@ -545,14 +547,30 @@ class ChainConsumer(object):
             assert isinstance(legend_kwargs, dict), "legend_kwargs should be a dict"
         else:
             legend_kwargs = {}
-        # Default to top right corner
-        if "loc" not in legend_kwargs:
-            legend_kwargs["loc"] = "upper right"
-        # Default to no frame
-        if "frameon" not in legend_kwargs:
-            legend_kwargs["frameon"] = False
-        if "fontsize" not in legend_kwargs:
-            legend_kwargs["fontsize"] = label_font_size
+
+        if num_chains < 3:
+            labelspacing = 0.5
+        elif num_chains == 3:
+            labelspacing = 0.2
+        else:
+            labelspacing = 0.1
+        legend_kwargs_default = {
+            "labelspacing": labelspacing,
+            "loc":  "upper right",
+            "frameon": False,
+            "fontsize": label_font_size
+        }
+        legend_kwargs_default.update(legend_kwargs)
+
+        watermark_text_kwargs_default = {
+            "color": "#333333",
+            "alpha": 0.7,
+            "verticalalignment": "center",
+            "horizontalalignment": "center"
+        }
+        if watermark_text_kwargs is None:
+            watermark_text_kwargs = {}
+        watermark_text_kwargs_default.update(watermark_text_kwargs)
 
         # List options
         self.config["shade"] = shade[:num_chains]
@@ -594,9 +612,10 @@ class ChainConsumer(object):
         self.config["contour_labels"] = contour_labels
         self.config["contour_label_font_size"] = contour_label_font_size
         self.config["legend_location"] = legend_location
-        self.config["legend_kwargs"] = legend_kwargs
+        self.config["legend_kwargs"] = legend_kwargs_default
         self.config["legend_artists"] = legend_artists
         self.config["legend_color_text"] = legend_color_text
+        self.config["watermark_text_kwargs"] = watermark_text_kwargs_default
 
         self._configured = True
         return self

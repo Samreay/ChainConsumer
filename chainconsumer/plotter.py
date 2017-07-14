@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
+from matplotlib.textpath import TextPath
 from numpy import meshgrid
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
@@ -16,8 +17,8 @@ class Plotter(object):
         self.parent = parent
         self._logger = logging.getLogger(__name__)
 
-    def plot(self, figsize="GROW", parameters=None, extents=None, filename=None,
-             display=False, truth=None, legend=None, blind=None):  # pragma: no cover
+    def plot(self, figsize="GROW", parameters=None, chains=None, extents=None, filename=None,
+             display=False, truth=None, legend=None, blind=None, watermark=None):  # pragma: no cover
         """ Plot the chain!
 
         Parameters
@@ -33,6 +34,10 @@ class Plotter(object):
         parameters : list[str]|int, optional
             If set, only creates a plot for those specific parameters (if list). If an
             integer is given, only plots the fist so many parameters.
+        chains : int|str, list[str|int], optional
+            Used to specify which chain to show if more than one chain is loaded in.
+            Can be an integer, specifying the
+            chain index, or a str, specifying the chain name.
         extents : list[tuple[float]] or dict[str], optional
             Extents are given as two-tuples. You can pass in a list the same size as
             parameters (or default parameters if you don't specify parameters),
@@ -49,6 +54,8 @@ class Plotter(object):
         blind : bool|string|list[string], optional
             Whether to blind axes values. Can be set to `True` to blind all parameters,
             or can pass in a string (or list of strings) which specify the parameters to blind.
+        watermark : str, optional
+            A watermark to add to the figure
 
         Returns
         -------
@@ -57,27 +64,17 @@ class Plotter(object):
 
         """
 
-        if not self.parent._configured:
-            self.parent.configure()
-        if not self.parent._configured_truth:
-            self.parent.configure_truth()
+        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents, color_p=True)
+        names = [self.parent._names[i] for i in chains]
 
         if legend is None:
-            legend = len(self.parent._chains) > 1
+            legend = len(chains) > 1
 
-        legend = legend and len([n for n in self.parent._names if n]) > 0
-
-        # Get all parameters to plot, taking into account some of them
-        # might be excluded colour parameters
-        color_params = self.parent.config["color_params"]
-        plot_color_params = self.parent.config["plot_color_params"]
-        all_parameters = []
-        for cp, ps, pc in zip(color_params, self.parent._parameters, plot_color_params):
-            for p in ps:
-                if (p != cp or pc) and p not in all_parameters:
-                    all_parameters.append(p)
+        # If no chains have names, dont plot the legend
+        legend = legend and len([n for n in names if n]) > 0
 
         # Calculate cmap extents
+        color_params = self.parent.config["color_params"]
         unique_color_params = list(set(color_params))
         num_cax = len(unique_color_params)
         if None in unique_color_params:
@@ -86,6 +83,8 @@ class Plotter(object):
         for u in unique_color_params:
             umin, umax = np.inf, -np.inf
             for i, cp in enumerate(color_params):
+                if i not in chains:
+                    continue
                 if cp is not None and u == cp:
                     try:
                         data = self.parent._chains[i][:, self.parent._parameters[i].index(cp)]
@@ -101,14 +100,6 @@ class Plotter(object):
                         umax = max(umax, data.max())
             color_param_extents[u] = (umin, umax)
 
-        if parameters is None:
-            parameters = all_parameters
-        elif isinstance(parameters, int):
-            parameters = self.parent._all_parameters[:parameters]
-        if truth is not None and isinstance(truth, np.ndarray):
-            truth = truth.tolist()
-        if truth is not None and isinstance(truth, list):
-            truth = truth[:len(parameters)]
         grow_size = 1.5
         if isinstance(figsize, float):
             grow_size *= figsize
@@ -121,25 +112,10 @@ class Plotter(object):
                 figsize = (10, 10)
             elif figsize.upper() == "GROW":
                 figsize = (grow_size * len(parameters) + num_cax * 1.0, grow_size * len(parameters))
-
             else:
                 raise ValueError("Unknown figure size %s" % figsize)
         elif isinstance(figsize, float):
             figsize = (figsize * grow_size * len(parameters), figsize * grow_size * len(parameters))
-
-        assert truth is None or isinstance(truth, dict) or \
-               (isinstance(truth, list) and len(truth) == len(parameters)), \
-            "Have a list of %d parameters and %d truth values" % (len(parameters), len(truth))
-
-        assert extents is None or isinstance(extents, dict) or \
-               (isinstance(extents, list) and len(extents) == len(parameters)), \
-            "Have a list of %d parameters and %d extent values" % (len(parameters), len(extents))
-
-        if truth is not None and isinstance(truth, list):
-            truth = dict((p, t) for p, t in zip(parameters, truth))
-
-        if extents is not None and isinstance(extents, list):
-            extents = dict((p, e) for p, e in zip(parameters, extents))
 
         if blind is None:
             blind = []
@@ -151,7 +127,7 @@ class Plotter(object):
         plot_hists = self.parent.config["plot_hists"]
         flip = (len(parameters) == 2 and plot_hists and self.parent.config["flip"])
 
-        fig, axes, params1, params2, extents = self._get_figure(parameters, figsize=figsize, flip=flip,
+        fig, axes, params1, params2, extents = self._get_figure(parameters, chains=chains, figsize=figsize, flip=flip,
                                                                 external_extents=extents, blind=blind)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
@@ -159,11 +135,11 @@ class Plotter(object):
 
         if summary is None:
             summary = len(parameters) < 5 and len(self.parent._chains) == 1
-        if len(self.parent._chains) == 1:
+        if len(chains) == 1:
             self._logger.debug("Plotting surfaces for chain of dimension %s" %
-                               (self.parent._chains[0].shape,))
+                               (self.parent._chains[chains[0]].shape,))
         else:
-            self._logger.debug("Plotting surfaces for %d chains" % len(self.parent._chains))
+            self._logger.debug("Plotting surfaces for %d chains" % len(chains))
         cbar_done = []
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
@@ -176,6 +152,8 @@ class Plotter(object):
                     for ii, (chain, weights, parameters, fit, grid) in \
                             enumerate(zip(self.parent._chains, self.parent._weights, self.parent._parameters,
                                           fit_values, self.parent._grids)):
+                        if ii not in chains:
+                            continue
                         if p1 not in parameters:
                             continue
                         index = parameters.index(p1)
@@ -193,6 +171,8 @@ class Plotter(object):
                     for ii, (chain, parameters, fit, weights, grid, posterior) in \
                             enumerate(zip(self.parent._chains, self.parent._parameters, fit_values,
                                           self.parent._weights, self.parent._grids, self.parent._posteriors)):
+                        if ii not in chains:
+                            continue
                         if p1 not in parameters or p2 not in parameters:
                             continue
                         i1 = parameters.index(p1)
@@ -241,7 +221,7 @@ class Plotter(object):
             else:
                 legend_location = (-1, 0)
         outside = (legend_location[0] >= legend_location[1])
-        if self.parent._names is not None and legend:
+        if names is not None and legend:
             ax = axes[legend_location[0], legend_location[1]]
             if "markerfirst" not in legend_kwargs:
                 # If we have legend inside a used subplot, switch marker order
@@ -250,10 +230,11 @@ class Plotter(object):
             linestyles2 = linestyles if legend_artists else ["-"]*len(linestyles)
 
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
-                       for n, c, ls, lw in zip(self.parent._names, colors, linestyles2, linewidths2) if n is not None]
-            leg = ax.legend(artists, self.parent._names, **legend_kwargs)
+                       for i, (n, c, ls, lw) in enumerate(zip(self.parent._names, colors, linestyles2, linewidths2)) if n is not None and i in chains]
+            leg = ax.legend(artists, names, **legend_kwargs)
             if legend_color_text:
-                for text, c in zip(leg.get_texts(), colors):
+                cs = [c for i, c in enumerate(colors) if i in chains]
+                for text, c in zip(leg.get_texts(), cs):
                     text.set_weight("medium")
                     text.set_color(c)
             if not outside:
@@ -271,16 +252,44 @@ class Plotter(object):
             offset = ax.get_yaxis().get_offset_text()
             ax.set_ylabel('{0} {1}'.format(ax.get_ylabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
             offset.set_visible(False)
+
+        dpi = 300
+        if watermark:
+            if flip and len(parameters) == 2:
+                ax = axes[-1, 0]
+            else:
+                ax = None
+            self._add_watermark(fig, ax, figsize, watermark, dpi=dpi)
+
         if filename is not None:
-            fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+            fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
         if display:
             plt.show()
 
         return fig
 
+    def _add_watermark(self, fig, axes, figsize, text, dpi=300):  # pragma: no cover
+        dx, dy = figsize
+        dy, dx = dy * dpi, dx * dpi
+        rotation = 180 / np.pi * np.arctan2(-dy, dx)
+        fontdict = self.parent.config["watermark_text_kwargs"]
+        usetex = self.parent.config["usetex"]
+        bb0 = TextPath((0, 0), text, size=50, props=fontdict, usetex=usetex).get_extents()
+        bb1 = TextPath((0, 0), text, size=51, props=fontdict, usetex=usetex).get_extents()
+        dw = (bb1.width - bb0.width) * (dpi / 100)
+        dh = (bb1.height - bb0.height) * (dpi / 100)
+        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6
+        if axes is not None:
+            size *= 0.7
+        fontdict['size'] = int(size)
+        if axes is None:
+            fig.text(0.5, 0.5, text, fontdict=fontdict, rotation=rotation)
+        else:
+            axes.text(0.5, 0.5, text, transform=axes.transAxes, fontdict=fontdict, rotation=rotation)
+
     def plot_walks(self, parameters=None, truth=None, extents=None, display=False,
                    filename=None, chains=None, convolve=None, figsize=None,
-                   plot_weights=True, plot_posterior=True, log_weight=None): # pragma: no cover
+                   plot_weights=True, plot_posterior=True, log_weight=None):  # pragma: no cover
         """ Plots the chain walk; the parameter values as a function of step index.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -330,52 +339,8 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        if not self.parent._configured:
-            self.parent.configure()
-        if not self.parent._configured_truth:
-            self.parent.configure_truth()
 
-        if truth is not None and isinstance(truth, np.ndarray):
-            truth = truth.tolist()
-
-        if chains is None:
-            chains = list(range(len(self.parent._chains)))
-        else:
-            if isinstance(chains, str) or isinstance(chains, int):
-                chains = [chains]
-            chains = [self.parent._get_chain(c) for c in chains]
-
-        all_parameters2 = [p for i in chains for p in self.parent._parameters[i]]
-        all_parameters = []
-        for p in all_parameters2:
-            if p not in all_parameters:
-                all_parameters.append(p)
-
-        if parameters is None:
-            parameters = all_parameters
-        elif isinstance(parameters, int):
-            parameters = self.parent.all_parameters[:parameters]
-
-        if truth is not None and isinstance(truth, list):
-            truth = truth[:len(parameters)]
-
-        assert truth is None or isinstance(truth, dict) or \
-               (isinstance(truth, list) and len(truth) == len(parameters)), \
-            "Have a list of %d parameters and %d truth values" % (len(parameters), len(truth))
-
-        assert extents is None or isinstance(extents, dict) or \
-               (isinstance(extents, list) and len(extents) == len(parameters)), \
-            "Have a list of %d parameters and %d extent values" % (len(parameters), len(extents))
-
-        if truth is not None and isinstance(truth, list):
-            truth = dict((p, t) for p, t in zip(parameters, truth))
-        if truth is None:
-            truth = {}
-
-        if extents is not None and isinstance(extents, list):
-            extents = dict((p, e) for p, e in zip(parameters, extents))
-        if extents is None:
-            extents = {}
+        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents)
 
         n = len(parameters)
         extra = 0
@@ -482,52 +447,7 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        if not self.parent._configured:
-            self.parent.configure()
-        if not self.parent._configured_truth:
-            self.parent.configure_truth()
-
-        if truth is not None and isinstance(truth, np.ndarray):
-            truth = truth.tolist()
-
-        if chains is None:
-            chains = list(range(len(self.parent._chains)))
-        else:
-            if isinstance(chains, str) or isinstance(chains, int):
-                chains = [chains]
-            chains = [self.parent._get_chain(c) for c in chains]
-
-        all_parameters2 = [p for i in chains for p in self.parent._parameters[i]]
-        all_parameters = []
-        for p in all_parameters2:
-            if p not in all_parameters:
-                all_parameters.append(p)
-
-        if parameters is None:
-            parameters = all_parameters
-        elif isinstance(parameters, int):
-            parameters = self.parent.all_parameters[:parameters]
-
-        if truth is not None and isinstance(truth, list):
-            truth = truth[:len(parameters)]
-
-        assert truth is None or isinstance(truth, dict) or \
-               (isinstance(truth, list) and len(truth) == len(parameters)), \
-            "Have a list of %d parameters and %d truth values" % (len(parameters), len(truth))
-
-        assert extents is None or isinstance(extents, dict) or \
-               (isinstance(extents, list) and len(extents) == len(parameters)), \
-            "Have a list of %d parameters and %d extent values" % (len(parameters), len(extents))
-
-        if truth is not None and isinstance(truth, list):
-            truth = dict((p, t) for p, t in zip(parameters, truth))
-        if truth is None:
-            truth = {}
-
-        if extents is not None and isinstance(extents, list):
-            extents = dict((p, e) for p, e in zip(parameters, extents))
-        if extents is None:
-            extents = {}
+        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents)
 
         if blind is None:
             blind = []
@@ -609,6 +529,57 @@ class Plotter(object):
         if display:
             plt.show()
         return fig
+
+    def _sanitise(self, chains, parameters, truth, extents, color_p=False):  # pragma: no cover
+        if not self.parent._configured:
+            self.parent.configure()
+        if not self.parent._configured_truth:
+            self.parent.configure_truth()
+
+        if truth is not None and isinstance(truth, np.ndarray):
+            truth = truth.tolist()
+
+        if chains is None:
+            chains = list(range(len(self.parent._chains)))
+        else:
+            if isinstance(chains, str) or isinstance(chains, int):
+                chains = [chains]
+            chains = [self.parent._get_chain(c) for c in chains]
+
+        if color_p:
+            # Get all parameters to plot, taking into account some of them
+            # might be excluded colour parameters
+            color_params = self.parent.config["color_params"]
+            plot_color_params = self.parent.config["plot_color_params"]
+            all_parameters = []
+            for i, (cp, ps, pc) in enumerate(zip(color_params, self.parent._parameters, plot_color_params)):
+                if i not in chains:
+                    continue
+                for p in ps:
+                    if (p != cp or pc) and p not in all_parameters:
+                        all_parameters.append(p)
+        else:
+            all_parameters = list(set([p for i in chains for p in self.parent._parameters[i]]))
+
+        if parameters is None:
+            parameters = all_parameters
+        elif isinstance(parameters, int):
+            parameters = self.parent.all_parameters[:parameters]
+
+        if truth is None:
+            truth = {}
+        else:
+            if isinstance(truth, np.ndarray):
+                truth = truth.tolist()
+            if isinstance(truth, list):
+                truth = dict((p, t) for p, t in zip(parameters, truth))
+
+        if extents is None:
+            extents = {}
+        elif isinstance(extents, list):
+            extents = dict((p, e) for p, e in zip(parameters, extents))
+
+        return chains, parameters, truth, extents
 
     def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None,
                     chains=None, blind=None):  # pragma: no cover
@@ -723,7 +694,7 @@ class Plotter(object):
                 min_prop = chain[:, index].min()
                 max_prop = chain[:, index].max()
             else:
-                min_prop, max_prop = get_extents(chain[:, index], w)
+                min_prop, max_prop = get_extents(chain[:, index], w, plot=True)
             if min_val is None or min_prop < min_val:
                 min_val = min_prop
             if max_val is None or max_prop > max_val:
