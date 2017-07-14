@@ -10,6 +10,10 @@ It's easy to do, just supply a string to the `watermark` option when plotting yo
 and remember that when using TeX `matplotlib` settings like `weight` don't do anything -
 if you want bold text make it TeX bold.
 
+The code for this is based off the preliminize github repo at
+https://github.com/cpadavis/preliminize, which will add watermark to arbitrary
+figures!
+
 """
 
 import numpy as np

@@ -269,6 +269,7 @@ class Plotter(object):
         return fig
 
     def _add_watermark(self, fig, axes, figsize, text, dpi=300):  # pragma: no cover
+        # Code based off github repository https://github.com/cpadavis/preliminize
         dx, dy = figsize
         dy, dx = dy * dpi, dx * dpi
         rotation = 180 / np.pi * np.arctan2(-dy, dx)
