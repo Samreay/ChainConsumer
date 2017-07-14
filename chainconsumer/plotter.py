@@ -274,19 +274,30 @@ class Plotter(object):
         dy, dx = dy * dpi, dx * dpi
         rotation = 180 / np.pi * np.arctan2(-dy, dx)
         fontdict = self.parent.config["watermark_text_kwargs"]
-        usetex = self.parent.config["usetex"]
+        if "usetex" in fontdict:
+            usetex = fontdict["usetex"]
+        else:
+            usetex = self.parent.config["usetex"]
+            fontdict["usetex"] = usetex
+        if fontdict["usetex"]:
+            px, py, scale = 0.5, 0.5, 1.0
+        else:
+            px, py, scale = 0.45, 0.55, 0.8
         bb0 = TextPath((0, 0), text, size=50, props=fontdict, usetex=usetex).get_extents()
         bb1 = TextPath((0, 0), text, size=51, props=fontdict, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
-        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6
+        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale
         if axes is not None:
-            size *= 0.7
+            if fontdict["usetex"]:
+                size *= 0.7
+            else:
+                size *= 0.85
         fontdict['size'] = int(size)
         if axes is None:
-            fig.text(0.5, 0.5, text, fontdict=fontdict, rotation=rotation)
+            fig.text(px, py, text, fontdict=fontdict, rotation=rotation)
         else:
-            axes.text(0.5, 0.5, text, transform=axes.transAxes, fontdict=fontdict, rotation=rotation)
+            axes.text(px, py, text, transform=axes.transAxes, fontdict=fontdict, rotation=rotation)
 
     def plot_walks(self, parameters=None, truth=None, extents=None, display=False,
                    filename=None, chains=None, convolve=None, figsize=None,

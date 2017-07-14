@@ -32,6 +32,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.21.1
+* Adding example and code to deal with non-TeX watermarks.
+
 ##### 0.21.0
 * Increasing extents again.
 * Updating legend defaults.

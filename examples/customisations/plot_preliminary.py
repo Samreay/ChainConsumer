@@ -37,6 +37,7 @@ fig = c.plotter.plot(watermark=r"\textbf{Preliminary}", figsize=2.0)
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Good results")
 c.add_chain(data2, name="Unfinished results")
-c.configure(watermark_text_kwargs={"color": "green", "alpha": 0.2})
-fig = c.plotter.plot(watermark=r"\textbf{Preliminary}", figsize=2.0)
+kwargs = {"color": "purple", "alpha": 1.0, "family":"sanserif", "usetex": False, "weight": "bold"}
+c.configure(watermark_text_kwargs=kwargs, flip=True)
+fig = c.plotter.plot(watermark="SECRET RESULTS", figsize=2.0)
 
