@@ -52,6 +52,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.21.2
+* Updating extents so previous updates do something.
+
 ##### 0.21.1
 * Adding example and code to deal with non-TeX watermarks.
 

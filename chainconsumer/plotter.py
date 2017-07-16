@@ -64,7 +64,7 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents, color_p=True)
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, color_p=True)
         names = [self.parent._names[i] for i in chains]
 
         if legend is None:
@@ -116,13 +116,6 @@ class Plotter(object):
                 raise ValueError("Unknown figure size %s" % figsize)
         elif isinstance(figsize, float):
             figsize = (figsize * grow_size * len(parameters), figsize * grow_size * len(parameters))
-
-        if blind is None:
-            blind = []
-        elif isinstance(blind, str):
-            blind = [blind]
-        elif isinstance(blind, bool) and blind:
-            blind = parameters
 
         plot_hists = self.parent.config["plot_hists"]
         flip = (len(parameters) == 2 and plot_hists and self.parent.config["flip"])
@@ -352,7 +345,7 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents)
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents)
 
         n = len(parameters)
         extra = 0
@@ -370,15 +363,6 @@ class Plotter(object):
             figsize = (8, 0.75 + (n + extra))
 
         colors = self.parent.config["colors"]
-
-        if self.parent.config["usetex"]:
-            plt.rc('text', usetex=True)
-        else:
-            plt.rc('text', usetex=False)
-        if self.parent.config["serif"]:
-            plt.rc('font', family='serif')
-        else:
-            plt.rc('font', family='sans-serif')
 
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
 
@@ -459,14 +443,7 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        chains, parameters, truth, extents = self._sanitise(chains, parameters, truth, extents)
-
-        if blind is None:
-            blind = []
-        elif isinstance(blind, str):
-            blind = [blind]
-        elif isinstance(blind, bool) and blind:
-            blind = parameters
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind)
 
         n = len(parameters)
         num_cols = min(n, col_wrap)
@@ -496,15 +473,6 @@ class Plotter(object):
 
         formatter = ScalarFormatter(useOffset=False)
         formatter.set_powerlimits((-3, 4))
-
-        if self.parent.config["usetex"]:
-            plt.rc('text', usetex=True)
-        else:
-            plt.rc('text', usetex=False)
-        if self.parent.config["serif"]:
-            plt.rc('font', family='serif')
-        else:
-            plt.rc('font', family='sans-serif')
 
         for i, ax in enumerate(axes.flatten()):
             if i >= len(parameters):
@@ -542,7 +510,7 @@ class Plotter(object):
             plt.show()
         return fig
 
-    def _sanitise(self, chains, parameters, truth, extents, color_p=False):  # pragma: no cover
+    def _sanitise(self, chains, parameters, truth, extents, color_p=False, blind=None):  # pragma: no cover
         if not self.parent._configured:
             self.parent.configure()
         if not self.parent._configured_truth:
@@ -591,7 +559,23 @@ class Plotter(object):
         elif isinstance(extents, list):
             extents = dict((p, e) for p, e in zip(parameters, extents))
 
-        return chains, parameters, truth, extents
+        if blind is None:
+            blind = []
+        elif isinstance(blind, str):
+            blind = [blind]
+        elif isinstance(blind, bool) and blind:
+            blind = parameters
+
+        if self.parent.config["usetex"]:
+            plt.rc('text', usetex=True)
+        else:
+            plt.rc('text', usetex=False)
+        if self.parent.config["serif"]:
+            plt.rc('font', family='serif')
+        else:
+            plt.rc('font', family='sans-serif')
+
+        return chains, parameters, truth, extents, blind
 
     def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None,
                     chains=None, blind=None):  # pragma: no cover
@@ -618,15 +602,6 @@ class Plotter(object):
             gridspec_kw = {'width_ratios': [3, 1], 'height_ratios': [1, 3]}
         else:
             gridspec_kw = {}
-
-        if self.parent.config["usetex"]:
-            plt.rc('text', usetex=True)
-        else:
-            plt.rc('text', usetex=False)
-        if self.parent.config["serif"]:
-            plt.rc('font', family='serif')
-        else:
-            plt.rc('font', family='sans-serif')
 
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05 * spacing, hspace=0.05 * spacing)
