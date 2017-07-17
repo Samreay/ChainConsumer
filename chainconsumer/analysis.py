@@ -104,7 +104,7 @@ class Analysis(object):
 
         return final_text
 
-    def get_summary(self, squeeze=True):
+    def get_summary(self, squeeze=True, parameters=None):
         """  Gets a summary of the marginalised parameter distributions.
 
         Parameters
@@ -113,12 +113,15 @@ class Analysis(object):
             Squeeze the summaries. If you only have one chain, squeeze will not return
             a length one list, just the single summary. If this is false, you will
             get a length one list.
+        parameters : list[str], optional
+            A list of parameters which to generate summaries for.
 
         Returns
         -------
         list of dictionaries
             One entry per chain, parameter bounds stored in dictionary with parameter as key
         """
+        find_parameters = parameters
         results = []
         for ind, (chain, parameters, weights, g) in enumerate(zip(self.parent._chains,
                                                                   self.parent._parameters,
@@ -126,6 +129,8 @@ class Analysis(object):
                                                                   self.parent._grids)):
             res = {}
             for i, p in enumerate(parameters):
+                if find_parameters is not None and p not in find_parameters:
+                    continue
                 summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
                 res[p] = summary
             results.append(res)
@@ -394,7 +399,6 @@ class Analysis(object):
         maxVal = ys[startIndex]
         minVal = 0
         threshold = 0.001
-
         x1 = None
         x2 = None
         count = 0

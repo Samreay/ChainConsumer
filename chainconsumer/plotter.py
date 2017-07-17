@@ -124,7 +124,7 @@ class Plotter(object):
                                                                 external_extents=extents, blind=blind)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
-        fit_values = self.parent.analysis.get_summary(squeeze=False)
+        fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
 
         if summary is None:
             summary = len(parameters) < 5 and len(self.parent._chains) == 1
@@ -345,7 +345,7 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents)
+        chains, parameters, truth, extents, _ = self._sanitise(chains, parameters, truth, extents)
 
         n = len(parameters)
         extra = 0
@@ -457,7 +457,7 @@ class Plotter(object):
         else:
             figsize_float = 1.0
 
-        fit_values = self.parent.analysis.get_summary(squeeze=False)
+        fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
         summary = self.parent.config["summary"]
         label_font_size = self.parent.config["label_font_size"]
         tick_font_size = self.parent.config["tick_font_size"]

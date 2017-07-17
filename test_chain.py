@@ -63,6 +63,15 @@ class TestChain(object):
         assert np.all(diff1 < tolerance)
         assert np.all(diff2 < tolerance)
 
+    def test_summary_some_params(self):
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data_combined, parameters=["a", "b"], name="chain1")
+        summary = consumer.analysis.get_summary(parameters=["a"], squeeze=False)
+        k1 = list(summary[0].keys())
+        assert len(k1) == 1
+        assert "a" in k1
+        assert "b" not in k1
+
     def test_summary1(self):
         tolerance = 5e-2
         consumer = ChainConsumer()
