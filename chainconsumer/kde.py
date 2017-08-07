@@ -3,7 +3,7 @@ import numpy as np
 
 
 class MegKDE(object):
-    """ Matched Elliptical Gaussian Kernel Desntiy Estimator
+    """ Matched Elliptical Gaussian Kernel Density Estimator
     
     Adapted from the algorithm specified in the BAMBIS's model specified Wolf 2017
     to support weighted samples.
@@ -45,7 +45,7 @@ class MegKDE(object):
         self.sigma = 2.0 * factor * np.power(self.num_points, -1. / (4 + self.num_dim))  # Starting sigma (bw) of Gauss
         self.sigma_fact = -0.5 / (self.sigma * self.sigma)
 
-        # Cant get normed probs to work atm, turning off for now as I dont need normed pdfs for contours
+        # Cant get normed probs to work atm, turning off for now as I don't need normed pdfs for contours
         # self.norm = np.product(np.diagonal(self.A)) * (2 * np.pi) ** (-0.5 * self.num_dim)  # prob norm
         # self.scaling = np.power(self.norm * self.sigma, -self.num_dim)
 

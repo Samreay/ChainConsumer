@@ -26,7 +26,7 @@ Install via `pip`:
 ### Contributors
 
 I would like to thank the following people for their contribution in issues, algorithms and code snippets
-which have helepd improve ChainConsumer:
+which have helped improve ChainConsumer:
 
 * Chris Davis (check out https://github.com/cpadavis/preliminize)
 * Joe Zuntz

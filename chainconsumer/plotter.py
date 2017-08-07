@@ -70,7 +70,7 @@ class Plotter(object):
         if legend is None:
             legend = len(chains) > 1
 
-        # If no chains have names, dont plot the legend
+        # If no chains have names, don't plot the legend
         legend = legend and len([n for n in names if n]) > 0
 
         # Calculate cmap extents
@@ -309,7 +309,7 @@ class Plotter(object):
         Parameters
         ----------
         parameters : list[str]|int, optional
-            Specifiy a subset of parameters to plot. If not set, all parameters are plotted.
+            Specify a subset of parameters to plot. If not set, all parameters are plotted.
             If an integer is given, only the first so many parameters are plotted.
         truth : list[float]|dict[str], optional
             A list of truth values corresponding to parameters, or a dictionary of
@@ -413,7 +413,7 @@ class Plotter(object):
         Parameters
         ----------
         parameters : list[str]|int, optional
-            Specifiy a subset of parameters to plot. If not set, all parameters are plotted.
+            Specify a subset of parameters to plot. If not set, all parameters are plotted.
             If an integer is given, only the first so many parameters are plotted.
         truth : list[float]|dict[str], optional
             A list of truth values corresponding to parameters, or a dictionary of
@@ -718,8 +718,8 @@ class Plotter(object):
             binsy = get_grid_bins(y)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
         else:
-            binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalsied=False)
-            binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalsied=False)
+            binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalised=False)
+            binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalised=False)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         colours = self._scale_colours(colour, len(levels), shade_gradient)

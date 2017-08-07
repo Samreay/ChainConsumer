@@ -21,12 +21,12 @@ def get_bins(chains):
     return proposal
 
 
-def get_smoothed_bins(smooth, bins, data, weight, marginalsied=True, plot=False):
+def get_smoothed_bins(smooth, bins, data, weight, marginalised=True, plot=False):
     minv, maxv = get_extents(data, weight, plot=plot)
     if smooth is None or not smooth or smooth == 0:
         return np.linspace(minv, maxv, int(bins)), 0
     else:
-        return np.linspace(minv, maxv, int((2 if marginalsied else 2) * smooth * bins)), smooth
+        return np.linspace(minv, maxv, int((2 if marginalised else 2) * smooth * bins)), smooth
 
 
 def get_grid_bins(data):
