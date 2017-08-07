@@ -278,11 +278,11 @@ class ChainConsumer(object):
             than colours, you *will* get the rainbow colour spectrum. If you only pass
             one colour, all chains are set to this colour. This probably won't look good.
         linestyles : str|list[str], optional
-            Provide a list of line styles to plot the contours and marginalsied
+            Provide a list of line styles to plot the contours and marginalised
             distributions with. By default, this will become a list of solid lines. If a
             string is passed instead of a list, this style is used for all chains.
         linewidths : float|list[float], optional
-            Provide a list of line widths to plot the contours and marginalsied
+            Provide a list of line widths to plot the contours and marginalised
             distributions with. By default, this is a width of 1. If a float
             is passed instead of a list, this width is used for all chains.
         kde : bool|float|list[bool|float], optional
@@ -353,7 +353,7 @@ class ChainConsumer(object):
         legend_color_text : bool, optional
             Whether to colour the legend text.
         watermark_text_kwargs : dict, optional
-            Options to pass to the fontdict propery when generating text for the watermark.
+            Options to pass to the fontdict property when generating text for the watermark.
             
         Returns
         -------
@@ -658,7 +658,7 @@ class ChainConsumer(object):
 
         This method might be useful if, for example, your chain was made using
         MCMC with 4 walkers. To check the sampling of all 4 walkers agree, you could
-        call this to get a ChainConumser instance with one chain for ech of the
+        call this to get a ChainConsumer instance with one chain for ech of the
         four walks. If you then plot, hopefully all four contours
         you would see agree.
 
