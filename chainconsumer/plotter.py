@@ -64,7 +64,8 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, color_p=True)
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth,
+                                                                   extents, color_p=True, blind=blind)
         names = [self.parent._names[i] for i in chains]
 
         if legend is None:

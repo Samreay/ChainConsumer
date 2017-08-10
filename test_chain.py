@@ -12,6 +12,7 @@ from chainconsumer.helpers import get_extents
 from chainconsumer.kde import MegKDE
 from chainconsumer.colors import Colors
 
+
 class TestChain(object):
     np.random.seed(1)
     n = 2000000

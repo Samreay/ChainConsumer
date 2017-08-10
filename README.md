@@ -52,6 +52,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.21.4
+* Fixing issue where refactoring broke parameter blinding.
+
 ##### 0.21.3
 * ChainConsumer now only finds extents of relevant parameters when plotting, instead of all parameters.
 
