@@ -52,6 +52,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.21.5
+* Fixing error when plotting walks with small weights.
+
 ##### 0.21.4
 * Fixing issue where refactoring broke parameter blinding.
 

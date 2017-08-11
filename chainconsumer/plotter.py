@@ -385,7 +385,7 @@ class Plotter(object):
                                             convolve=convolve, color=colors[index])
                 else:
                     if log_weight is None:
-                        log_weight = np.any([self._weights[index].mean() < 0.1 for index in chains])
+                        log_weight = np.any([self.parent._weights[index].mean() < 0.1 for index in chains])
                     if log_weight:
                         for index in chains:
                             self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(self.parent._weights[index]),
