@@ -540,7 +540,11 @@ class Plotter(object):
                     if (p != cp or pc) and p not in all_parameters:
                         all_parameters.append(p)
         else:
-            all_parameters = list(set([p for i in chains for p in self.parent._parameters[i]]))
+            all_parameters = []
+            for i in chains:
+                for p in self.parent._parameters[i]:
+                    if p not in all_parameters:
+                        all_parameters.append(p)
 
         if parameters is None:
             parameters = all_parameters
