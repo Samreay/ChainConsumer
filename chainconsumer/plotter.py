@@ -549,7 +549,7 @@ class Plotter(object):
         if parameters is None:
             parameters = all_parameters
         elif isinstance(parameters, int):
-            parameters = self.parent.all_parameters[:parameters]
+            parameters = self.parent._all_parameters[:parameters]
 
         if truth is None:
             truth = {}
