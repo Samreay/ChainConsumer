@@ -52,7 +52,7 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 ###############################################################################
 # Or we can enable maximum closest statistics
 
-c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_closest")
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_shortest")
 fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
