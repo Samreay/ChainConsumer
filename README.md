@@ -52,6 +52,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.22.0
+* Adding option to specify the confidence interval (area) for parameter summaries.
+* Adding three extra methods for parameter summaries from Andrae 2010: max symmetric, max shortest and max central stats.
+
 ##### 0.21.7
 * Fixing a bug that caused ChainConsumer to crash in some cases when you specified a number of parameters.
 

@@ -1320,3 +1320,183 @@ class TestChain(object):
         colourmap = Colors()
         with pytest.raises(ValueError):
             colourmap.get_formatted(["java"])
+
+    def test_summary_area(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        summary = c.analysis.get_summary()[0]
+        expected = [3.5, 5, 6.5]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+
+    def test_summary_area_default(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(summary_area=0.6827)
+        summary = c.analysis.get_summary()[0]
+        expected = [3.5, 5, 6.5]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+
+    def test_summary_area_95(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(summary_area=0.95)
+        summary = c.analysis.get_summary()[0]
+        expected = [2, 5, 8]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+
+    def test_summary_bad_input1(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data).configure(summary_area=None)
+
+    def test_summary_bad_input2(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data).configure(summary_area="Nope")
+
+    def test_summary_bad_input3(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data).configure(summary_area=0)
+
+    def test_summary_bad_input4(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data).configure(summary_area=1)
+
+    def test_summary_bad_input5(self):
+        with pytest.raises(AssertionError):
+            ChainConsumer().add_chain(self.data).configure(summary_area=-0.2)
+
+    def test_summary_max_symmetric_1(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(statistics="max_symmetric")
+        summary = c.analysis.get_summary()[0]
+        expected = [3.5, 5, 6.5]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+        assert np.isclose(summary[2] - summary[1], summary[1] - summary[0])
+
+    def test_summary_max_symmetric_2(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.6827
+        c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(0, 2, 1000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        xmax = xs[pdf.argmax()]
+        cdf_top = skewnorm.cdf(summary[2], 5, 1, 1.5)
+        cdf_bottom = skewnorm.cdf(summary[0], 5, 1, 1.5)
+        area = cdf_top - cdf_bottom
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(area, summary_area, atol=0.05)
+        assert np.isclose(summary[2] - summary[1], summary[1] - summary[0])
+
+    def test_summary_max_symmetric_3(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.95
+        c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(0, 2, 1000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        xmax = xs[pdf.argmax()]
+        cdf_top = skewnorm.cdf(summary[2], 5, 1, 1.5)
+        cdf_bottom = skewnorm.cdf(summary[0], 5, 1, 1.5)
+        area = cdf_top - cdf_bottom
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(area, summary_area, atol=0.05)
+        assert np.isclose(summary[2] - summary[1], summary[1] - summary[0])
+
+    def test_summary_max_shortest_1(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(statistics="max_shortest")
+        summary = c.analysis.get_summary()[0]
+        expected = [3.5, 5, 6.5]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+
+    def test_summary_max_shortest_2(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.6827
+        c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(-1, 5, 10000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        cdf = skewnorm.cdf(xs, 5, 1, 1.5)
+        x2 = interp1d(cdf, xs, bounds_error=False, fill_value=np.inf)(cdf + summary_area)
+        dist = x2 - xs
+        ind = np.argmin(dist)
+        x0 = xs[ind]
+        x2 = x2[ind]
+        xmax = xs[pdf.argmax()]
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(x0, summary[0], atol=0.05)
+        assert np.isclose(x2, summary[2], atol=0.05)
+
+    def test_summary_max_shortest_3(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.95
+        c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(-1, 5, 10000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        cdf = skewnorm.cdf(xs, 5, 1, 1.5)
+        x2 = interp1d(cdf, xs, bounds_error=False, fill_value=np.inf)(cdf + summary_area)
+        dist = x2 - xs
+        ind = np.argmin(dist)
+        x0 = xs[ind]
+        x2 = x2[ind]
+        xmax = xs[pdf.argmax()]
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(x0, summary[0], atol=0.05)
+        assert np.isclose(x2, summary[2], atol=0.05)
+
+    def test_summary_max_central_1(self):
+        c = ChainConsumer()
+        c.add_chain(self.data)
+        c.configure(statistics="max_central")
+        summary = c.analysis.get_summary()[0]
+        expected = [3.5, 5, 6.5]
+        assert np.all(np.isclose(summary, expected, atol=0.1))
+
+    def test_summary_max_central_2(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.6827
+        c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(-1, 5, 10000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        cdf = skewnorm.cdf(xs, 5, 1, 1.5)
+        xval = interp1d(cdf, xs)([0.5 - 0.5 * summary_area, 0.5 + 0.5 * summary_area])
+        xmax = xs[pdf.argmax()]
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(xval[0], summary[0], atol=0.05)
+        assert np.isclose(xval[1], summary[2], atol=0.05)
+
+    def test_summary_max_central_3(self):
+        c = ChainConsumer()
+        c.add_chain(self.data_skew)
+        summary_area = 0.95
+        c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
+        summary = c.analysis.get_summary()[0]
+
+        xs = np.linspace(-1, 5, 10000)
+        pdf = skewnorm.pdf(xs, 5, 1, 1.5)
+        cdf = skewnorm.cdf(xs, 5, 1, 1.5)
+        xval = interp1d(cdf, xs)([0.5 - 0.5 * summary_area, 0.5 + 0.5 * summary_area])
+        xmax = xs[pdf.argmax()]
+
+        assert np.isclose(xmax, summary[1], atol=0.05)
+        assert np.isclose(xval[0], summary[0], atol=0.05)
+        assert np.isclose(xval[1], summary[2], atol=0.05)

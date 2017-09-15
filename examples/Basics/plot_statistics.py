@@ -43,15 +43,36 @@ fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
+# Or we can enable maximum symmetric statistics
+
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_symmetric")
+fig = c.plotter.plot()
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# Or we can enable maximum closest statistics
+
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_closest")
+fig = c.plotter.plot()
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# Or we can enable maximum central statistics
+
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_central")
+fig = c.plotter.plot()
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
 # We can also take advantage of the ability to pass lists to ChainConsumer's
 # configuration to have report different statistics for different chains.
 # Please note, I don't recommend you do this in practise, it is just begging
 # for confusion.
 
-c = ChainConsumer().add_chain(data, parameters=parameters)
-c.add_chain(data)
-c.add_chain(data)
-c.configure(statistics=["max", "mean", "cumulative"],
-            linestyles=["-", "--", ":"], linewidths=[1, 2, 3], bar_shade=True)
+c = ChainConsumer()
+stats = list(c.analysis._summaries.keys())
+for stat in stats:
+    c.add_chain(data, parameters=parameters, name=stat)
+c.configure(statistics=stats, bar_shade=True)
 fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

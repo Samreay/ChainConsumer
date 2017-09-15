@@ -18,7 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.21.7"
+    __version__ = "0.22.0"
 
     def __init__(self):
         logging.basicConfig()
@@ -226,7 +226,7 @@ class ChainConsumer(object):
                   diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
                   spacing=None, contour_labels=None, contour_label_font_size=10,
                   legend_kwargs=None, legend_location=None, legend_artists=None,
-                  legend_color_text=True, watermark_text_kwargs=None):  # pragma: no cover
+                  legend_color_text=True, watermark_text_kwargs=None, summary_area=0.6827):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -241,7 +241,8 @@ class ChainConsumer(object):
         ----------
         statistics : string|list[str], optional
             Which sort of statistics to use. Defaults to `"max"` for maximum likelihood
-            statistics. Other available options are `"mean"` and `"cumulative"`. In the
+            statistics. Other available options are `"mean"`, `"cumulative"`, `"max_symmetric"`,
+            `"max_closest"` and `"max_central"`. In the
             very, very rare case you want to enable different statistics for different
             chains, you can pass in a list of strings.
         max_ticks : int, optional
@@ -354,6 +355,8 @@ class ChainConsumer(object):
             Whether to colour the legend text.
         watermark_text_kwargs : dict, optional
             Options to pass to the fontdict property when generating text for the watermark.
+        summary_area : float, optional
+            The confidence interval used when generating parameter summaries. Defaults to 1 sigma, aka 0.6827
             
         Returns
         -------
@@ -375,8 +378,8 @@ class ChainConsumer(object):
         else:
             raise ValueError("statistics is not a string or a list!")
         for s in statistics:
-            assert s in ["max", "mean", "cumulative"], \
-                "statistics %s not recognised. Should be max, mean or cumulative" % s
+            assert s in list(self.analysis._summaries.keys()), \
+                "statistics %s not recognised. Should be in %s" % (s, self.analysis._summaries.keys())
 
         # Determine KDEs
         if isinstance(kde, bool) or isinstance(kde, float):
@@ -572,6 +575,10 @@ class ChainConsumer(object):
             watermark_text_kwargs = {}
         watermark_text_kwargs_default.update(watermark_text_kwargs)
 
+        assert isinstance(summary_area, float), "summary_area needs to be a float, not %s!" % type(summary_area)
+        assert summary_area > 0, "summary_area should be a positive number, instead is %s!" % summary_area
+        assert summary_area < 1, "summary_area must be less than unity, instead is %s!" % summary_area
+
         # List options
         self.config["shade"] = shade[:num_chains]
         self.config["shade_alpha"] = shade_alpha[:num_chains]
@@ -616,6 +623,7 @@ class ChainConsumer(object):
         self.config["legend_artists"] = legend_artists
         self.config["legend_color_text"] = legend_color_text
         self.config["watermark_text_kwargs"] = watermark_text_kwargs_default
+        self.config["summary_area"] = summary_area
 
         self._configured = True
         return self

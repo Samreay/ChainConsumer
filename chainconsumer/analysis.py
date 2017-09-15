@@ -15,7 +15,10 @@ class Analysis(object):
         self._summaries = {
             "max": self.get_parameter_summary_max,
             "mean": self.get_parameter_summary_mean,
-            "cumulative": self.get_parameter_summary_cumulative
+            "cumulative": self.get_parameter_summary_cumulative,
+            "max_symmetric": self.get_paramater_summary_max_symmetric,
+            "max_shortest": self.get_parameter_summary_max_shortest,
+            "max_central": self.get_parameter_summary_max_central
         }
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
@@ -142,7 +145,8 @@ class Analysis(object):
         if not self.parent._configured:
             self.parent.configure()
         method = self._summaries[self.parent.config["statistics"][chain_index]]
-        return method(data, weights, parameter, chain_index, **kwargs)
+        desired_area = self.parent.config["summary_area"]
+        return method(data, weights, parameter, chain_index, desired_area=desired_area, **kwargs)
 
     def get_correlations(self, chain=0, parameters=None):
         """
@@ -398,7 +402,7 @@ class Analysis(object):
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0
-        threshold = 0.001
+        threshold = 0.0001
         x1 = None
         x2 = None
         count = 0
@@ -425,3 +429,57 @@ class Analysis(object):
 
         return [x1, xs[startIndex], x2]
 
+    def get_paramater_summary_max_symmetric(self, data, weights, parameter, chain_index,
+                                            desired_area=0.6827, grid=False):
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        x_to_c = interp1d(xs, cs, bounds_error=False, fill_value=(0, 1))
+
+        # Get max likelihood x
+        max_index = ys.argmax()
+        x = xs[max_index]
+
+        # Estimate width
+        h = 0.5 * (xs[-1] - xs[0])
+        prev_h = 0
+
+        # Hone in on right answer
+        while True:
+            current_area = x_to_c(x + h) - x_to_c(x - h)
+            if np.abs(current_area - desired_area) < 0.0001:
+                return [x - h, x, x + h]
+            temp = h
+            h += 0.5 * np.abs(prev_h - h) * (1 if current_area < desired_area else -1)
+            prev_h = temp
+
+    def get_parameter_summary_max_shortest(self, data, weights, parameter, chain_index,
+                                           desired_area=0.6827, grid=False):
+
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        c_to_x = interp1d(cs, xs, bounds_error=False, fill_value=(-np.inf, np.inf))
+
+        # Get max likelihood x
+        max_index = ys.argmax()
+        x = xs[max_index]
+
+        # Pair each lower bound with an upper to get the right area
+        x2 = c_to_x(cs + desired_area)
+        dists = x2 - xs
+        mask = (xs > x) | (x2 < x)  # Ensure max point is inside the area
+        dists[mask] = np.inf
+        ind = dists.argmin()
+        return [xs[ind], x, x2[ind]]
+
+    def get_parameter_summary_max_central(self, data, weights, parameter, chain_index,
+                                           desired_area=0.6827, grid=False):
+
+        xs, ys, cs = self._get_smoothed_histogram(data, weights, chain_index, grid)
+        c_to_x = interp1d(cs, xs)
+
+        # Get max likelihood x
+        max_index = ys.argmax()
+        x = xs[max_index]
+
+        vals = [0.5 - 0.5 * desired_area, 0.5 + 0.5 * desired_area]
+        xvals = c_to_x(vals)
+
+        return [xvals[0], x, xvals[1]]
