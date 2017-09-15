@@ -72,7 +72,7 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer()
 stats = list(c.analysis._summaries.keys())
 for stat in stats:
-    c.add_chain(data, parameters=parameters, name=stat)
+    c.add_chain(data, parameters=parameters, name=stat.replace("_", " "))
 c.configure(statistics=stats, bar_shade=True)
 fig = c.plotter.plot()
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
