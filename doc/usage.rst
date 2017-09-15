@@ -43,13 +43,13 @@ Mean Statistics
    statistics, however report symmetric error bars by having the primary statistic
    reported as the mean of the lower and upper bound.
 Max Symmetric
-   See [Figure 6(1) of Andrae (2010)](https://arxiv.org/pdf/1009.2755.pdf). Maximum
+   See `Figure 6(1) of Andrae (2010) <https://arxiv.org/pdf/1009.2755.pdf>`_. Maximum
    likelihood with error with symmetric errors to get the desired confidence interval.
 Max Shortest
-   See [Figure 6(2) of Andrae (2010)](https://arxiv.org/pdf/1009.2755.pdf). Maximum
+   See `Figure 6(2) of Andrae (2010) <https://arxiv.org/pdf/1009.2755.pdf>`_. Maximum
    likelihood with uncertainty bounds that minimise the distance between bounds.
 Max Central
-   See [Figure 6(3) of Andrae (2010)](https://arxiv.org/pdf/1009.2755.pdf). Maximum
+   See `Figure 6(3) of Andrae (2010) <https://arxiv.org/pdf/1009.2755.pdf>`_. Maximum
    likelihood with uncertainty bounds from the CDF (i.e. same as cumulative stats
    but the central point is the maximum likelihood point and not the :math:`x` such that
    :math:`C(x)=0.5`.
