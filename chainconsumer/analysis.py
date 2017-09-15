@@ -402,7 +402,7 @@ class Analysis(object):
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0
-        threshold = 0.0001
+        threshold = 0.0003
         x1 = None
         x2 = None
         count = 0
