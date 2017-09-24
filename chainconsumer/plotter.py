@@ -522,8 +522,9 @@ class Plotter(object):
         return fig
 
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
-                     filename=None, chains=None, figsize=None, errorbar=False, include_truth_chain=True,
-                     blind=None, watermark=None, extra_parameter_spacing=0.5):  # pragma: no cover
+                     filename=None, chains=None, figsize=1.0, errorbar=False, include_truth_chain=True,
+                     blind=None, watermark=None, extra_parameter_spacing=0.5,
+                     vertical_spacing_ratio=1.0):  # pragma: no cover
         """ Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -554,8 +555,8 @@ class Plotter(object):
             Used to specify which chain to show if more than one chain is loaded in.
             Can be an integer, specifying the
             chain index, or a str, specifying the chain name.
-        figsize : tuple(float)|float, optional
-            Either a tuple specifying the figure size or a float scaling factor.
+        figsize : float, optional
+            Scale horizontal and vertical figure size.
         errorbar : bool, optional
             Whether to onle plot an error bar, instead of the marginalised distribution.
         include_truth_chain : bool, optional
@@ -568,6 +569,8 @@ class Plotter(object):
             A watermark to add to the figure
         extra_parameter_spacing : float, optional
             Increase horizontal space for parameter values
+        vertical_spacing_ratio : float, optional
+            Increase vertical space for each model
 
         Returns
         -------
@@ -598,18 +601,13 @@ class Plotter(object):
 
         top_spacing = 0.3
         bottom_spacing = 0.2
-        row_height = 0.5 if not errorbar else 0.3
+        row_height = (0.5 if not errorbar else 0.3) * vertical_spacing_ratio
         width = param_width * len(parameters) + model_width
         height = top_spacing + bottom_spacing + row_height * len(chains)
         top_ratio = 1 - (top_spacing / height)
         bottom_ratio = bottom_spacing / height
 
-        if figsize is None:
-            figsize = 1.0
-        if isinstance(figsize, float):
-            figsize_float = figsize
-            figsize = (width * figsize_float, height * figsize_float)
-
+        figsize = (width * figsize, height * figsize)
         fig, axes = plt.subplots(nrows=len(chains), ncols=1 + len(parameters), figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
         label_font_size = self.parent.config["label_font_size"]
