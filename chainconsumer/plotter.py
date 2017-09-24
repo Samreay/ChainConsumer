@@ -523,7 +523,7 @@ class Plotter(object):
 
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
                      filename=None, chains=None, figsize=None, errorbar=False, include_truth_chain=True,
-                     blind=None, watermark=None):  # pragma: no cover
+                     blind=None, watermark=None, extra_parameter_spacing=0.5):  # pragma: no cover
         """ Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -566,6 +566,8 @@ class Plotter(object):
             or can pass in a string (or list of strings) which specify the parameters to blind.
         watermark : str, optional
             A watermark to add to the figure
+        extra_parameter_spacing : float, optional
+            Increase horizontal space for parameter values
 
         Returns
         -------
@@ -589,7 +591,7 @@ class Plotter(object):
         max_model_name = self._get_size_of_texts([self.parent._names[i] for i in chains])
         max_param = self._get_size_of_texts(parameters)
         fid_dpi = 65  # Seriously I have no idea what value this should be
-        param_width = max(1, 0.25 + max_param / fid_dpi)
+        param_width = extra_parameter_spacing + max(0.5, max_param / fid_dpi)
         model_width = 0.25 + (max_model_name / fid_dpi)
 
         gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
