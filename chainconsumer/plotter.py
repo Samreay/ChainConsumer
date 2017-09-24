@@ -523,7 +523,7 @@ class Plotter(object):
 
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
                      filename=None, chains=None, figsize=None, errorbar=False, include_truth_chain=True,
-                     watermark=None):  # pragma: no cover
+                     blind=None, watermark=None):  # pragma: no cover
         """ Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -561,6 +561,9 @@ class Plotter(object):
         include_truth_chain : bool, optional
             If you specify another chain as the truth chain, determine if it should still
             be plotted.
+        blind : bool|string|list[string], optional
+            Whether to blind axes values. Can be set to `True` to blind all parameters,
+            or can pass in a string (or list of strings) which specify the parameters to blind.
         watermark : str, optional
             A watermark to add to the figure
 
@@ -571,13 +574,13 @@ class Plotter(object):
 
         """
         wide_extents = not errorbar
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, wide_extents=wide_extents)
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind, wide_extents=wide_extents)
 
         fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
 
         # Check if we're using a chain for truth values
         if isinstance(truth, str):
-            assert truth in self.parent._names, "Truth chain %s is not in the list of added chains: %s" (truth, self.parent._names)
+            assert truth in self.parent._names, "Truth chain %s is not in the list of added chains: %s" % (truth, self.parent._names)
             index = self.parent._names.index(truth)
             truth = fit_values[index]
             if not include_truth_chain:
@@ -632,6 +635,7 @@ class Plotter(object):
                     ax.spines['top'].set_visible(False)
                 if i < (len(chains) - 1):
                     ax.spines['bottom'].set_visible(False)
+                if i < (len(chains) - 1) or p in blind:
                     ax.set_xticks([])
                 ax.set_yticks([])
                 ax.set_xlim(extents[p])
