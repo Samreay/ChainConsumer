@@ -33,7 +33,7 @@ The output figure is displayed below.
 
 Or you can add more models and look at the summaries between them. Or a ton more, check the examples!
 
-.. figure::     ../examples/summary.png
+.. figure::     ../examples/resources/summary.png
    :align:     center
    :width:     60%
 
