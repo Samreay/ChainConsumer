@@ -52,6 +52,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.23.0
+* Can now pass a list of filenames to save out, to make generating a PNG and PDF option in one go easier
+* Adding method `plot_summary`
+
 ##### 0.22.0
 * Adding option to specify the confidence interval (area) for parameter summaries.
 * Adding three extra methods for parameter summaries from Andrae 2010: max symmetric, max shortest and max central stats.

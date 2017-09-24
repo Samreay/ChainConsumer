@@ -626,6 +626,13 @@ class TestChain(object):
         assert np.abs(low + 4) < threshold
         assert np.abs(high - 4) < threshold
 
+    def test_extents_summary(self):
+        xs = np.random.normal(size=100000)
+        low, high = get_extents(xs, np.ones(xs.shape), plot=True, wide_extents=False)
+        threshold = 0.1
+        assert np.abs(low + 1.644855) < threshold
+        assert np.abs(high - 1.644855) < threshold
+
     def test_grid_list_input(self):
         x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)
         xx, yy = np.meshgrid(x, y, indexing='ij')
@@ -1212,9 +1219,9 @@ class TestChain(object):
         p, cor = c.analysis.get_covariance()
         assert p[0] == "x"
         assert p[1] == "y"
-        assert np.isclose(cor[0, 0], 1, atol=2e-2)
-        assert np.isclose(cor[1, 1], 1, atol=2e-2)
-        assert np.isclose(cor[0, 1], 0, atol=2e-2)
+        assert np.isclose(cor[0, 0], 1, atol=4e-2)
+        assert np.isclose(cor[1, 1], 1, atol=4e-2)
+        assert np.isclose(cor[0, 1], 0, atol=4e-2)
         assert cor.shape == (2, 2)
 
     def test_megkde_1d_basic(self):

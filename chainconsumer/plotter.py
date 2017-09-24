@@ -256,13 +256,17 @@ class Plotter(object):
             self._add_watermark(fig, ax, figsize, watermark, dpi=dpi)
 
         if filename is not None:
-            fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
+            if isinstance(filename, str):
+                filename = [filename]
+            for f in filename:
+                fig.savefig(f, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
+
         if display:
             plt.show()
 
         return fig
 
-    def _add_watermark(self, fig, axes, figsize, text, dpi=300):  # pragma: no cover
+    def _add_watermark(self, fig, axes, figsize, text, dpi=300, size_scale=1.0):  # pragma: no cover
         # Code based off github repository https://github.com/cpadavis/preliminize
         dx, dy = figsize
         dy, dx = dy * dpi, dx * dpi
@@ -281,7 +285,7 @@ class Plotter(object):
         bb1 = TextPath((0, 0), text, size=51, props=fontdict, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
-        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale
+        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
         if axes is not None:
             if fontdict["usetex"]:
                 size *= 0.7
@@ -396,7 +400,10 @@ class Plotter(object):
                                             convolve=convolve, color=colors[index])
 
         if filename is not None:
-            fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+            if isinstance(filename, str):
+                filename = [filename]
+            for f in filename:
+                fig.savefig(f, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
         if display:
             plt.show()
         return fig
@@ -506,19 +513,199 @@ class Plotter(object):
             ax.set_xlabel(p, fontsize=label_font_size)
 
         if filename is not None:
-            fig.savefig(filename, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+            if isinstance(filename, str):
+                filename = [filename]
+            for f in filename:
+                fig.savefig(f, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
         if display:
             plt.show()
         return fig
 
-    def _sanitise(self, chains, parameters, truth, extents, color_p=False, blind=None):  # pragma: no cover
+    def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
+                     filename=None, chains=None, figsize=None, errorbar=False, include_truth_chain=True,
+                     watermark=None):  # pragma: no cover
+        """ Plots parameter summaries
+
+        This plot is more for a sanity or consistency check than for use with final results.
+        Plotting this before plotting with :func:`plot` allows you to quickly see if the
+        chains give well behaved distributions, or if certain parameters are suspect
+        or require a greater burn in period.
+
+
+        Parameters
+        ----------
+        parameters : list[str]|int, optional
+            Specify a subset of parameters to plot. If not set, all parameters are plotted.
+            If an integer is given, only the first so many parameters are plotted.
+        truth : list[float]|list|list[float]|dict[str]|str, optional
+            A list of truth values corresponding to parameters, or a dictionary of
+            truth values keyed by the parameter. Each "truth value" can be either a float (will
+            draw a vertical line), two floats (a shaded interval) or three floats (min, mean, max),
+            which renders as a shaded interval with a line for the mean. Or, supply a string
+            which matches a chain name, and the results for that chain will be used as the 'truth'
+        extents : list[tuple]|dict[str], optional
+            A list of two-tuples for plot extents per parameter, or a dictionary of
+            extents keyed by the parameter.
+        display : bool, optional
+            If set, shows the plot using ``plt.show()``
+        filename : str, optional
+            If set, saves the figure to the filename
+        chains : int|str, list[str|int], optional
+            Used to specify which chain to show if more than one chain is loaded in.
+            Can be an integer, specifying the
+            chain index, or a str, specifying the chain name.
+        figsize : tuple(float)|float, optional
+            Either a tuple specifying the figure size or a float scaling factor.
+        errorbar : bool, optional
+            Whether to onle plot an error bar, instead of the marginalised distribution.
+        include_truth_chain : bool, optional
+            If you specify another chain as the truth chain, determine if it should still
+            be plotted.
+        watermark : str, optional
+            A watermark to add to the figure
+
+        Returns
+        -------
+        figure
+            the matplotlib figure created
+
+        """
+        wide_extents = not errorbar
+        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, wide_extents=wide_extents)
+
+        fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
+
+        # Check if we're using a chain for truth values
+        if isinstance(truth, str):
+            assert truth in self.parent._names, "Truth chain %s is not in the list of added chains: %s" (truth, self.parent._names)
+            index = self.parent._names.index(truth)
+            truth = fit_values[index]
+            if not include_truth_chain:
+                chains.remove(index)
+
+        max_model_name = self._get_size_of_texts([self.parent._names[i] for i in chains])
+        max_param = self._get_size_of_texts(parameters)
+        fid_dpi = 65  # Seriously I have no idea what value this should be
+        param_width = max(1, 0.25 + max_param / fid_dpi)
+        model_width = 0.25 + (max_model_name / fid_dpi)
+
+        gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
+
+        top_spacing = 0.3
+        bottom_spacing = 0.2
+        row_height = 0.5 if not errorbar else 0.3
+        width = param_width * len(parameters) + model_width
+        height = top_spacing + bottom_spacing + row_height * len(chains)
+        top_ratio = 1 - (top_spacing / height)
+        bottom_ratio = bottom_spacing / height
+
+        if figsize is None:
+            figsize = 1.0
+        if isinstance(figsize, float):
+            figsize_float = figsize
+            figsize = (width * figsize_float, height * figsize_float)
+
+        fig, axes = plt.subplots(nrows=len(chains), ncols=1 + len(parameters), figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
+        fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
+        label_font_size = self.parent.config["label_font_size"]
+        legend_color_text = self.parent.config["legend_color_text"]
+
+        max_vals = {}
+        for i, row in enumerate(axes):
+            ii = chains[i]
+
+            cs, ws, ps, = self.parent._chains[ii], self.parent._weights[ii], self.parent._parameters[ii]
+            fvs, gs, ns = fit_values[ii], self.parent._grids[ii], self.parent._names[ii]
+
+            # First one put name of model
+            ax_first = row[0]
+            ax_first.set_axis_off()
+
+            colour = self.parent.config["colors"][ii]
+            text_colour = "k" if not legend_color_text else colour
+
+            ax_first.text(0, 0.5, ns, transform=ax_first.transAxes, fontsize=label_font_size, verticalalignment="center", color=text_colour, weight="medium")
+
+            for ax, p in zip(row[1:], parameters):
+                # Set up the frames
+                if i > 0:
+                    ax.spines['top'].set_visible(False)
+                if i < (len(chains) - 1):
+                    ax.spines['bottom'].set_visible(False)
+                    ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_xlim(extents[p])
+
+                # Put title in
+                if i == 0:
+                    ax.set_title(r"$%s$" % p, fontsize=label_font_size)
+
+                # Add truth values
+                truth_value = truth.get(p)
+                if truth_value is not None:
+                    if isinstance(truth_value, float) or isinstance(truth_value, int):
+                        truth_mean = truth_value
+                        truth_min, truth_max = None, None
+                    else:
+                        if len(truth_value) == 1:
+                            truth_mean = truth_value
+                            truth_min, truth_max = None, None
+                        elif len(truth_value) == 2:
+                            truth_min, truth_max = truth_value
+                            truth_mean = None
+                        else:
+                            truth_min, truth_mean, truth_max = truth_value
+                    if truth_mean is not None:
+                        ax.axvline(truth_mean, **self.parent.config_truth)
+                    if truth_min is not None and truth_max is not None:
+                        ax.axvspan(truth_min, truth_max, color=self.parent.config_truth["color"], alpha=0.15, lw=0)
+                # Skip if this chain doesnt have the parameter
+                if p not in ps:
+                    continue
+
+                # Plot the good stuff
+                if errorbar:
+                    fv = fvs[p]
+                    if fv[0] is not None and fv[2] is not None:
+                        diff = np.abs(np.diff(fv))
+                        ax.errorbar([fv[1]], 0, xerr=[[diff[0]], [diff[1]]], fmt='o', color=colour)
+                else:
+                    index = ps.index(p)
+                    m = self._plot_bars(ii, ax, p, cs[:, index], ws, grid=gs, fit_values=fvs[p])
+                    if max_vals.get(p) is None or m > max_vals.get(p):
+                        max_vals[p] = m
+
+        for i, row in enumerate(axes):
+            for ax, p in zip(row[1:], parameters):
+                if not errorbar:
+                    ax.set_ylim(0, 1.1 * max_vals[p])
+
+        dpi = 300
+        if watermark:
+            ax = None
+            self._add_watermark(fig, ax, figsize, watermark, dpi=dpi, size_scale=0.8)
+
+        if filename is not None:
+            if isinstance(filename, str):
+                filename = [filename]
+            for f in filename:
+                fig.savefig(f, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
+        if display:
+            plt.show()
+
+        return fig
+
+    def _get_size_of_texts(self, texts):  # pragma: no cover
+        usetex = self.parent.config["usetex"]
+        size = self.parent.config["label_font_size"]
+        widths = [TextPath((0, 0), text, usetex=usetex, size=size).get_extents().width for text in texts]
+        return max(widths)
+
+    def _sanitise(self, chains, parameters, truth, extents, color_p=False, blind=None, wide_extents=True):  # pragma: no cover
         if not self.parent._configured:
             self.parent.configure()
         if not self.parent._configured_truth:
             self.parent.configure_truth()
-
-        if truth is not None and isinstance(truth, np.ndarray):
-            truth = truth.tolist()
 
         if chains is None:
             chains = list(range(len(self.parent._chains)))
@@ -551,6 +738,8 @@ class Plotter(object):
         elif isinstance(parameters, int):
             parameters = self.parent._all_parameters[:parameters]
 
+        if truth is not None and isinstance(truth, np.ndarray):
+            truth = truth.tolist()
         if truth is None:
             truth = {}
         else:
@@ -563,6 +752,8 @@ class Plotter(object):
             extents = {}
         elif isinstance(extents, list):
             extents = dict((p, e) for p, e in zip(parameters, extents))
+
+        extents = self._get_custom_extents(parameters, chains, extents, wide_extents=wide_extents)
 
         if blind is None:
             blind = []
@@ -581,6 +772,15 @@ class Plotter(object):
             plt.rc('font', family='sans-serif')
 
         return chains, parameters, truth, extents, blind
+
+    def _get_custom_extents(self, parameters, chains, external_extents, wide_extents=True):  # pragma: no cover
+        extents = {}
+        for p in parameters:
+            if external_extents is not None and p in external_extents:
+                extents[p] = external_extents[p]
+            else:
+                extents[p] = self._get_parameter_extents(p, chains, wide_extents=wide_extents)
+        return extents
 
     def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None,
                     chains=None, blind=None):  # pragma: no cover
@@ -614,12 +814,7 @@ class Plotter(object):
         formatter = ScalarFormatter(useOffset=False)
         formatter.set_powerlimits((-3, 4))
 
-        extents = {}
-        for p in all_parameters:
-            if external_extents is not None and p in external_extents:
-                extents[p] = external_extents[p]
-            else:
-                extents[p] = self._get_parameter_extents(p, chains)
+        extents = self._get_custom_extents(all_parameters, chains, external_extents)
 
         if plot_hists:
             params1 = all_parameters
@@ -675,7 +870,7 @@ class Plotter(object):
 
         return fig, axes, params1, params2, extents
 
-    def _get_parameter_extents(self, parameter, chain_indexes):
+    def _get_parameter_extents(self, parameter, chain_indexes, wide_extents=True):
         min_val, max_val = None, None
         for i, (chain, parameters, w) in enumerate(
                 zip(self.parent._chains, self.parent._parameters, self.parent._weights)):
@@ -686,7 +881,7 @@ class Plotter(object):
                 min_prop = chain[:, index].min()
                 max_prop = chain[:, index].max()
             else:
-                min_prop, max_prop = get_extents(chain[:, index], w, plot=True)
+                min_prop, max_prop = get_extents(chain[:, index], w, plot=True, wide_extents=wide_extents)
             if min_val is None or min_prop < min_val:
                 min_val = min_prop
             if max_val is None or max_prop > max_val:
