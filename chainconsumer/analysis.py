@@ -402,7 +402,7 @@ class Analysis(object):
         startIndex = ys.argmax()
         maxVal = ys[startIndex]
         minVal = 0
-        threshold = 0.0003
+        threshold = 0.003
         x1 = None
         x2 = None
         count = 0
@@ -424,7 +424,7 @@ class Analysis(object):
                 elif area > desired_area:
                     minVal = mid
             except ValueError:
-                self._logger.warning("Parameter %s is not constrained" % parameter)
+                self._logger.warning("Parameter %s  in chain %s is not constrained" % (parameter, chain_index))
                 return [None, xs[startIndex], None]
 
         return [x1, xs[startIndex], x2]

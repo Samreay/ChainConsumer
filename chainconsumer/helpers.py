@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_extents(data, weight, plot=False):
+def get_extents(data, weight, plot=False, wide_extents=True):
     hist, be = np.histogram(data, weights=weight, bins=2000)
     bc = 0.5 * (be[1:] + be[:-1])
     cdf = hist.cumsum()
@@ -10,6 +10,8 @@ def get_extents(data, weight, plot=False):
     icdf = icdf / icdf.max()
     cdf = 1 - icdf[::-1]
     threshold = 1e-3 if plot else 1e-5
+    if plot and not wide_extents:
+        threshold = 0.05
     i1 = np.where(cdf > threshold)[0][0]
     i2 = np.where(icdf > threshold)[0][0]
     return bc[i1], bc[-i2]

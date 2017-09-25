@@ -31,6 +31,12 @@ The output figure is displayed below.
    :align:     center
    :width:     80%
 
+Or you can add more models and look at the summaries between them. Or a ton more, check the examples!
+
+.. figure::     ../examples/resources/summary.png
+   :align:     center
+   :width:     60%
+
 Check out the API and far more :ref:`examples-index` below:
 
 Contents

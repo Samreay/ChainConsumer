@@ -14,7 +14,7 @@ If you want examples of loading grid data, see the grid data example!
 # declared parameters).
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal
 import tempfile
 import os
 from chainconsumer import ChainConsumer
