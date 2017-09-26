@@ -925,10 +925,10 @@ class Plotter(object):
             binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalised=False)
             binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalised=False)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
-
+        cf = self.parent.color_finder
         colours = self._scale_colours(colour, len(levels), shade_gradient)
-        colours2 = [self._scale_colour(colours[0], 0.7)] + \
-                   [self._scale_colour(c, 0.8) for c in colours[:-1]]
+        colours2 = [cf.scale_colour(colours[0], 0.7)] + \
+                   [cf.scale_colour(c, 0.8) for c in colours[:-1]]
 
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
@@ -1065,7 +1065,7 @@ class Plotter(object):
         ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
 
         if convolve is not None:
-            color2 = self._scale_colour(color, 0.5)
+            color2 = self.parent.color_finder.scale_colour(color, 0.5)
             filt = np.ones(convolve) / convolve
             filtered = np.convolve(data, filt, mode="same")
             ax.plot(x[:-1], filtered[:-1], ls=':', color=color2, alpha=1)
@@ -1084,29 +1084,10 @@ class Plotter(object):
 
         return sigma_cumsum[i_unsort].reshape(shape)
 
-    def _clamp(self, val, minimum=0, maximum=255):  # pragma: no cover
-        if val < minimum:
-            return minimum
-        if val > maximum:
-            return maximum
-        return val
-
     def _scale_colours(self, colour, num, shade_gradient):  # pragma: no cover
         # http://thadeusb.com/weblog/2010/10/10/python_scale_hex_color
         minv, maxv = 1 - 0.1 * shade_gradient, 1 + 0.3 * shade_gradient
         scales = np.logspace(np.log(minv), np.log(maxv), num)
-        colours = [self._scale_colour(colour, scale) for scale in scales]
+        colours = [self.parent.color_finder.scale_colour(colour, scale) for scale in scales]
         return colours
 
-    def _scale_colour(self, colour, scalefactor):  # pragma: no cover
-        if isinstance(colour, np.ndarray):
-            r, g, b = colour[:3] * 255.0
-        else:
-            hexx = colour.strip('#')
-            if scalefactor < 0 or len(hexx) != 6:
-                return hexx
-            r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)
-        r = self._clamp(int(r * scalefactor))
-        g = self._clamp(int(g * scalefactor))
-        b = self._clamp(int(b * scalefactor))
-        return "#%02x%02x%02x" % (r, g, b)

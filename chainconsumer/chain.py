@@ -1,6 +1,5 @@
 import numpy as np
 import logging
-import matplotlib.cm as cm
 
 
 from chainconsumer.comparisons import Comparison
@@ -18,7 +17,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.23.0"
+    __version__ = "0.23.1"
 
     def __init__(self):
         logging.basicConfig()
@@ -441,11 +440,11 @@ class ChainConsumer(object):
         # Determine colours
         if colors is None:
             if rainbow:
-                colors = cm.rainbow(np.linspace(0, 1, num_chains))
+                colors = self.color_finder.get_colormap(num_chains)
             else:
                 if num_chains > len(self._all_colours):
                     num_needed_colours = np.sum([c is None for c in color_params])
-                    colour_list = cm.rainbow(np.linspace(0, 1, num_needed_colours))
+                    colour_list = self.color_finder.get_colormap(num_needed_colours)
                 else:
                     colour_list = self._all_colours
                 colors = []

@@ -1,4 +1,5 @@
 from matplotlib.colors import rgb2hex
+import matplotlib.cm as cm
 import numpy as np
 # Colours drawn from material designs colour pallet at https://material.io/guidelines/style/color.html
 
@@ -47,3 +48,29 @@ class Colors(object):
 
     def get_default(self):
         return self.get_formatted(self.default_colors)
+
+    def get_colormap(self, num, scale=0.7):
+        color_list = self.get_formatted(cm.rainbow(np.linspace(0, 1, num)))
+        scales = scale + (1 - scale) * np.abs(1 - np.linspace(0, 2, num))
+        scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales)]
+        return scaled
+
+    def scale_colour(self, colour, scalefactor):  # pragma: no cover
+        if isinstance(colour, np.ndarray):
+            r, g, b = colour[:3] * 255.0
+        else:
+            hexx = colour.strip('#')
+            if scalefactor < 0 or len(hexx) != 6:
+                return hexx
+            r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)
+        r = self._clamp(int(r * scalefactor))
+        g = self._clamp(int(g * scalefactor))
+        b = self._clamp(int(b * scalefactor))
+        return "#%02x%02x%02x" % (r, g, b)
+
+    def _clamp(self, val, minimum=0, maximum=255):  # pragma: no cover
+        if val < minimum:
+            return minimum
+        if val > maximum:
+            return maximum
+        return val
