@@ -54,6 +54,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ##### 0.23.2
 * Removing `bbox_inches="tight"` due to a bug in matplotlib v2.1.0.
+* Adding more colour shortcuts.
 
 ##### 0.23.1
 * Making rainbow colours slightly more visible by darkening the yellow regions.

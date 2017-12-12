@@ -24,7 +24,7 @@ class Colors(object):
         }
         self.aliases = {
             "b": "blue", "r": "red", "g": "green", "k": "black", "m": "magenta", "c": "cyan",
-            "o": "orange", "y": "yellow", "a": "amber",
+            "o": "orange", "y": "yellow", "a": "amber", "p": "purple",
             "e": "grey", "lg": "lgreen", "lb": "lblue"
         }
         self.default_colors = ["blue", "red", "green", "purple", "yellow",
