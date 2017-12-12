@@ -259,12 +259,14 @@ class Plotter(object):
             if isinstance(filename, str):
                 filename = [filename]
             for f in filename:
-                fig.savefig(f, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
-
+                self._save_fig(fig, f, dpi)
         if display:
             plt.show()
 
         return fig
+
+    def _save_fig(self, fig, filename, dpi):
+        fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
 
     def _add_watermark(self, fig, axes, figsize, text, dpi=300, size_scale=1.0):  # pragma: no cover
         # Code based off github repository https://github.com/cpadavis/preliminize
@@ -403,7 +405,7 @@ class Plotter(object):
             if isinstance(filename, str):
                 filename = [filename]
             for f in filename:
-                fig.savefig(f, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+                self._save_fig(fig, f, 300)
         if display:
             plt.show()
         return fig
@@ -516,7 +518,7 @@ class Plotter(object):
             if isinstance(filename, str):
                 filename = [filename]
             for f in filename:
-                fig.savefig(f, bbox_inches="tight", dpi=300, transparent=True, pad_inches=0.05)
+                self._save_fig(fig, f, 300)
         if display:
             plt.show()
         return fig
@@ -693,7 +695,7 @@ class Plotter(object):
             if isinstance(filename, str):
                 filename = [filename]
             for f in filename:
-                fig.savefig(f, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
+                self._save_fig(fig, f, dpi)
         if display:
             plt.show()
 
