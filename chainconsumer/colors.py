@@ -15,7 +15,7 @@ class Colors(object):
             "purple": "#673AB7",
             "cyan": "#4DD0E1",
             "magenta": "#E91E63",
-            "yellow": "#FFEB3B",
+            "yellow": "#F2D026",
             "black": "#333333",
             "grey": "#9E9E9E",
             "orange": "#FB8C00",
