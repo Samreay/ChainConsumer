@@ -1,8 +1,26 @@
 .wy-nav-top {
-    background-color: #DC3535 !important;
+    background-color: #208ae0 !important;
+    background: linear-gradient(to bottom, #1a7ccc 0%,#4ba3ea 100%);
 }
 .wy-side-nav-search {
-    background-color: #DC3535 !important;
+    background-color: #208ae0 !important;
+    background: linear-gradient(to bottom, #1a7ccc 0%,#4ba3ea 100%);
+}
+
+.wy-menu-vertical a {
+    line-height: 1.7;
+    font-size: 100%;
+}
+
+li>strong {
+    font-weight: bold;
+    color: #208ae0;
+    font-size: 1.1em;
+    padding-right: 0.5em;
+}
+
+.field-body ul li {
+    padding-bottom: 0.5em;
 }
 
 .wy-nav-side {
