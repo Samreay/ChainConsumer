@@ -803,7 +803,7 @@ class TestChain(object):
         c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()[0]
 
-        xs = np.linspace(-1, 5, 10000)
+        xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
         cdf = skewnorm.cdf(xs, 5, 1, 1.5)
         x2 = interp1d(cdf, xs, bounds_error=False, fill_value=np.inf)(cdf + summary_area)
@@ -824,7 +824,7 @@ class TestChain(object):
         c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()[0]
 
-        xs = np.linspace(-1, 5, 10000)
+        xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
         cdf = skewnorm.cdf(xs, 5, 1, 1.5)
         x2 = interp1d(cdf, xs, bounds_error=False, fill_value=np.inf)(cdf + summary_area)
@@ -853,7 +853,7 @@ class TestChain(object):
         c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()[0]
 
-        xs = np.linspace(-1, 5, 10000)
+        xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
         cdf = skewnorm.cdf(xs, 5, 1, 1.5)
         xval = interp1d(cdf, xs)([0.5 - 0.5 * summary_area, 0.5 + 0.5 * summary_area])
@@ -870,7 +870,7 @@ class TestChain(object):
         c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()[0]
 
-        xs = np.linspace(-1, 5, 10000)
+        xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
         cdf = skewnorm.cdf(xs, 5, 1, 1.5)
         xval = interp1d(cdf, xs)([0.5 - 0.5 * summary_area, 0.5 + 0.5 * summary_area])
