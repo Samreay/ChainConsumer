@@ -53,7 +53,8 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 ### Update History
 
 ##### 0.24.0
-* Refactoring
+* Refactoring project structure
+* Updating colours for better legibility
 
 ##### 0.23.2
 * Removing `bbox_inches="tight"` due to a bug in matplotlib v2.1.0.
