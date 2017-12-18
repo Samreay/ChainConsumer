@@ -49,7 +49,7 @@ class Colors(object):
     def get_default(self):
         return self.get_formatted(self.default_colors)
 
-    def get_colormap(self, num, scale=0.7):
+    def get_colormap(self, num, scale=0.7):  # pragma: no cover
         color_list = self.get_formatted(cm.rainbow(np.linspace(0, 1, num)))
         scales = scale + (1 - scale) * np.abs(1 - np.linspace(0, 2, num))
         scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales)]
@@ -68,7 +68,7 @@ class Colors(object):
         b = self._clamp(int(b * scalefactor))
         return "#%02x%02x%02x" % (r, g, b)
 
-    def _clamp(self, val, minimum=0, maximum=255):  # pragma: no cover
+    def _clamp(self, val, minimum=0, maximum=255):
         if val < minimum:
             return minimum
         if val > maximum:

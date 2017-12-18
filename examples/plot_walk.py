@@ -23,16 +23,15 @@ giving the top two subplots.
 import numpy as np
 from chainconsumer import ChainConsumer
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    data1 = np.random.randn(100000, 2)
-    data2 = np.random.randn(100000, 2) - 2
-    data1[:, 1] += 1
+np.random.seed(0)
+data1 = np.random.randn(100000, 2)
+data2 = np.random.randn(100000, 2) - 2
+data1[:, 1] += 1
 
-    c = ChainConsumer()
-    c.add_chain(data1, parameters=["$x$", "$y$"])
-    c.add_chain(data2, parameters=["$x$", "$z$"])
-    fig = c.plotter.plot_walks(truth={"$x$": -1, "$y$": 1, "$z$": -2}, convolve=100)
+c = ChainConsumer()
+c.add_chain(data1, parameters=["$x$", "$y$"])
+c.add_chain(data2, parameters=["$x$", "$z$"])
+fig = c.plotter.plot_walks(truth={"$x$": -1, "$y$": 1, "$z$": -2}, convolve=100)
 
-    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

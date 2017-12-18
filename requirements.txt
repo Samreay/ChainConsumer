@@ -2,3 +2,11 @@ numpy
 scipy
 matplotlib
 statsmodels
+pytest
+pytest-cov
+sphinx
+numpydoc
+sphinx_rtd_theme
+codecov
+Pillow
+sphinx_gallery

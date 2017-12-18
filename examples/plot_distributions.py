@@ -14,15 +14,13 @@ import numpy as np
 from numpy.random import random, multivariate_normal
 from chainconsumer import ChainConsumer
 
-if __name__ == "__main__":
+np.random.seed(0)
+means, cov = np.arange(8), random(size=(8, 8))
+data = multivariate_normal(means, np.dot(cov, cov.T), size=1000000)
 
-    np.random.seed(0)
-    means, cov = np.arange(8), random(size=(8, 8))
-    data = multivariate_normal(means, np.dot(cov, cov.T), size=1000000)
+params = ["$x$", "$y$", "$z$", "a", "b", "c", "d", "e"]
+c = ChainConsumer().add_chain(data, parameters=params)
 
-    params = ["$x$", "$y$", "$z$", "a", "b", "c", "d", "e"]
-    c = ChainConsumer().add_chain(data, parameters=params)
+fig = c.plotter.plot_distributions(truth=means)
 
-    fig = c.plotter.plot_distributions(truth=means)
-
-    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

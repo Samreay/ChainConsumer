@@ -21,13 +21,11 @@ import numpy as np
 from chainconsumer import ChainConsumer
 
 
-if __name__ == "__main__":
-    cov = [[1.0, 0.5, 0.2], [0.5, 2.0, 0.3], [0.2, 0.3, 3.0]]
-    data = np.random.multivariate_normal([0, 0, 1], cov, size=1000000)
-    parameters = ["x", "y", "z"]
-    c = ChainConsumer()
-    c.add_chain(data, parameters=parameters)
-    latex_table = c.analysis.get_covariance_table()
-
-    print(latex_table)
+cov = [[1.0, 0.5, 0.2], [0.5, 2.0, 0.3], [0.2, 0.3, 3.0]]
+data = np.random.multivariate_normal([0, 0, 1], cov, size=1000000)
+parameters = ["x", "y", "z"]
+c = ChainConsumer()
+c.add_chain(data, parameters=parameters)
+latex_table = c.analysis.get_covariance_table()
+print(latex_table)
 

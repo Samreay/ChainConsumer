@@ -265,7 +265,7 @@ class Plotter(object):
 
         return fig
 
-    def _save_fig(self, fig, filename, dpi):
+    def _save_fig(self, fig, filename, dpi):  # pragma: no cover
         fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
 
     def _add_watermark(self, fig, axes, figsize, text, dpi=300, size_scale=1.0):  # pragma: no cover
