@@ -27,7 +27,7 @@ class Colors(object):
             "o": "orange", "y": "yellow", "a": "amber", "p": "purple",
             "e": "grey", "lg": "lgreen", "lb": "lblue"
         }
-        self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "green"
+        self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "green",
                                "lblue", "magenta", "lgreen", "brown", "black", "grey"]
 
     def get_formatted(self, list_colors):
