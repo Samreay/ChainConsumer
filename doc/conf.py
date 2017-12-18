@@ -65,7 +65,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-version = re.findall(r"__version__ = \"(.*?)\"", open("../chainconsumer/chain.py").read())[0]
+version = re.findall(r"__version__ = \"(.*?)\"", open("../chainconsumer/chainconsumer.py").read())[0]
 
 project = u'ChainConsumer'
 copyright = u'2016-2017, Samuel Hinton and contributors'

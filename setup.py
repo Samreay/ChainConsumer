@@ -3,7 +3,7 @@ import re
 from setuptools import setup
 
 # Synchronize version from code.
-with open("chainconsumer/chain.py") as f:
+with open("chainconsumer/chainconsumer.py") as f:
     version = re.findall(r"__version__ = \"(.*?)\"", f.read())[0]
 
 setup(name="ChainConsumer",

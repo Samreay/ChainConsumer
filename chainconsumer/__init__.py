@@ -2,6 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-from .chain import ChainConsumer
+from .chainconsumer import ChainConsumer
 
 __all__ = ["ChainConsumer"]

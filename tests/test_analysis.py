@@ -261,7 +261,6 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(data)
         summary = c.analysis.get_summary()
-        print(c._chains[0].shape)
         deviations = np.abs([summary["x"][1] - 5, summary["y"][1] - 3])
         assert np.all(deviations < 0.1)
 
@@ -269,7 +268,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         summary = c.analysis.get_summary()
-        assert list(summary.keys()) == [0]
+        assert list(summary.keys()) == ['0']
 
     def test_squeeze_squeezes(self):
         sum = ChainConsumer().add_chain(self.data).analysis.get_summary()
@@ -314,7 +313,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.analysis.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_index(self):
         np.random.seed(0)
@@ -330,7 +329,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.analysis.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_name(self):
         np.random.seed(0)
@@ -345,7 +344,7 @@ class TestChain(object):
         for i in range(num_walkers):
             stats = list(c.analysis.get_summary()[i].values())[0]
             assert np.abs(stats[1] - means[i]) < 1e-1
-            assert np.abs(c._chains[i][:, 0].mean() - means[i]) < 1e-2
+            assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_fail(self):
         np.random.seed(0)
@@ -567,8 +566,7 @@ class TestChain(object):
         c.add_chain(data, parameters=parameters)
         p, cor = c.analysis.get_correlations()
         assert p[0] == "x"
-        print(cor)
-        assert np.isclose(cor[0, 0], 1)
+        assert np.isclose(cor[0, 0], 1, atol=1e-2)
         assert cor.shape == (1, 1)
 
     def test_correlations_2d(self):
@@ -579,8 +577,8 @@ class TestChain(object):
         p, cor = c.analysis.get_correlations()
         assert p[0] == "x"
         assert p[1] == "y"
-        assert np.isclose(cor[0, 0], 1)
-        assert np.isclose(cor[1, 1], 1)
+        assert np.isclose(cor[0, 0], 1, atol=1e-2)
+        assert np.isclose(cor[1, 1], 1, atol=1e-2)
         assert np.abs(cor[0, 1]) < 0.01
         assert cor.shape == (2, 2)
 
@@ -593,9 +591,9 @@ class TestChain(object):
         assert p[0] == "y"
         assert p[1] == "z"
         assert p[2] == "x"
-        assert np.isclose(cor[0, 0], 1)
-        assert np.isclose(cor[1, 1], 1)
-        assert np.isclose(cor[2, 2], 1)
+        assert np.isclose(cor[0, 0], 1, atol=1e-2)
+        assert np.isclose(cor[1, 1], 1, atol=1e-2)
+        assert np.isclose(cor[2, 2], 1, atol=1e-2)
         assert cor.shape == (3, 3)
         assert np.abs(cor[0, 1] - 0.3) < 0.01
         assert np.abs(cor[0, 2] - 0.5) < 0.01
@@ -723,7 +721,7 @@ class TestChain(object):
     def test_summary_area(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
 
@@ -731,7 +729,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         c.configure(summary_area=0.6827)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
 
@@ -739,7 +737,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         c.configure(summary_area=0.95)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [2, 5, 8]
         assert np.all(np.isclose(summary, expected, atol=0.1))
 
@@ -747,7 +745,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         c.configure(statistics="max_symmetric")
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
         assert np.isclose(summary[2] - summary[1], summary[1] - summary[0])
@@ -757,7 +755,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.6827
         c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(0, 2, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
@@ -775,7 +773,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.95
         c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(0, 2, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
@@ -792,7 +790,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         c.configure(statistics="max_shortest")
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
 
@@ -801,7 +799,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.6827
         c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
@@ -822,7 +820,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.95
         c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
@@ -842,7 +840,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data)
         c.configure(statistics="max_central")
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
 
@@ -851,7 +849,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.6827
         c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)
@@ -868,7 +866,7 @@ class TestChain(object):
         c.add_chain(self.data_skew)
         summary_area = 0.95
         c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
-        summary = c.analysis.get_summary()[0]
+        summary = c.analysis.get_summary()['0']
 
         xs = np.linspace(-1, 5, 1000)
         pdf = skewnorm.pdf(xs, 5, 1, 1.5)

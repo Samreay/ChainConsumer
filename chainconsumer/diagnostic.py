@@ -46,18 +46,20 @@ class Diagnostic(object):
         this ratio deviates from unity by less than the supplied threshold.
         """
         if chain is None:
-            keys = [n if n is not None else i for i, n in enumerate(self.parent._names)]
-            return np.all([self.gelman_rubin(k, threshold=threshold) for k in keys])
+            return np.all([self.gelman_rubin(k, threshold=threshold) for k in range(len(self.parent.chains))])
+
         index = self.parent._get_chain(chain)
-        num_walkers = self.parent._walkers[index]
-        parameters = self.parent._parameters[index]
-        name = self.parent._names[index] if self.parent._names[index] is not None else "%d" % index
-        chain = self.parent._chains[index]
-        chains = np.split(chain, num_walkers)
+        chain = self.parent.chains[index]
+
+        num_walkers = chain.walkers
+        parameters = chain.parameters
+        name = chain.name
+        data = chain.chain
+        chains = np.split(data, num_walkers)
         assert num_walkers > 1, "Cannot run Gelman-Rubin statistic with only one walker"
         m = 1.0 * len(chains)
         n = 1.0 * chains[0].shape[0]
-        all_mean = np.mean(chain, axis=0)
+        all_mean = np.mean(data, axis=0)
         chain_means = np.array([np.mean(c, axis=0) for c in chains])
         chain_var = np.array([np.var(c, axis=0, ddof=1) for c in chains])
         b = n / (m - 1) * ((chain_means - all_mean)**2).sum(axis=0)
@@ -97,15 +99,17 @@ class Diagnostic(object):
 
         """
         if chain is None:
-            keys = [n if n is not None else i for i, n in enumerate(self.parent._names)]
-            return np.all([self.geweke(k, threshold=threshold) for k in keys])
+            return np.all([self.geweke(k, threshold=threshold) for k in range(len(self.parent.chains))])
+
         index = self.parent._get_chain(chain)
-        num_walkers = self.parent._walkers[index]
+        chain = self.parent.chains[index]
+
+        num_walkers = chain.walkers
         assert num_walkers is not None and num_walkers > 0, \
             "You need to specify the number of walkers to use the Geweke diagnostic."
-        name = self.parent._names[index] if self.parent._names[index] is not None else "%d" % index
-        chain = self.parent._chains[index]
-        chains = np.split(chain, num_walkers)
+        name = chain.name
+        data = chain.chain
+        chains = np.split(data, num_walkers)
         n = 1.0 * chains[0].shape[0]
         n_start = int(np.floor(first * n))
         n_end = int(np.floor((1 - last) * n))

@@ -37,19 +37,18 @@ class Comparison(object):
         """
         dics = []
         dics_bool = []
-        for i, p in enumerate(self.parent._posteriors):
+        for i, chain in enumerate(self.parent.chains):
+            p = chain.posterior
             if p is None:
                 dics_bool.append(False)
-                self._logger.warn("You need to set the posterior for chain %s to get the DIC" %
-                                  self.parent._get_chain_name(i))
+                self._logger.warn("You need to set the posterior for chain %s to get the DIC" % chain.name)
             else:
                 dics_bool.append(True)
-                chain = self.parent._chains[i]
-                num_params = chain.shape[1]
-                means = np.array([np.average(chain[:, ii], weights=self.parent._weights[i]) for ii in range(num_params)])
+                num_params = chain.chain.shape[1]
+                means = np.array([np.average(chain.chain[:, ii], weights=chain.weights) for ii in range(num_params)])
                 d = -2 * p
-                d_of_mean = griddata(chain, d, means, method='nearest')[0]
-                mean_d = np.average(d, weights=self.parent._weights[i])
+                d_of_mean = griddata(chain.chain, d, means, method='nearest')[0]
+                mean_d = np.average(d, weights=chain.weights)
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
                 dics.append(dic)
@@ -84,7 +83,8 @@ class Comparison(object):
         """
         bics = []
         bics_bool = []
-        for i, (p, n_data, n_free) in enumerate(zip(self.parent._posteriors, self.parent._num_data, self.parent._num_free)):
+        for i, chain in enumerate(self.parent.chains):
+            p, n_data, n_free = chain.posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
                 bics_bool.append(False)
                 missing = ""
@@ -96,7 +96,7 @@ class Comparison(object):
                     missing += "num_free_params, "
 
                 self._logger.warn("You need to set %s for chain %s to get the BIC" %
-                                  (missing[:-2], self.parent._get_chain_name(i)))
+                                  (missing[:-2], chain.name))
             else:
                 bics_bool.append(True)
                 bics.append(n_free * np.log(n_data) - 2 * np.max(p))
@@ -137,7 +137,8 @@ class Comparison(object):
         """
         aics = []
         aics_bool = []
-        for i, (p, n_data, n_free) in enumerate(zip(self.parent._posteriors, self.parent._num_data, self.parent._num_free)):
+        for i, chain in enumerate(self.parent.chains):
+            p, n_data, n_free = chain.posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
                 aics_bool.append(False)
                 missing = ""
@@ -149,7 +150,7 @@ class Comparison(object):
                     missing += "num_free_params, "
 
                 self._logger.warn("You need to set %s for chain %s to get the AIC" %
-                                  (missing[:-2], self.parent._get_chain_name(i)))
+                                  (missing[:-2], chain.name))
             else:
                 aics_bool.append(True)
                 c_cor = (1.0 * n_free * (n_free + 1) / (n_data - n_free - 1))
@@ -223,15 +224,15 @@ class Comparison(object):
         if aic:
             aics = self.aic()
         else:
-            aics = np.zeros(len(self.parent._chains))
+            aics = np.zeros(len(self.parent.chains))
         if bic:
             bics = self.bic()
         else:
-            bics = np.zeros(len(self.parent._chains))
+            bics = np.zeros(len(self.parent.chains))
         if dic:
             dics = self.dic()
         else:
-            dics = np.zeros(len(self.parent._chains))
+            dics = np.zeros(len(self.parent.chains))
 
         if sort == "bic":
             to_sort = bics
@@ -243,7 +244,7 @@ class Comparison(object):
             raise ValueError("sort %s not recognised, must be dic, aic or dic" % sort)
 
         good = [i for i, t in enumerate(to_sort) if t is not None]
-        names = [self.parent._names[g] for g in good]
+        names = [self.parent.chains[g].name for g in good]
         aics = [aics[g] for g in good]
         bics = [bics[g] for g in good]
         to_sort = bics if sort == "bic" else aics

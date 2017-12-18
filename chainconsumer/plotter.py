@@ -17,7 +17,7 @@ class Plotter(object):
         self.parent = parent
         self._logger = logging.getLogger(__name__)
 
-    def plot(self, figsize="GROW", parameters=None, chains=None, extents=None, filename=None,
+    def plot(self, figsize="GROW", parameters=None, chain_indices=None, extents=None, filename=None,
              display=False, truth=None, legend=None, blind=None, watermark=None):  # pragma: no cover
         """ Plot the chain!
 
@@ -34,7 +34,7 @@ class Plotter(object):
         parameters : list[str]|int, optional
             If set, only creates a plot for those specific parameters (if list). If an
             integer is given, only plots the fist so many parameters.
-        chains : int|str, list[str|int], optional
+        chain_indices : int|str, list[str|int], optional
             Used to specify which chain to show if more than one chain is loaded in.
             Can be an integer, specifying the
             chain index, or a str, specifying the chain name.
@@ -64,12 +64,14 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth,
-                                                                   extents, color_p=True, blind=blind)
-        names = [self.parent._names[i] for i in chains]
+        chain_indices, parameters, truth, extents, blind = self._sanitise(chain_indices, parameters, truth,
+                                                                          extents, color_p=True, blind=blind)
+        chains = [self.parent._chains[i] for i in chain_indices]
+        names = [chain.names for chain in chains]
+        all_names = self.parent._all_names()
 
         if legend is None:
-            legend = len(chains) > 1
+            legend = len(chain_indices) > 1
 
         # If no chains have names, don't plot the legend
         legend = legend and len([n for n in names if n]) > 0
@@ -84,18 +86,19 @@ class Plotter(object):
         for u in unique_color_params:
             umin, umax = np.inf, -np.inf
             for i, cp in enumerate(color_params):
-                if i not in chains:
+                if i not in chain_indices:
                     continue
                 if cp is not None and u == cp:
+                    chain = self.parent.chains[i]
                     try:
-                        data = self.parent._chains[i][:, self.parent._parameters[i].index(cp)]
+                        data = chain.get_data(cp)
                     except ValueError:
                         if cp == "weights":
-                            data = self.parent._weights[i]
+                            data = chain.weights
                         elif cp == "log_weights":
-                            data = np.log(self.parent._weights[i])
+                            data = np.log(chain.weights)
                         elif cp == "posterior":
-                            data = self.parent._posteriors[i]
+                            data = chain.posterior
                     if data is not None:
                         umin = min(umin, data.min())
                         umax = max(umax, data.max())
@@ -121,19 +124,19 @@ class Plotter(object):
         plot_hists = self.parent.config["plot_hists"]
         flip = (len(parameters) == 2 and plot_hists and self.parent.config["flip"])
 
-        fig, axes, params1, params2, extents = self._get_figure(parameters, chains=chains, figsize=figsize, flip=flip,
+        fig, axes, params1, params2, extents = self._get_figure(parameters, chains=chain_indices, figsize=figsize, flip=flip,
                                                                 external_extents=extents, blind=blind)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
         fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
 
         if summary is None:
-            summary = len(parameters) < 5 and len(self.parent._chains) == 1
-        if len(chains) == 1:
+            summary = len(parameters) < 5 and len(self.parent.chains) == 1
+        if len(chain_indices) == 1:
             self._logger.debug("Plotting surfaces for chain of dimension %s" %
-                               (self.parent._chains[chains[0]].shape,))
+                               (self.parent.chains[chain_indices[0]].shape,))
         else:
-            self._logger.debug("Plotting surfaces for %d chains" % len(chains))
+            self._logger.debug("Plotting surfaces for %d chains" % len(chain_indices))
         cbar_done = []
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
@@ -143,16 +146,16 @@ class Plotter(object):
                 do_flip = (flip and i == len(params1) - 1)
                 if plot_hists and i == j:
                     max_val = None
-                    for ii, (chain, weights, parameters, fit, grid) in \
-                            enumerate(zip(self.parent._chains, self.parent._weights, self.parent._parameters,
-                                          fit_values, self.parent._grids)):
-                        if ii not in chains:
+                    for ii, (chain, fit) in enumerate(zip(self.parent.chains, fit_values)):
+                        weights = chain.weights
+                        parameters = chain.parameters
+                        grid = chain.grid
+                        if ii not in chain_indices:
                             continue
                         if p1 not in parameters:
                             continue
-                        index = parameters.index(p1)
                         param_summary = summary and p1 not in blind
-                        m = self._plot_bars(ii, ax, p1, chain[:, index], weights, grid=grid, fit_values=fit[p1],
+                        m = self._plot_bars(ii, ax, p1, chain.get_data(p1), weights, grid=grid, fit_values=fit[p1],
                                             flip=do_flip, summary=param_summary, truth=truth)
                         if max_val is None or m > max_val:
                             max_val = m
@@ -162,21 +165,18 @@ class Plotter(object):
                         ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for ii, (chain, parameters, fit, weights, grid, posterior) in \
-                            enumerate(zip(self.parent._chains, self.parent._parameters, fit_values,
-                                          self.parent._weights, self.parent._grids, self.parent._posteriors)):
-                        if ii not in chains:
+                    for ii, (chain, fit) in enumerate(zip(self.parent.chains, fit_values)):
+                        if ii not in chain_indices:
                             continue
                         if p1 not in parameters or p2 not in parameters:
                             continue
-                        i1 = parameters.index(p1)
-                        i2 = parameters.index(p2)
+
+                        parameters, weights, grid, posterior = chain.parameters, chain.weights, chain.grid, chain.posterior
                         color_data = None
                         extent = None
                         if color_params[ii] is not None:
                             try:
-                                color_index = parameters.index(color_params[ii])
-                                color_data = chain[:, color_index]
+                                color_data = chain.get_data(color_params[ii])
                             except ValueError:
                                 if color_params[ii] == "weights":
                                     color_data = weights
@@ -185,7 +185,7 @@ class Plotter(object):
                                 elif color_params[ii] == "posterior":
                                     color_data = posterior
                             extent = color_param_extents[color_params[ii]]
-                        h = self._plot_contour(ii, ax, chain[:, i2], chain[:, i1], weights, p1, p2,
+                        h = self._plot_contour(ii, ax, chain.get_data(p2), chain.get_data(p1), weights, p1, p2,
                                                grid, truth=truth, color_data=color_data, color_extent=extent)
                         if h is not None and color_params[ii] not in cbar_done:
                             cbar_done.append(color_params[ii])
@@ -224,10 +224,10 @@ class Plotter(object):
             linestyles2 = linestyles if legend_artists else ["-"]*len(linestyles)
 
             artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
-                       for i, (n, c, ls, lw) in enumerate(zip(self.parent._names, colors, linestyles2, linewidths2)) if n is not None and i in chains]
+                       for i, (n, c, ls, lw) in enumerate(zip(all_names, colors, linestyles2, linewidths2)) if n is not None and i in chain_indices]
             leg = ax.legend(artists, names, **legend_kwargs)
             if legend_color_text:
-                cs = [c for i, c in enumerate(colors) if i in chains]
+                cs = [c for i, c in enumerate(colors) if i in chain_indices]
                 for text, c in zip(leg.get_texts(), cs):
                     text.set_weight("medium")
                     text.set_color(c)
@@ -411,7 +411,7 @@ class Plotter(object):
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
-                   filename=None, chains=None, col_wrap=4, figsize=None, blind=None):  # pragma: no cover
+                           filename=None, chain_indices=None, col_wrap=4, figsize=None, blind=None):  # pragma: no cover
         """ Plots the 1D parameter distributions for verification purposes.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -435,7 +435,7 @@ class Plotter(object):
             If set, shows the plot using ``plt.show()``
         filename : str, optional
             If set, saves the figure to the filename
-        chains : int|str, list[str|int], optional
+        chain_indices : int|str, list[str|int], optional
             Used to specify which chain to show if more than one chain is loaded in.
             Can be an integer, specifying the
             chain index, or a str, specifying the chain name.
@@ -453,7 +453,7 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind)
+        chain_indices, parameters, truth, extents, blind = self._sanitise(chain_indices, parameters, truth, extents, blind=blind)
 
         n = len(parameters)
         num_cols = min(n, col_wrap)
@@ -499,15 +499,16 @@ class Plotter(object):
                 _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
                 ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
                 ax.xaxis.set_major_formatter(formatter)
-            ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
+            ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chain_indices))
             max_val = None
-            for index in chains:
-                if p in self.parent._parameters[index]:
-                    chain_row = self.parent._chains[index][:, self.parent._parameters[index].index(p)]
-                    weights = self.parent._weights[index]
+            for index in chain_indices:
+                chain = self.parent._chains[index]
+                if p in chain.parameters[index]:
+                    chain_row = chain.get_data(p)
+                    weights = chain.weights
                     fit = fit_values[index][p]
                     param_summary = summary and p not in blind
-                    m = self._plot_bars(index, ax, p, chain_row, weights, grid=self.parent._grids[index],
+                    m = self._plot_bars(index, ax, p, chain_row, weights, grid=chain.grid,
                                         fit_values=fit, summary=param_summary, truth=truth)
                     if max_val is None or m > max_val:
                         max_val = m
@@ -524,7 +525,7 @@ class Plotter(object):
         return fig
 
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
-                     filename=None, chains=None, figsize=1.0, errorbar=False, include_truth_chain=True,
+                     filename=None, chain_indices=None, figsize=1.0, errorbar=False, include_truth_chain=True,
                      blind=None, watermark=None, extra_parameter_spacing=0.5,
                      vertical_spacing_ratio=1.0):  # pragma: no cover
         """ Plots parameter summaries
@@ -553,7 +554,7 @@ class Plotter(object):
             If set, shows the plot using ``plt.show()``
         filename : str, optional
             If set, saves the figure to the filename
-        chains : int|str, list[str|int], optional
+        chain_indices : int|str, list[str|int], optional
             Used to specify which chain to show if more than one chain is loaded in.
             Can be an integer, specifying the
             chain index, or a str, specifying the chain name.
@@ -581,46 +582,48 @@ class Plotter(object):
 
         """
         wide_extents = not errorbar
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind, wide_extents=wide_extents)
-
+        chain_indices, parameters, truth, extents, blind = self._sanitise(chain_indices, parameters, truth, extents, blind=blind, wide_extents=wide_extents)
+        chains = [self.parent._chains[i] for i in chain_indices]
+        all_names = [c.name for c in self.parent._chains]
         fit_values = self.parent.analysis.get_summary(squeeze=False, parameters=parameters)
 
         # Check if we're using a chain for truth values
         if isinstance(truth, str):
-            assert truth in self.parent._names, "Truth chain %s is not in the list of added chains: %s" % (truth, self.parent._names)
-            index = self.parent._names.index(truth)
+            assert truth in all_names, "Truth chain %s is not in the list of added chains" % (truth, all_names)
+            index = all_names.index(truth)
             truth = fit_values[index]
             if not include_truth_chain:
-                chains.remove(index)
+                chain_indices.remove(index)
 
-        max_model_name = self._get_size_of_texts([self.parent._names[i] for i in chains])
+        max_model_name = self._get_size_of_texts([chain.name for chain in chains])
         max_param = self._get_size_of_texts(parameters)
         fid_dpi = 65  # Seriously I have no idea what value this should be
         param_width = extra_parameter_spacing + max(0.5, max_param / fid_dpi)
         model_width = 0.25 + (max_model_name / fid_dpi)
 
-        gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
+        gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chain_indices)}
 
         top_spacing = 0.3
         bottom_spacing = 0.2
         row_height = (0.5 if not errorbar else 0.3) * vertical_spacing_ratio
         width = param_width * len(parameters) + model_width
-        height = top_spacing + bottom_spacing + row_height * len(chains)
+        height = top_spacing + bottom_spacing + row_height * len(chain_indices)
         top_ratio = 1 - (top_spacing / height)
         bottom_ratio = bottom_spacing / height
 
         figsize = (width * figsize, height * figsize)
-        fig, axes = plt.subplots(nrows=len(chains), ncols=1 + len(parameters), figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
+        fig, axes = plt.subplots(nrows=len(chain_indices), ncols=1 + len(parameters), figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
         label_font_size = self.parent.config["label_font_size"]
         legend_color_text = self.parent.config["legend_color_text"]
 
         max_vals = {}
         for i, row in enumerate(axes):
-            ii = chains[i]
+            ii = chain_indices[i]
+            chain = chains[i]
 
-            cs, ws, ps, = self.parent._chains[ii], self.parent._weights[ii], self.parent._parameters[ii]
-            fvs, gs, ns = fit_values[ii], self.parent._grids[ii], self.parent._names[ii]
+            cs, ws, ps, = chain.chain, chain.weights, chain.parameters
+            fvs, gs, ns = fit_values[ii], chain.grid, chain.name
 
             # First one put name of model
             ax_first = row[0]
@@ -635,9 +638,9 @@ class Plotter(object):
                 # Set up the frames
                 if i > 0:
                     ax.spines['top'].set_visible(False)
-                if i < (len(chains) - 1):
+                if i < (len(chain_indices) - 1):
                     ax.spines['bottom'].set_visible(False)
-                if i < (len(chains) - 1) or p in blind:
+                if i < (len(chain_indices) - 1) or p in blind:
                     ax.set_xticks([])
                 ax.set_yticks([])
                 ax.set_xlim(extents[p])
@@ -735,7 +738,7 @@ class Plotter(object):
         else:
             all_parameters = []
             for i in chains:
-                for p in self.parent._parameters[i]:
+                for p in self.parent._chains[i].parameters:
                     if p not in all_parameters:
                         all_parameters.append(p)
 
@@ -878,16 +881,15 @@ class Plotter(object):
 
     def _get_parameter_extents(self, parameter, chain_indexes, wide_extents=True):
         min_val, max_val = None, None
-        for i, (chain, parameters, w) in enumerate(
-                zip(self.parent._chains, self.parent._parameters, self.parent._weights)):
-            if parameter not in parameters or i not in chain_indexes:
+        for i, chain in enumerate(self.parent.chains):
+            if parameter not in chain.parameters or i not in chain_indexes:
                 continue  # pragma: no cover
-            index = parameters.index(parameter)
-            if self.parent._grids[i]:
-                min_prop = chain[:, index].min()
-                max_prop = chain[:, index].max()
+            data = chain.get_data(parameter)
+            if chain.grid:
+                min_prop = data.min()
+                max_prop = data.max()
             else:
-                min_prop, max_prop = get_extents(chain[:, index], w, plot=True, wide_extents=wide_extents)
+                min_prop, max_prop = get_extents(data, chain.weights, plot=True, wide_extents=wide_extents)
             if min_val is None or min_prop < min_val:
                 min_val = min_prop
             if max_val is None or max_prop > max_val:

@@ -53,8 +53,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 ### Update History
 
 ##### 0.24.0
-* Refactoring project structure
-* Updating colours for better legibility
+* Refactoring project structure.
+* Updating colours for better legibility.
+* Setting `shade=True` automatically if `shade_alpha` is overriden.
 
 ##### 0.23.2
 * Removing `bbox_inches="tight"` due to a bug in matplotlib v2.1.0.

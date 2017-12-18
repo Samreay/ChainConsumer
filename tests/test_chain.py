@@ -1,180 +1,199 @@
 import numpy as np
+from numpy.random import normal
 import pytest
-from scipy.stats import skewnorm
 
-from chainconsumer import ChainConsumer
+from chainconsumer.chain import Chain
 
 
-class TestChain(object):
-    np.random.seed(1)
-    n = 2000000
-    data = np.random.normal(loc=5.0, scale=1.5, size=n)
-    data2 = np.random.normal(loc=3, scale=1.0, size=n)
-    data_combined = np.vstack((data, data2)).T
-    data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
+class TestChain():
+    d = normal(size=(100, 3))
+    bad = d.copy()
+    bad[0, 0] = np.nan
+    p = ["a", "b", "c"]
+    n = "A"
+    w = np.ones(100)
 
-    def test_summary_bad_input1(self):
+    def test_good_chain(self):
+        Chain(self.d, self.p, self.n)
+
+    def test_good_chain_weights1(self):
+        Chain(self.d, self.p, self.n, self.w)
+
+    def test_good_chain_weights2(self):
+        Chain(self.d, self.p, self.n, self.w[None])
+
+    def test_good_chain_weights3(self):
+        Chain(self.d, self.p, self.n, self.w[None].T)
+
+    def test_chain_with_bad_weights1(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=None)
+            Chain(self.d, self.p, self.n, weights=np.ones((50, 1)))
 
-    def test_summary_bad_input2(self):
+    def test_chain_with_bad_weights2(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area="Nope")
+            w = self.w.copy()
+            w[10] = np.inf
+            Chain(self.d, self.p, self.n, weights=w)
 
-    def test_summary_bad_input3(self):
+    def test_chain_with_bad_weights3(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=0)
+            w = self.w.copy()
+            w[10] = np.nan
+            Chain(self.d, self.p, self.n, weights=w)
 
-    def test_summary_bad_input4(self):
+    def test_chain_with_bad_weights4(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=1)
+            Chain(self.d, self.p, self.n, weights=np.ones((50, 2)))
 
-    def test_summary_bad_input5(self):
+    def test_chain_with_bad_name1(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=-0.2)
+            Chain(self.d, self.p, 1)
 
-    def test_remove_last_chain(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data)
-        consumer.add_chain(self.data * 2)
-        consumer.remove_chain()
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_first_chain(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2)
-        consumer.add_chain(self.data)
-        consumer.remove_chain(chain=0)
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_chain_by_name(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2, name="a")
-        consumer.add_chain(self.data, name="b")
-        consumer.remove_chain(chain="a")
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_chain_recompute_params(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
-        consumer.add_chain(self.data, parameters=["p2"], name="b")
-        consumer.remove_chain(chain="a")
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        assert "p2" in summary
-        assert "p1" not in summary
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_multiple_chains(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
-        consumer.add_chain(self.data, parameters=["p2"], name="b")
-        consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
-        consumer.remove_chain(chain=["a", "c"])
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        assert "p2" in summary
-        assert "p1" not in summary
-        assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_multiple_chains2(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
-        consumer.add_chain(self.data, parameters=["p2"], name="b")
-        consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
-        consumer.remove_chain(chain=[0, 2])
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        assert "p2" in summary
-        assert "p1" not in summary
-        assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_multiple_chains3(self):
-        tolerance = 5e-2
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
-        consumer.add_chain(self.data, parameters=["p2"], name="b")
-        consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
-        consumer.remove_chain(chain=["a", 2])
-        consumer.configure()
-        summary = consumer.analysis.get_summary()
-        assert isinstance(summary, dict)
-        assert "p2" in summary
-        assert "p1" not in summary
-        assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
-        expected = np.array([3.5, 5.0, 6.5])
-        diff = np.abs(expected - actual)
-        assert np.all(diff < tolerance)
-
-    def test_remove_multiple_chains_fails(self):
+    def test_chain_with_bad_name2(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).remove_chain(chain=[0, 0])
+            Chain(self.d, self.p, None)
 
-    def test_shade_alpha_algorithm1(self):
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data)
-        consumer.configure()
-        alphas = consumer.config["shade_alpha"]
-        assert len(alphas) == 1
-        assert alphas[0] == 1.0
+    def test_chain_with_bad_params1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p[:-1], self.n)
 
-    def test_shade_alpha_algorithm2(self):
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data)
-        consumer.add_chain(self.data)
-        consumer.configure()
-        alphas = consumer.config["shade_alpha"]
-        assert len(alphas) == 2
-        assert alphas[0] == 1.0 / 2.0
-        assert alphas[1] == 1.0 / 2.0
+    def test_chain_with_bad_params2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, ["A", "B", 0], self.n)
 
-    def test_shade_alpha_algorithm3(self):
-        consumer = ChainConsumer()
-        consumer.add_chain(self.data)
-        consumer.add_chain(self.data)
-        consumer.add_chain(self.data)
-        consumer.configure()
-        alphas = consumer.config["shade_alpha"]
-        assert len(alphas) == 3
-        assert alphas[0] == 1.0 / 3.0
-        assert alphas[1] == 1.0 / 3.0
-        assert alphas[2] == 1.0 / 3.0
+    def test_chain_with_bad_params3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, None, self.n)
+
+    def test_chain_with_bad_chain_initial_success1(self):
+        Chain(self.bad, self.p, self.n)
+
+    def test_chain_with_bad_chain_initial_success2(self):
+        c = Chain(self.bad, self.p, self.n)
+        c.get_data(1)
+
+    def test_chain_with_bad_chain_fails_on_access1(self):
+        c = Chain(self.bad, self.p, self.n)
+        with pytest.raises(AssertionError):
+            c.get_data(0)
+
+    def test_chain_with_bad_chain_fails_on_access2(self):
+        c = Chain(self.bad, self.p, self.n)
+        with pytest.raises(AssertionError):
+            c.get_data(self.p[0])
+
+    def test_good_grid(self):
+        Chain(self.d, self.p, self.n, grid=False)
+
+    def test_bad_grid1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, grid=0)
+
+    def test_bad_grid2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, grid=None)
+
+    def test_bad_grid3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, grid="False")
+
+    def test_good_walkers1(self):
+        Chain(self.d, self.p, self.n, walkers=10)
+
+    def test_good_walkers2(self):
+        Chain(self.d, self.p, self.n, walkers=10.0)
+
+    def test_bad_walkers1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, walkers=2000)
+
+    def test_bad_walkers2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, walkers=11)
+
+    def test_bad_walkers3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, walkers="5")
+
+    def test_bad_walkers4(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, walkers=2.5)
+
+    def test_good_posterior1(self):
+        Chain(self.d, self.p, self.n, posterior=np.ones(100))
+
+    def test_good_posterior2(self):
+        Chain(self.d, self.p, self.n, posterior=np.ones((100, 1)))
+
+    def test_good_posterior3(self):
+        Chain(self.d, self.p, self.n, posterior=np.ones((1, 100)))
+
+    def test_bad_posterior1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, posterior=np.ones((2, 50)))
+
+    def test_bad_posterior2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, posterior=np.ones(50))
+
+    def test_bad_posterior3(self):
+        posterior = np.ones(100)
+        posterior[0] = np.nan
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, posterior=posterior)
+
+    def test_bad_posterior4(self):
+        posterior = np.ones(100)
+        posterior[0] = np.inf
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, posterior=posterior)
+
+    def test_bad_posterior5(self):
+        posterior = np.ones(100)
+        posterior[0] = -np.inf
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, posterior=posterior)
+
+    def test_good_num_free_params1(self):
+        Chain(self.d, self.p, self.n, num_free_params=2)
+
+    def test_good_num_free_params2(self):
+        Chain(self.d, self.p, self.n, num_free_params=2.0)
+
+    def test_bad_num_free_params1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_free_params="2.5")
+
+    def test_bad_num_free_params2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_free_params=np.inf)
+
+    def test_bad_num_free_params3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_free_params=np.nan)
+
+    def test_bad_num_free_params4(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_free_params=-10)
+
+    def test_good_num_eff_data_points1(self):
+        Chain(self.d, self.p, self.n, num_eff_data_points=2)
+
+    def test_good_num_eff_data_points2(self):
+        Chain(self.d, self.p, self.n, num_eff_data_points=20.4)
+
+    def test_bad_num_eff_data_points1(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_eff_data_points="2.5")
+
+    def test_bad_num_eff_data_points2(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_eff_data_points=np.nan)
+
+    def test_bad_num_eff_data_points3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_eff_data_points=np.inf)
+
+    def test_bad_num_eff_data_points3(self):
+        with pytest.raises(AssertionError):
+            Chain(self.d, self.p, self.n, num_eff_data_points=-100)

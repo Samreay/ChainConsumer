@@ -52,10 +52,6 @@ class Analysis(object):
         """
         if parameters is None:
             parameters = self.parent._all_parameters
-        for name in self.parent._names:
-            assert name is not None, \
-                "Generating a LaTeX table requires all chains to have names." \
-                " Ensure you have `name=` in your `add_chain` call"
         for p in parameters:
             assert isinstance(p, str), \
                 "Generating a LaTeX table requires all parameters have labels"
@@ -78,7 +74,7 @@ class Analysis(object):
         if hlines:
             center_text += hline_text + "\t\t"
         if transpose:
-            center_text += " & ".join(["Parameter"] + self.parent._names) + end_text
+            center_text += " & ".join(["Parameter"] + [c.name for c in self.parent.chains]) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
             for p in parameters:
@@ -93,7 +89,7 @@ class Analysis(object):
             center_text += " & ".join(["Model"] + parameters) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
-            for name, chain_res in zip(self.parent._names, fit_values):
+            for name, chain_res in zip([c.name for c in self.parent.chains], fit_values):
                 arr = ["\t\t" + name]
                 for p in parameters:
                     if p in chain_res:
@@ -126,15 +122,13 @@ class Analysis(object):
         """
         find_parameters = parameters
         results = []
-        for ind, (chain, parameters, weights, g) in enumerate(zip(self.parent._chains,
-                                                                  self.parent._parameters,
-                                                                  self.parent._weights,
-                                                                  self.parent._grids)):
+        for ind, c in enumerate(self.parent.chains):
+            parameters, weights, g = c.parameters, c.weights, c.grid
             res = {}
-            for i, p in enumerate(parameters):
+            for p in parameters:
                 if find_parameters is not None and p not in find_parameters:
                     continue
-                summary = self._get_parameter_summary(chain[:, i], weights, p, ind, grid=g)
+                summary = self._get_parameter_summary(c.get_data(p), weights, p, ind, grid=g)
                 res[p] = summary
             results.append(res)
         if squeeze and len(results) == 1:
@@ -166,14 +160,10 @@ class Analysis(object):
                 The first index giving a list of parameter names, the second index being the
                 2D correlation matrix.
         """
-        chain = self.parent._get_chain(chain)
-        if parameters is None:
-            parameters = self.parent._parameters[chain]
-
-        indexes = [self.parent._parameters[chain].index(p) for p in parameters]
-        data = self.parent._chains[chain][:, indexes]
-        correlations = np.atleast_2d(np.corrcoef(data, rowvar=0))
-
+        parameters, cov = self.get_covariance(chain=chain, parameters=parameters)
+        diag = np.sqrt(np.diag(cov))
+        divisor = np.sqrt(diag[None, :] * diag[:, None])
+        correlations = cov / divisor
         return parameters, correlations
 
     def get_covariance(self, chain=0, parameters=None):
@@ -194,15 +184,15 @@ class Analysis(object):
                 The first index giving a list of parameter names, the second index being the
                 2D covariance matrix.
         """
-        chain = self.parent._get_chain(chain)
+        index = self.parent._get_chain(chain)
+        chain = self.parent.chains[index]
         if parameters is None:
-            parameters = self.parent._parameters[chain]
+            parameters = chain.parameters
 
-        indexes = [self.parent._parameters[chain].index(p) for p in parameters]
-        data = self.parent._chains[chain][:, indexes]
-        correlations = np.atleast_2d(np.cov(data, aweights=self.parent._weights[chain], rowvar=False))
+        data = chain.get_data(parameters)
+        cov = np.atleast_2d(np.cov(data, aweights=chain.weights, rowvar=False))
 
-        return parameters, correlations
+        return parameters, cov
 
     def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations",
                               label="tab:parameter_correlations"):
