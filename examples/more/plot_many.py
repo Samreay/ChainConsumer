@@ -16,7 +16,7 @@ from numpy.random import normal, multivariate_normal, uniform
 from chainconsumer import ChainConsumer
 
 np.random.seed(1)
-n = 100000
+n = 1000000
 data = multivariate_normal([0.4, 1], [[0.01, -0.003], [-0.003, 0.001]], size=n)
 data = np.hstack((data, (67 + 10 * data[:, 0] - data[:, 1] ** 2)[:, None]))
 data2 = np.vstack((uniform(-0.1, 1.1, n), normal(1.2, 0.1, n))).T
