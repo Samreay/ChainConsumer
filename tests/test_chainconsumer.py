@@ -13,6 +13,17 @@ class TestChain(object):
     data_combined = np.vstack((data, data2)).T
     data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
 
+    def test_get_chain_name(self):
+        c = ChainConsumer()
+        c.add_chain(self.data, name="A")
+        assert c._get_chain_name(0) == "A"
+
+    def test_get_names(self):
+        c = ChainConsumer()
+        c.add_chain(self.data, name="A")
+        c.add_chain(self.data, name="B")
+        assert c._all_names() == ["A", "B"]
+
     def test_summary_bad_input1(self):
         with pytest.raises(AssertionError):
             ChainConsumer().add_chain(self.data).configure(summary_area=None)
