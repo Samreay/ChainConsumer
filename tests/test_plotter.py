@@ -13,7 +13,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data, parameters=["x"])
         c.configure()
-        minv, maxv = c.plotter._get_parameter_extents("x", [0])
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
 
@@ -22,7 +22,7 @@ class TestChain(object):
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure()
-        minv, maxv = c.plotter._get_parameter_extents("x", [0, 1])
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
 
@@ -31,7 +31,7 @@ class TestChain(object):
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["x"])
         c.configure()
-        minv, maxv = c.plotter._get_parameter_extents("x", [0, 1])
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
         assert np.isclose(maxv, (10.0 + 1.5 * 3.1), atol=0.1)
 
@@ -40,7 +40,7 @@ class TestChain(object):
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure()
-        minv, maxv = c.plotter._get_parameter_extents("x", [0])
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains[:1])
         assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
 
@@ -53,6 +53,6 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(chain, parameters=['x', 'y'], weights=pdf, grid=True)
         c.configure()
-        minv, maxv = c.plotter._get_parameter_extents("x", [0])
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
         assert np.isclose(minv, -3, atol=0.001)
         assert np.isclose(maxv, 3, atol=0.001)

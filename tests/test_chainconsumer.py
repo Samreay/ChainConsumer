@@ -164,19 +164,18 @@ class TestChain(object):
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         consumer.configure()
-        alphas = consumer.config["shade_alpha"]
-        assert len(alphas) == 1
-        assert alphas[0] == 1.0
+        alpha = consumer.chains[0].config["shade_alpha"]
+        assert alpha == 1.0
 
     def test_shade_alpha_algorithm2(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
         consumer.configure()
-        alphas = consumer.config["shade_alpha"]
-        assert len(alphas) == 2
-        assert alphas[0] == 1.0 / 2.0
-        assert alphas[1] == 1.0 / 2.0
+        alpha0 = consumer.chains[0].config["shade_alpha"]
+        alpha1 = consumer.chains[0].config["shade_alpha"]
+        assert alpha0 == 1.0 / 2.0
+        assert alpha1 == 1.0 / 2.0
 
     def test_shade_alpha_algorithm3(self):
         consumer = ChainConsumer()
@@ -184,7 +183,7 @@ class TestChain(object):
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
         consumer.configure()
-        alphas = consumer.config["shade_alpha"]
+        alphas = [c.config["shade_alpha"] for c in consumer.chains]
         assert len(alphas) == 3
         assert alphas[0] == 1.0 / 3.0
         assert alphas[1] == 1.0 / 3.0

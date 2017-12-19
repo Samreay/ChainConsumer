@@ -44,6 +44,8 @@ class ChainConsumer(object):
         self.config_truth = {}
         self._configured = False
         self._configured_truth = False
+        for c in self.chains:
+            c.reset_config()
 
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
                   grid=False, num_free_params=None, num_eff_data_points=None):
@@ -552,32 +554,36 @@ class ChainConsumer(object):
         assert summary_area < 1, "summary_area must be less than unity, instead is %s!" % summary_area
 
         # List options
-        self.config["shade"] = shade[:num_chains]
-        self.config["shade_alpha"] = shade_alpha[:num_chains]
-        self.config["shade_gradient"] = shade_gradient
-        self.config["bar_shade"] = bar_shade[:len(self.chains)]
-        self.config["bins"] = bins
-        self.config["kde"] = kde
-        self.config["cloud"] = cloud
-        self.config["linewidths"] = linewidths
-        self.config["linestyles"] = linestyles
-        self.config["colors"] = colors
-        self.config["smooth"] = smooth
-        self.config["color_params"] = color_params
-        self.config["plot_color_params"] = plot_color_params
-        self.config["cmaps"] = cmaps
-        self.config["num_cloud"] = num_cloud
+        for i, c in enumerate(self.chains):
+            try:
+                c.config["shade"] = shade[i]
+                c.config["shade_alpha"] = shade_alpha[i]
+                c.config["shade_gradient"] = shade_gradient[i]
+                c.config["bar_shade"] = bar_shade[i]
+                c.config["bins"] = bins[i]
+                c.config["kde"] = kde[i]
+                c.config["cloud"] = cloud[i]
+                c.config["linewidths"] = linewidths[i]
+                c.config["linestyles"] = linestyles[i]
+                c.config["colors"] = colors[i]
+                c.config["smooth"] = smooth[i]
+                c.config["color_params"] = color_params[i]
+                c.config["plot_color_params"] = plot_color_params[i]
+                c.config["cmaps"] = cmaps[i]
+                c.config["num_cloud"] = num_cloud[i]
+                c.config["statistics"] = statistics[i]
 
-        # Verify we have enough options entered.
-        for key in self.config.keys():
-            val = self.config[key]
-            assert len(val) >= num_chains, \
-                "Only have %d options for %s, but have %d chains!" % (len(val), key, num_chains)
+                c.config["summary_area"] = summary_area
+
+            except IndentationError as e:
+                print("Index error when assigning chain properties, make sure you "
+                      "have enough properties set for the number of chains you have loaded! "
+                      "See the stack trace for which config item has the wrong number of entries.")
+                raise e
 
         # Non list options
         self.config["sigma2d"] = sigma2d
         self.config["sigmas"] = sigmas
-        self.config["statistics"] = statistics
         self.config["summary"] = summary
         self.config["flip"] = flip
         self.config["serif"] = serif
@@ -595,7 +601,6 @@ class ChainConsumer(object):
         self.config["legend_artists"] = legend_artists
         self.config["legend_color_text"] = legend_color_text
         self.config["watermark_text_kwargs"] = watermark_text_kwargs_default
-        self.config["summary_area"] = summary_area
 
         self._configured = True
         return self

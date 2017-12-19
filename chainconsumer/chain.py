@@ -25,6 +25,8 @@ class Chain(object):
         self._logger = logging.getLevelName(self.__class__.__name__)
 
         self.summaries = {}
+        self.config = {}
+
         self.validate_chain()
         self.validated_params = set()
 
@@ -64,6 +66,31 @@ class Chain(object):
                 "Chain %s has num_eff_data_points which is not an a number, its %s" % (self.name, type(self.num_eff_data_points))
             assert np.isfinite(self.num_eff_data_points), "num_eff_data_points is either infinite or NaN"
             assert self.num_eff_data_points > 0, "num_eff_data_points must be positive"
+
+    def reset_config(self):
+        self.config = {}
+        self.summaries = {}
+        self.validated_params = set()
+
+    def get_summary(self, param, callback):
+        if param in self.summaries:
+            return self.summaries[param]
+        result = callback(self, param)
+        self.summaries[param] = result
+        return result
+
+    def get_color_data(self):
+        color_param = self.config.get("color_params")
+        color_data = None
+        if color_param in self.parameters:
+            color_data = self.get_data(color_param)
+        elif color_param == "weights":
+            color_data = self.weights
+        elif color_param == "log_weights":
+            color_data = np.log(self.weights)
+        elif color_param == "posterior":
+            color_data = self.posterior
+        return color_data
 
     def get_data(self, params):
         if not isinstance(params, list):

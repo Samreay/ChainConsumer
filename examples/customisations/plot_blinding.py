@@ -18,7 +18,7 @@ np.random.seed(0)
 data = multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
-c.configure(colors=["#00ef7b"])
+c.configure(colors=["g"])
 fig = c.plotter.plot(blind="$y$")
 
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

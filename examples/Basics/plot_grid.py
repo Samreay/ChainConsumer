@@ -18,6 +18,7 @@ the order of the parameters is not preserved in the dictionary.
 """
 import numpy as np
 from chainconsumer import ChainConsumer
+from scipy.stats import multivariate_normal
 
 
 x, y = np.linspace(-3, 3, 50), np.linspace(-7, 7, 100)
@@ -34,7 +35,8 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 
 # Turning 2D data to flat data.
 xs, ys = xx.flatten(), yy.flatten()
-pdf_flat = pdf.flatten()
+coords = np.vstack((xs, ys)).T
+pdf_flat = multivariate_normal.pdf(coords, mean=[0.0, 0.0], cov=[[1.0, 0.7], [0.7, 3.5]])
 c = ChainConsumer()
 c.add_chain([xs, ys], parameters=["$x$", "$y$"], weights=pdf_flat, grid=True)
 c.configure(smooth=1)  # Notice how smoothing changes the results!
