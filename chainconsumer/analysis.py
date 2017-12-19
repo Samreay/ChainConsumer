@@ -3,8 +3,8 @@ import numpy as np
 from scipy.integrate import simps
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
-from chainconsumer.helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
-from chainconsumer.kde import MegKDE
+from .helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
+from .kde import MegKDE
 
 
 class Analysis(object):

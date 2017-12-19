@@ -2,7 +2,7 @@ from scipy.interpolate import griddata
 import numpy as np
 import logging
 
-from chainconsumer.helpers import get_latex_table_frame
+from .helpers import get_latex_table_frame
 
 
 class Comparison(object):

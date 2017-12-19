@@ -8,8 +8,8 @@ from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 from scipy.stats import norm
 
-from chainconsumer.helpers import get_extents, get_smoothed_bins, get_grid_bins
-from chainconsumer.kde import MegKDE
+from .helpers import get_extents, get_smoothed_bins, get_grid_bins
+from .kde import MegKDE
 
 
 class Plotter(object):
