@@ -22,13 +22,12 @@ from numpy.random import multivariate_normal
 from chainconsumer import ChainConsumer
 
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    data = multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
-    data[:, 0] += np.linspace(0, 1, data.shape[0])
+np.random.seed(0)
+data = multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+data[:, 0] += np.linspace(0, 1, data.shape[0])
 
-    c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"], walkers=5)
-    c2 = c.divide_chain()
-    fig = c2.plotter.plot()
+c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"], walkers=5)
+c2 = c.divide_chain()
+fig = c2.plotter.plot()
 
-    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

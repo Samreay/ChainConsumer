@@ -15,13 +15,12 @@ ticks to the axis in this example. Also, I change the colour to red, just for fu
 import numpy as np
 from chainconsumer import ChainConsumer
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    data = np.random.multivariate_normal([1.5, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
-    data[:, 0] = np.abs(data[:, 0])
+np.random.seed(0)
+data = np.random.multivariate_normal([1.5, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+data[:, 0] = np.abs(data[:, 0])
 
-    c = ChainConsumer().add_chain(data, parameters=["$x_1$", "$x_2$"])
-    c.configure(flip=False, max_ticks=10, colors="#D32F2F")
-    fig = c.plotter.plot(figsize=(6, 6))
+c = ChainConsumer().add_chain(data, parameters=["$x_1$", "$x_2$"])
+c.configure(flip=False, max_ticks=10, colors="#D32F2F")
+fig = c.plotter.plot(figsize=(6, 6))
 
-    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

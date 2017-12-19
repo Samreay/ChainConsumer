@@ -15,11 +15,11 @@ from chainconsumer import ChainConsumer
 if __name__ == "__main__":
     np.random.seed(0)
     cov = random(size=(3, 3)) + np.identity(3)
-    data = multivariate_normal(normal(size=3), 0.5 * (cov + cov.T), size=100000)
+    data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
     cov = random(size=(3, 3)) + np.identity(3)
-    data2 = multivariate_normal(normal(size=3), 0.5 * (cov + cov.T), size=100000)
+    data2 = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
     cov = random(size=(3, 3)) + np.identity(3)
-    data3 = multivariate_normal(normal(size=3), 0.5 * (cov + cov.T), size=100000)
+    data3 = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 
     # If the parameters are the same between chains, you can just pass it the
     # first time, and they will become the default parameters.

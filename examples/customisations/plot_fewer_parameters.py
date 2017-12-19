@@ -17,12 +17,11 @@ from numpy.random import normal, random, multivariate_normal
 from chainconsumer import ChainConsumer
 
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    cov = random(size=(6, 6))
-    data = multivariate_normal(normal(size=6), 0.5 * (cov + cov.T), size=200000)
-    parameters = ["$x$", "$y$", "$z$", "$a$", "$b$", "$c$"]
-    c = ChainConsumer().add_chain(data, parameters=parameters).configure(colors="#388E3C")
-    fig = c.plotter.plot(parameters=parameters[:4], figsize="page")
+np.random.seed(0)
+cov = random(size=(6, 6))
+data = multivariate_normal(normal(size=6), np.dot(cov, cov.T), size=200000)
+parameters = ["$x$", "$y$", "$z$", "$a$", "$b$", "$c$"]
+c = ChainConsumer().add_chain(data, parameters=parameters).configure(colors="#388E3C")
+fig = c.plotter.plot(parameters=parameters[:4], figsize="page")
 
-    fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -20,7 +20,7 @@ from chainconsumer import ChainConsumer
 
 np.random.seed(1)
 cov = normal(size=(3, 3))
-data = multivariate_normal(normal(size=3), 0.5 * (cov + cov.T), size=100000)
+data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
 c.configure(color_params="$z$")

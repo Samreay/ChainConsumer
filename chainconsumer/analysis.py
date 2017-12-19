@@ -56,7 +56,7 @@ class Analysis(object):
             assert isinstance(p, str), \
                 "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
-        num_chains = len(self.parent._chains)
+        num_chains = len(self.parent.chains)
         fit_values = self.get_summary(squeeze=False)
         if label is None:
             label = ""

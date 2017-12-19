@@ -14,7 +14,7 @@ from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = random(size=(3, 3))
-data = multivariate_normal(normal(size=3), cov * cov.T, size=200000)
+data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=200000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
 c.configure(spacing=0.0)

@@ -24,6 +24,6 @@ c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain A")
 c.add_chain(data2, name="Chain B")
 c.add_chain(data3, name="Chain C")
-fig = c.plotter.plot(chain_indices=["Chain A", "Chain C"])
+fig = c.plotter.plot(chains=["Chain A", "Chain C"])
 
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

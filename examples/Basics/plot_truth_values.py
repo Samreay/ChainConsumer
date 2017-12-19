@@ -18,7 +18,7 @@ from chainconsumer import ChainConsumer
 np.random.seed(2)
 cov = 0.2 * normal(size=(3, 3)) + np.identity(3)
 truth = normal(size=3)
-data = multivariate_normal(truth, 0.5 * (cov + cov.T), size=100000)
+data = multivariate_normal(truth, np.dot(cov, cov.T), size=100000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", r"$\beta$"])
 fig = c.plotter.plot(truth=truth)
