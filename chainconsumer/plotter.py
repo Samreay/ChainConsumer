@@ -896,8 +896,11 @@ class Plotter(object):
 
         cf = self.parent.color_finder
         colours = self._scale_colours(colour, len(levels), shade_gradient)
-        colours2 = [cf.scale_colour(colours[0], 0.7)] + \
-                   [cf.scale_colour(c, 0.8) for c in colours[:-1]]
+        sub = max(0.1, 1 - 0.2 * shade_gradient)
+        if shade:
+            sub *= 0.9
+        colours2 = [cf.scale_colour(colours[0], sub)] + \
+                   [cf.scale_colour(c, sub) for c in colours[:-1]]
 
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
@@ -934,7 +937,7 @@ class Plotter(object):
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
                         alpha=shade_alpha)
         con = ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2,
-                   linestyles=linestyle, linewidths=linewidth)
+                         linestyles=linestyle, linewidths=linewidth)
 
         if contour_labels is not None:
             if contour_labels == "sigma":

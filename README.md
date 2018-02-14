@@ -52,6 +52,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.24.1
+* Changing default colour order.
+* Improving behaviour of `shade_gradient`.
+
 ##### 0.24.0
 * Refactoring project structure.
 * Updating colours for better legibility.
