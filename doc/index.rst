@@ -73,17 +73,17 @@ Citing
 
 You can cite ChainConsumer using the following BibTeX::
 
-   @article{Hinton2016,
-     doi = {10.21105/joss.00045},
-     url = {http://dx.doi.org/10.21105/joss.00045},
-     year  = {2016},
-     month = {aug},
-     publisher = {The Open Journal},
-     volume = {1},
-     number = {4},
-     author = {Samuel Hinton},
-     title = {{ChainConsumer}},
-     journal = {{JOSS}}
+   @ARTICLE{Hinton2016,
+      author = {{Hinton}, S.~R.},
+       title = "{ChainConsumer}",
+     journal = {The Journal of Open Source Software},
+        year = 2016,
+       month = aug,
+      volume = 1,
+         eid = {00045},
+       pages = {00045},
+         doi = {10.21105/joss.00045},
+      adsurl = {http://adsabs.harvard.edu/abs/2016JOSS....1...45H},
    }
 
 Contributing
