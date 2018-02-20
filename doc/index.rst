@@ -52,13 +52,12 @@ Contents
 Installation
 ------------
 
-ChainConsumer requires the following dependencies, along with a LaTeX installation and `dvipng` (a maptlotlib dependency):
+ChainConsumer requires the following dependencies, along with a LaTeX installation and `dvipng` (a maptlotlib dependency)::
 
     numpy
     scipy
     matplotlib
     statsmodels
-
 
 ChainConsumer can be installed as follows::
 
