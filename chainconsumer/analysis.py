@@ -170,7 +170,7 @@ class Analysis(object):
         """
         parameters, cov = self.get_covariance(chain=chain, parameters=parameters)
         diag = np.sqrt(np.diag(cov))
-        divisor = np.sqrt(diag[None, :] * diag[:, None])
+        divisor = diag[None, :] * diag[:, None]
         correlations = cov / divisor
         return parameters, correlations
 

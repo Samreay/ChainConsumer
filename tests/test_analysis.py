@@ -599,8 +599,21 @@ class TestChain(object):
         assert np.abs(cor[0, 2] - 0.5) < 0.01
         assert np.abs(cor[1, 2] - 0.2) < 0.01
 
+    def test_correlations_2d_non_unitary(self):
+        data = np.random.multivariate_normal([0, 0], [[4, 0], [0, 4]], size=100000)
+        parameters = ["x", "y"]
+        c = ChainConsumer()
+        c.add_chain(data, parameters=parameters)
+        p, cor = c.analysis.get_correlations()
+        assert p[0] == "x"
+        assert p[1] == "y"
+        assert np.isclose(cor[0, 0], 1, atol=1e-2)
+        assert np.isclose(cor[1, 1], 1, atol=1e-2)
+        assert np.abs(cor[0, 1]) < 0.01
+        assert cor.shape == (2, 2)
+
     def test_correlation_latex_table(self):
-        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=100000)
+        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=1000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)

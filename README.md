@@ -52,6 +52,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.24.2
+* Fixing bug in `get_correlations`.
+
 ##### 0.24.1
 * Changing default colour order.
 * Improving behaviour of `shade_gradient`.
