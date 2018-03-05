@@ -18,7 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.24.2"
+    __version__ = "0.24.3"
 
     def __init__(self):
         logging.basicConfig()

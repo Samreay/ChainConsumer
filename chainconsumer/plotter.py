@@ -942,7 +942,7 @@ class Plotter(object):
         if contour_labels is not None:
             if contour_labels == "sigma":
                 sigmas = self.parent.config["sigmas"]
-                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(con.levels, sigmas)])
+                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(con.levels, sigmas[1:])])
             else:
                 fmt = dict([(l, '%d\\%%' % (100 * l)) for l in con.levels])
             ax.clabel(con, con.levels, inline=True, fmt=fmt, fontsize=self.parent.config["contour_label_font_size"])
