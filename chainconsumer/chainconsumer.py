@@ -226,8 +226,7 @@ class ChainConsumer(object):
             :math:`\sigma` represents 39% and 86% confidence levels respectively.
         sigmas : np.array, optional
             The :math:`\sigma` contour levels to plot. Defaults to [0, 1, 2, 3] for a single chain
-            and [0, 1, 2] for multiple chains. The leading zero is required if you don't want
-            your surfaces to have a hole in them.
+            and [0, 1, 2] for multiple chains.
         serif : bool, optional
             Whether to display ticks and labels with serif font.
         summary : bool, optional

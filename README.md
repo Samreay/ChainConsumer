@@ -54,6 +54,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ##### 0.24.3
 * Fixing bug in label rendering for contour sigma labels.
+* Improving parsing of `sigma` in `configure`, such that you don't need a leading zero.
 
 ##### 0.24.2
 * Fixing bug in `get_correlations`.
