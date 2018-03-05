@@ -508,6 +508,8 @@ class ChainConsumer(object):
                 sigmas = np.array([0, 1, 2, 3])
             else:
                 sigmas = np.array([0, 1, 2])
+        if sigmas[0] != 0:
+            sigmas = np.concatenate(([0], sigmas))
         sigmas = np.sort(sigmas)
 
         if contour_labels is not None:
