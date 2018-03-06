@@ -4,7 +4,8 @@ import numpy as np
 
 class Chain(object):
     def __init__(self, chain, parameters, name, weights=None, posterior=None, walkers=None,
-                 grid=False, num_free_params=None, num_eff_data_points=None):
+                 grid=False, num_free_params=None, num_eff_data_points=None, color=None, linewidth=None,
+                 linestyle=None, kde=None, shade_alpha=None):
         self.chain = chain
         self.parameters = parameters
         self.name = name
@@ -23,6 +24,13 @@ class Chain(object):
         self.num_free_params = num_free_params
         self.num_eff_data_points = num_eff_data_points
         self._logger = logging.getLevelName(self.__class__.__name__)
+
+        # Storing config overrides
+        self.color = color
+        self.linewidth = linewidth
+        self.linestyle = linestyle
+        self.kde = kde
+        self.shade_alpha = shade_alpha
 
         self.summaries = {}
         self.config = {}

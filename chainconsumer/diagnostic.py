@@ -1,7 +1,6 @@
 import numpy as np
 import logging
 from scipy.stats import normaltest
-from statsmodels.regression.linear_model import yule_walker
 
 
 class Diagnostic(object):
@@ -129,5 +128,6 @@ class Diagnostic(object):
     # Method of estimating spectral density following PyMC.
     # See https://github.com/pymc-devs/pymc/blob/master/pymc/diagnostics.py
     def _spec(self, x, order=2):
+        from statsmodels.regression.linear_model import yule_walker
         beta, sigma = yule_walker(x, order)
         return sigma ** 2 / (1. - np.sum(beta)) ** 2

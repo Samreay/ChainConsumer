@@ -22,7 +22,7 @@ np.random.seed(0)
 data = multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
-c.configure(flip=False, sigma2d=True, sigmas=[1, 2])  # The default case, so you don't need to specify sigma2d
+c.configure(flip=False, sigma2d=False, sigmas=[1, 2])  # The default case, so you don't need to specify sigma2d
 fig = c.plotter.plot()
 
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
@@ -32,7 +32,7 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 # The contours shown below now show the 68% and 95% confidence regions.
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
-c.configure(flip=False, sigma2d=False, sigmas=[1, 2])  # The default case, so you don't need to specify sigma2d
+c.configure(flip=False, sigma2d=True, sigmas=[1, 2])
 fig = c.plotter.plot()
 
 

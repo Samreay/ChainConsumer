@@ -80,6 +80,17 @@ class TestChain(object):
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
+    def test_summary_specific(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data, name="A")
+        consumer.configure(bins=0.8)
+        summary = consumer.analysis.get_summary(chains="A")
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])

@@ -52,6 +52,12 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.25.0
+* Changing default `sigma2d` to `False`. *May chance how your plots are displayed*.
+* Allowing format specification when adding chains.
+* Making `yule_walker` (and thus all of `statsmodels`) a conditional import.
+* Updating minimum version of requirements to reduce issues with install.
+
 ##### 0.24.3
 * Fixing bug in label rendering for contour sigma labels.
 * Improving parsing of `sigma` in `configure`, such that you don't need a leading zero.

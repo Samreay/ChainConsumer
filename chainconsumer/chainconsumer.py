@@ -18,10 +18,10 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.24.3"
+    __version__ = "0.25.0"
 
     def __init__(self):
-        logging.basicConfig()
+        logging.basicConfig(level=logging.INFO, fmt="[%15(filename)s:%(lineno)d][%15(funcName)s][%(levelname)8s] | %(message)s")
         self._logger = logging.getLogger(__name__)
         self.color_finder = Colors()
         self._all_colours = self.color_finder.get_default()
@@ -48,7 +48,8 @@ class ChainConsumer(object):
             c.reset_config()
 
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
-                  grid=False, num_free_params=None, num_eff_data_points=None):
+                  grid=False, num_free_params=None, num_eff_data_points=None, color=None, linewidth=None,
+                  linestyle=None, kde=None, shade_alpha=None):
         """ Add a chain to the consumer.
 
         Parameters
@@ -85,8 +86,18 @@ class ChainConsumer(object):
             for plotting, but required if loading in multiple chains to perform model comparison.
         num_free_params : int, optional
             The number of degrees of freedom in your model. Not required for plotting, but required if
-            loading in multiple chains to perform model comparison.
-
+            loading in multiple chains to perform model comparison.    
+        color : str(hex), optional
+            Provide a colour for the chain. Can be used instead of calling `configure` for convenience.
+        linestyle : str, optional
+            Provide a line style to plot the contour. Can be used instead of calling `configure` for convenience.
+        linewidth : float, optional
+            Provide a line width to plot the contours. Can be used instead of calling `configure` for convenience.
+        kde : bool|float, optional
+            Set the `kde` value for this specific chain. Can be used instead of calling `configure` for convenience.
+        shade_alpha : float, optional
+            Filled contour alpha value. Can be used instead of calling `configure` for convenience.
+            
         Returns
         -------
         ChainConsumer
@@ -148,8 +159,15 @@ class ChainConsumer(object):
             if p not in self._all_parameters:
                 self._all_parameters.append(p)
 
+        # Sorry, no KDE for you on a grid.
+        if grid:
+            kde = None
+        if color is not None:
+            color = self.color_finder.get_formatted([color])[0]
+
         c = Chain(chain, parameters, name, weights=weights, posterior=posterior, walkers=walkers,
-                  grid=grid, num_free_params=num_free_params, num_eff_data_points=num_eff_data_points)
+                  grid=grid, num_free_params=num_free_params, num_eff_data_points=num_eff_data_points,
+                  color=color, linewidth=linewidth, linestyle=linestyle, kde=kde, shade_alpha=shade_alpha)
         self.chains.append(c)
         self._init_params()
         return self
@@ -187,7 +205,7 @@ class ChainConsumer(object):
         return self
 
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
-                  serif=True, sigma2d=True, sigmas=None, summary=None, bins=None, rainbow=None,
+                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
                   num_cloud=None, color_params=None, plot_color_params=False, cmaps=None, usetex=True,
@@ -221,7 +239,7 @@ class ChainConsumer(object):
             Set to false if, when plotting only two parameters, you do not want it to
             rotate the histogram so that it is horizontal.
         sigma2d: bool, optional
-            Defaults to `True`. When `False`, uses :math:`\sigma` levels for 1D Gaussians - ie confidence
+            Defaults to `False`. When `False`, uses :math:`\sigma` levels for 1D Gaussians - ie confidence
             levels of 68% and 95%. When `True`, uses the confidence levels for 2D Gaussians, where 1 and 2
             :math:`\sigma` represents 39% and 86% confidence levels respectively.
         sigmas : np.array, optional
@@ -354,6 +372,9 @@ class ChainConsumer(object):
         if isinstance(kde, bool) or isinstance(kde, float):
             kde = [False if c.grid else kde for c in self.chains]
 
+        kde_override = [c.kde for c in self.chains]
+        kde = [c2 if c2 is not None else c1 for c1, c2 in zip(kde, kde_override)]
+
         # Determine bins
         if bins is None:
             bins = get_bins(self.chains)
@@ -429,6 +450,8 @@ class ChainConsumer(object):
         elif isinstance(colors, str):
                 colors = [colors] * len(self.chains)
         colors = self.color_finder.get_formatted(colors)
+        colors_override = [c.color for c in self.chains]
+        colors = [c2 if c2 is not None else c1 for c1, c2 in zip(colors, colors_override)]
 
         # Determine linestyles
         if linestyles is None:
@@ -442,12 +465,17 @@ class ChainConsumer(object):
                     i = (i + 1) % len(self._linestyles)
         elif isinstance(linestyles, str):
             linestyles = [linestyles] * len(self.chains)
+        linestyles_override = [c.linestyle for c in self.chains]
+        linestyles = [c2 if c2 is not None else c1 for c1, c2 in zip(linestyles, linestyles_override)]
+
 
         # Determine linewidths
         if linewidths is None:
             linewidths = [1.0] * len(self.chains)
         elif isinstance(linewidths, float) or isinstance(linewidths, int):
             linewidths = [linewidths] * len(self.chains)
+        linewidths_override = [c.linewidth for c in self.chains]
+        linewidths = [c2 if c2 is not None else c1 for c1, c2 in zip(linewidths, linewidths_override)]
 
         # Determine clouds
         if cloud is None:
@@ -482,6 +510,9 @@ class ChainConsumer(object):
         # Decrease the shading amount if there are colour scatter points
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
+
+        shade_alpha_override = [c.shade_alpha for c in self.chains]
+        shade_alpha = [c2 if c2 is not None else c1 for c1, c2 in zip(shade_alpha, shade_alpha_override)]
 
         if shade_gradient is None:
             shade_gradient = 1.0

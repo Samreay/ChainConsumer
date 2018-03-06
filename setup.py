@@ -22,5 +22,5 @@ setup(name="ChainConsumer",
       url="http://github.com/samreay/ChainConsumer",
       author="Samuel Hinton",
       author_email="samuelreay@gmail.com",
-      install_requires=["numpy", "scipy", "matplotlib<2.1.0", "statsmodels"])
+      install_requires=["numpy", "scipy", "matplotlib>1.6.0,<2.1.0", "statsmodels>=0.7.0"])
 

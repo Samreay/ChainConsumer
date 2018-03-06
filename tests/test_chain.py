@@ -3,9 +3,10 @@ from numpy.random import normal
 import pytest
 
 from chainconsumer.chain import Chain
+from chainconsumer.chainconsumer import ChainConsumer
 
 
-class TestChain():
+class TestChain(object):
     d = normal(size=(100, 3))
     bad = d.copy()
     bad[0, 0] = np.nan
@@ -194,6 +195,79 @@ class TestChain():
         with pytest.raises(AssertionError):
             Chain(self.d, self.p, self.n, num_eff_data_points=np.inf)
 
-    def test_bad_num_eff_data_points3(self):
+    def test_bad_num_eff_data_points4(self):
         with pytest.raises(AssertionError):
             Chain(self.d, self.p, self.n, num_eff_data_points=-100)
+
+    def test_color_data_none(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
+        c.configure(color_params=None)
+        chain = c.chains[0]
+        assert chain.get_color_data() is None
+
+    def test_color_data_p1(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
+        c.configure(color_params=self.p[0])
+        chain = c.chains[0]
+        assert np.all(chain.get_color_data() == self.d[:, 0])
+
+    def test_color_data_w(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
+        c.configure(color_params="weights")
+        chain = c.chains[0]
+        assert np.all(chain.get_color_data() == self.w)
+
+    def test_color_data_logw(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
+        c.configure(color_params="log_weights")
+        chain = c.chains[0]
+        assert np.all(chain.get_color_data() == np.log(self.w))
+
+    def test_color_data_posterior(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
+        c.configure(color_params="posterior")
+        chain = c.chains[0]
+        assert np.all(chain.get_color_data() == np.ones(100))
+
+    def test_override_color(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, color="#4286f4")
+        c.configure()
+        assert c.chains[0].config["colors"] == "#4286f4"
+
+    def test_override_linewidth(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, linewidth=2.0)
+        c.configure(linewidths=[100])
+        assert c.chains[0].config["linewidths"] == 2.0
+
+    def test_override_linestyle(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, linestyle="--")
+        c.configure()
+        assert c.chains[0].config["linestyles"] == "--"
+
+    def test_override_shade_alpha(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, shade_alpha=0.8)
+        c.configure()
+        assert c.chains[0].config["shade_alpha"] == 0.8
+
+    def test_override_kde(self):
+        c = ChainConsumer()
+        c.add_chain(self.d, parameters=self.p, kde=2.0)
+        c.configure()
+        assert c.chains[0].config["kde"] == 2.0
+
+    def test_override_kde_grid(self):
+        c = ChainConsumer()
+        x, y = np.linspace(0, 10, 10), np.linspace(0, 10, 10)
+        z = np.ones((10, 10))
+        c.add_chain([x, y], weights=z, grid=True, kde=2.0)
+        c.configure()
+        assert not c.chains[0].config["kde"]
