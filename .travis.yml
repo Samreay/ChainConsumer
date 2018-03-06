@@ -13,6 +13,7 @@ env:
 install:
     - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended dvipng
     - hash -r
+    - pip install setuptools twine wheel
     - pip install -r requirements.txt
     - ulimit -s unlimited
 
