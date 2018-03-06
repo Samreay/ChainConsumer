@@ -14,8 +14,8 @@ class TestChain(object):
         c.add_chain(self.data, parameters=["x"])
         c.configure()
         minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
-        assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
-        assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
+        assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
+        assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
     def test_plotter_extents2(self):
         c = ChainConsumer()
@@ -23,8 +23,8 @@ class TestChain(object):
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure()
         minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
-        assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
-        assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
+        assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
+        assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
     def test_plotter_extents3(self):
         c = ChainConsumer()
@@ -32,8 +32,8 @@ class TestChain(object):
         c.add_chain(self.data + 5, parameters=["x"])
         c.configure()
         minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
-        assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
-        assert np.isclose(maxv, (10.0 + 1.5 * 3.1), atol=0.1)
+        assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
+        assert np.isclose(maxv, (10.0 + 1.5 * 3.7), atol=0.2)
 
     def test_plotter_extents4(self):
         c = ChainConsumer()
@@ -41,8 +41,8 @@ class TestChain(object):
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure()
         minv, maxv = c.plotter._get_parameter_extents("x", c.chains[:1])
-        assert np.isclose(minv, (5.0 - 1.5 * 3.1), atol=0.1)
-        assert np.isclose(maxv, (5.0 + 1.5 * 3.1), atol=0.1)
+        assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
+        assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
     def test_plotter_extents5(self):
         x, y = np.linspace(-3, 3, 200), np.linspace(-5, 5, 200)

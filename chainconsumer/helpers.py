@@ -9,7 +9,7 @@ def get_extents(data, weight, plot=False, wide_extents=True):
     icdf = (1 - cdf)[::-1]
     icdf = icdf / icdf.max()
     cdf = 1 - icdf[::-1]
-    threshold = 1e-3 if plot else 1e-5
+    threshold = 1e-4 if plot else 1e-5
     if plot and not wide_extents:
         threshold = 0.05
     i1 = np.where(cdf > threshold)[0][0]

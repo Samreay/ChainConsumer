@@ -91,6 +91,20 @@ class TestChain(object):
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
+    def test_summary_disjoint(self):
+        tolerance = 5e-2
+        consumer = ChainConsumer()
+        consumer.add_chain(self.data, parameters="A")
+        consumer.add_chain(self.data, parameters="B")
+        consumer.configure(bins=0.8)
+        summary = consumer.analysis.get_summary(parameters="A")
+        assert len(summary) == 2  # Two chains
+        assert summary[1] == {}  # Second chain doesnt have param A
+        actual = summary[0]["A"]
+        expected = np.array([3.5, 5.0, 6.5])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])
