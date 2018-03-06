@@ -32,13 +32,6 @@ after_success:
     - ./deploy.sh
 
 deploy:
-  - provider: releases
-    api_key: "${GITHUB_API_KEY2}"
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
-      python: 3.6
   - provider: pypi
     user: "samreay"
     password:
@@ -48,3 +41,10 @@ deploy:
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
       python: 3.6
+#  - provider: releases
+#    api_key: "${GITHUB_API_KEY2}"
+#    skip_cleanup: true
+#    on:
+#      tags: true
+#      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
+#      python: 3.6
