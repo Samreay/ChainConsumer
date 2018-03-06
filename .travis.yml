@@ -36,7 +36,7 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: "$TRAVIS_TAG =~ ^v[0-9,\.]*$"
+      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
       python: 3.6
   - provider: pypi
     user: "samreay"
@@ -45,5 +45,5 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: "$TRAVIS_TAG =~ ^v[0-9,\.]*$"
+      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
       python: 3.6
