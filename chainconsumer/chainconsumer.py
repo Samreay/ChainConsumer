@@ -21,7 +21,7 @@ class ChainConsumer(object):
     __version__ = "0.25.0"
 
     def __init__(self):
-        logging.basicConfig(level=logging.INFO, fmt="[%15(filename)s:%(lineno)d][%15(funcName)s][%(levelname)8s] | %(message)s")
+        logging.basicConfig(level=logging.INFO)
         self._logger = logging.getLogger(__name__)
         self.color_finder = Colors()
         self._all_colours = self.color_finder.get_default()
