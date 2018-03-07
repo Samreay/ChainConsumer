@@ -10,10 +10,19 @@ env:
     global:
         - GH_REF: github.com/samreay/ChainConsumer.git
 
-install:
+before-install:
+    - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - conda config --set always_yes yes --set changeps1 no --set anaconda_upload no
+    - conda update -q conda
+    - conda create --yes -n mypython python=$TRAVIS_PYTHON_VERSION pip requests conda-build anaconda-client setuptools twine wheel
+    - conda activate mypython
     - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended dvipng
+
+install:
     - hash -r
-    - pip install -U pip setuptools twine wheel
     - pip install -r requirements.txt
     - ulimit -s unlimited
 
@@ -24,7 +33,7 @@ before_script:
 
 script:
     - python setup.py clean install
-    - py.test --cov=chainconsumer -v
+    - py.test --cov=chainconsumer -vv
 
 after_success:
     - codecov
