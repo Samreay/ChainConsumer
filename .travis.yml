@@ -42,7 +42,7 @@ after_success:
 # Atm Travis-CI's pypi deploy seems to be broken. Will uncomment when it is addressed via https://github.com/travis-ci/travis-ci/issues/9303
 deploy:
   - prover: script
-    script: ./conda/deploy_anaconda.sh
+    script: conda/deploy_anaconda.sh
     skip_cleanup: true
 
 #  - provider: pypi
