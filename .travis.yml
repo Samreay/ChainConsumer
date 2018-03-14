@@ -51,8 +51,8 @@ deploy:
     password:
       secure: "kvqxckhEA1gYXP028bywKqvmFsNDvaj5/34Tp5SXUM4cUPNti8AlJijDS2GRLfA+sPVgHMsAx47rX9AFWCSIMQi1P/Ahxxupk1Es4rsihjsfyOCi4rGgcLp9gx32Dnz8kKw4Sm5jJcqpz9mxD/YzaWGaJpaxCrTuxKOfEgdj2olAHZjApr+R5Ds7xD8tjO3qdFUE2JvmwboNJR6GCV5smUBM5ytdiDGYza/7SgBjtTPm4PPrd6htythFpg5P71iknJdZ7h61+amH2ksAOHEa5F1l5h5KagTuqnjhv4rXdKEYStPIoul/7T3nq8xEJ1psNHe9u5M25AZZnP5INXVa78BKFTe3NBCrC7R2xPKUncW08rl3pKtnMP5JpbGa0VT09aKSGScPSVrsNtHFyTu58WOiiMa/NM910Xb/yJ1KNprttk0nrUahC8cVVA6TAC9SeM/yHCEvoc83POgHOU5lm5GmXZKzj4JO6mRlLP8aR0Np4DwaPXGV+Tkz3FNrcRVxZv+iQvDGwjVZfgRdUJWbZLCodgOKpqFv3OacyP0OdD1MB/OycuvlfkE44tEgF5JrWhb3LtfJcugOGH+SvxM8yHFE/clHOJ7LIfmGXEeUCWbCIpxkzTo5he7G7IIstpmlRsjd/7n60uLt2Uk7SgQ7KdKDEECsmbpJ3LpmxKtnA8c="
     skip_cleanup: true
-     edge:
-         branch: v1.8.45
+    edge:
+      branch: v1.8.45
     on:
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
