@@ -52,6 +52,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.25.1
+* (Attempting to) enable fully automated releases to Github, PyPI, Zenodo and conda.
+
 ##### 0.25.0
 * Changing default `sigma2d` to `False`. *May chance how your plots are displayed*.
 * Allowing format specification when adding chains.

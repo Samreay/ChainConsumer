@@ -4,9 +4,6 @@ cd "${0%/*}"
 PKG_NAME=chainconsumer
 USER=samreay
 
-# Removing this after testing. But now dont have to play with tags
-TRAVIS_TAG=${TRAVIS_TAG:-v0.25.0}
-
 echo "Current tag is $TRAVIS_TAG"
 
 export CONDA_BLD_PATH=~/conda-bld
