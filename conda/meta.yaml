@@ -1,7 +1,7 @@
 
 package:
   name: 'chainconsumer'
-  version: '{{ environ['VERSION'] }}'
+  version: "{{ environ['VERSION'] }}"
 
 source:
   git_url: https://github.com/samreay/chainconsumer.git
