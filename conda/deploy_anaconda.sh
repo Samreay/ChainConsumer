@@ -16,4 +16,4 @@ conda config --set anaconda_upload no
 
 conda build .
 conda convert --platform all $CONDA_BLD_PATH/linux-64/$PKG_NAME-*.tar.bz2 -o $CONDA_BLD_PATH
-anaconda -t $CONDA_UPLOAD_TOKEN -u $USER upload $CONDA_BLD_PATH/**/$PKG_NAME-*.tar.bz2 --force
+anaconda -t $CONDA_UPLOAD_TOKEN upload -u $USER $CONDA_BLD_PATH/**/$PKG_NAME-*.tar.bz2 --force
