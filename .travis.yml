@@ -45,8 +45,8 @@ deploy:
     skip_cleanup: true
     on:
       python: 3.6
-#      tags: true
-#      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
+      tags: true
+      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
   - provider: pypi
     user: "samreay"
     password:
