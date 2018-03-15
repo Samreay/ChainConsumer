@@ -7,7 +7,7 @@
 
 
 [![PyPi](https://img.shields.io/pypi/v/ChainConsumer.svg?style=flat)](https://pypi.python.org/pypi/ChainConsumer)
-[![Conda](https://anaconda.org/samreay/chainconsumer)](https://anaconda.org/samreay/chainconsumer/badges/version.svg)
+[![Conda](https://anaconda.org/samreay/chainconsumer/badges/version.svg)](https://anaconda.org/samreay/chainconsumer)
 [![DOI](https://zenodo.org/badge/23430/Samreay/ChainConsumer.svg)](https://zenodo.org/badge/latestdoi/23430/Samreay/ChainConsumer)
 [![JOSS](http://joss.theoj.org/papers/10.21105/joss.00045/status.svg?style=flat)](http://dx.doi.org/10.21105/joss.00045)
 
