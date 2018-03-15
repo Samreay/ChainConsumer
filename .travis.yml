@@ -43,9 +43,9 @@ deploy:
   - provider: script
     script: ./conda/deploy_anaconda.sh
     skip_cleanup: true
-    on:
-      tags: true
-      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
+#    on:
+#      tags: true
+#      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
   - provider: pypi
     user: "samreay"
     password:
@@ -54,8 +54,8 @@ deploy:
     edge:
       branch: v1.8.45
     on:
-      #tags: true
-      #condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
+      tags: true
+      condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
       python: 3.6
   - provider: releases
     api_key: "${GITHUB_API_KEY2}"

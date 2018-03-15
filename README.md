@@ -4,11 +4,14 @@
 [![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg)](https://travis-ci.org/Samreay/ChainConsumer)
 [![Coverage Status](https://codecov.io/gh/Samreay/ChainConsumer/branch/master/graph/badge.svg)](https://codecov.io/gh/Samreay/ChainConsumer)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/dessn/abc/blob/master/LICENSE)
+
+
 [![PyPi](https://img.shields.io/pypi/v/ChainConsumer.svg?style=flat)](https://pypi.python.org/pypi/ChainConsumer)
+[![Conda](https://anaconda.org/samreay/chainconsumer)](https://anaconda.org/samreay/chainconsumer/badges/version.svg)
 [![DOI](https://zenodo.org/badge/23430/Samreay/ChainConsumer.svg)](https://zenodo.org/badge/latestdoi/23430/Samreay/ChainConsumer)
 [![JOSS](http://joss.theoj.org/papers/10.21105/joss.00045/status.svg?style=flat)](http://dx.doi.org/10.21105/joss.00045)
 
-A new library to consume your fitting chains! Produce likelihood surfaces,
+A library to consume your fitting chains! Produce likelihood surfaces,
 plot your walks to check convergence, output a LaTeX table of the
 marginalised parameter distributions with uncertainties and significant
 figures all done for you, or throw in a bunch of chains from different models
@@ -22,6 +25,9 @@ Install via `pip`:
     
     pip install chainconsumer
 
+Install via `conda`:
+
+    conda install -c samreay chainconsumer 
 
 ### Contributors
 
