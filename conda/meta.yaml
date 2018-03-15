@@ -15,7 +15,7 @@ build:
      
 requirements:
   host:
-    - python {{ python }}
+    - python
     - setuptools
     - numpy
     - scipy
