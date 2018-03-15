@@ -14,8 +14,6 @@ build:
     - CONDA_BLD_PATH
      
 requirements:
-  build:
-    - python {{ python }}
   host:
     - python {{ python }}
     - setuptools
