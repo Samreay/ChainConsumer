@@ -17,6 +17,6 @@ echo "Version building is $VERSION"
 mkdir ${CONDA_BLD_PATH}
 conda config --set anaconda_upload no
 
-conda build --py all .
+conda build .
 conda convert --platform all $CONDA_BLD_PATH/linux-64/$PKG_NAME-*.tar.bz2 -o $CONDA_BLD_PATH
 anaconda -t $CONDA_UPLOAD_TOKEN upload -u $USER $CONDA_BLD_PATH/**/$PKG_NAME-*.tar.bz2 --force
