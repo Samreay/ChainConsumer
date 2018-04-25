@@ -275,7 +275,6 @@ class Analysis(object):
             # area = simps(ys, x=kde_xs)
             # ys = ys / area
             # ys = interp1d(kde_xs, ys, kind="linear")(xs)
-            
             ys, kde_xs = fastKDE.pdf(data)
             ys = interp1d(kde_xs, ys, kind="linear", bounds_error=False, fill_value=0.)(xs)
         else:

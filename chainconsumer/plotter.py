@@ -906,31 +906,15 @@ class Plotter(object):
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
         if kde:
-            # nn = x_centers.size * 2  # Double samples for KDE because smooth
-            # x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
-            # y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
-            # xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
-            # coords = np.vstack((xx.flatten(), yy.flatten())).T
-            # data = np.vstack((x, y)).T
-            # hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
-            
             nn = x_centers.size * 2  # Double samples for KDE because smooth
             x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
             y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
             xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
             coords = np.vstack((xx.flatten(), yy.flatten())).T
-            
-            print coords.shape
-            print xx.shape
-            print xx.flatten().shape
-            
+            # data = np.vstack((x, y)).T
+            # hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
             hist_kde, (x_centers_kde, y_centers_kde) = fastKDE.pdf(x,y)
-            
-            print hist_kde.shape
-            print x_centers_kde.shape
-            
             hist = interp2d(x_centers_kde, y_centers_kde, hist_kde, kind='linear', bounds_error=False, fill_value=0.)(x_centers, y_centers).reshape((nn, nn))
-            
             
         elif smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
