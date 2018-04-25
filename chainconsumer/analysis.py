@@ -5,6 +5,7 @@ from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 from .helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
 from .kde import MegKDE
+from fastkde import fastKDE
 
 
 class Analysis(object):
@@ -269,11 +270,14 @@ class Analysis(object):
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
         kde = chain.config["kde"]
         if kde:
-            kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
-            ys = MegKDE(data, chain.weights, factor=kde).evaluate(kde_xs)
-            area = simps(ys, x=kde_xs)
-            ys = ys / area
-            ys = interp1d(kde_xs, ys, kind="linear")(xs)
+            # kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
+            # ys = MegKDE(data, chain.weights, factor=kde).evaluate(kde_xs)
+            # area = simps(ys, x=kde_xs)
+            # ys = ys / area
+            # ys = interp1d(kde_xs, ys, kind="linear")(xs)
+            
+            ys, kde_xs = fastKDE.pdf(data)
+            ys = interp1d(kde_xs, ys, kind="linear", bounds_error=False, fill_value=0.)(xs)
         else:
             ys = interp1d(edge_centers, hist, kind="linear")(xs)
         cs = ys.cumsum()
