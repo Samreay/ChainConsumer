@@ -3,14 +3,13 @@
 Overriding Configure
 ====================
 
-You can specify some display options when adding chains.
+You can specify display options when adding chains.
 
 This is useful for when you are playing around with code, adding and removing chains
 as you tweak the plot. Normally, this would involve modifying the lists passed into `configure`
 if you wanted to keep a specific chain with a specific style. To make it easier, 
-`color`, `linewidth`, `linestyle`, `kde` and `shade_alpha` have been added as optional
-parameters to `add_chain`. If set, these values override anything specified in configure (and
-thus override the default configure behaviour). 
+you can specify chain properties when addng them via `add_chain`. If set, these values override 
+anything specified in configure (and thus override the default configure behaviour). 
 
 """
 import numpy as np

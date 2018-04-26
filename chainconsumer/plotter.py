@@ -121,6 +121,15 @@ class Plotter(object):
         else:
             self._logger.debug("Plotting surfaces for %d chains" % len(chains))
         cbar_done = []
+
+        chain_points = [c for c in chains if c.config["plot_point"]]
+        num_chain_points = len(chain_points)
+        if num_chain_points:
+            subgroup_names = list(set([c.name for c in chain_points]))
+            subgroups = [[c for c in chain_points if c.name == n] for n in subgroup_names]
+            markers = [group[0].config["marker_style"] for group in subgroups]  # Only one marker per group
+            marker_sizes = [[g.config["marker_size"] for g in group] for group in subgroups]  # But size can diff
+            marker_alphas = [group[0].config["marker_alpha"] for group in subgroups]  # Only one marker per group
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
                 if i < j:
@@ -130,31 +139,45 @@ class Plotter(object):
 
                 # Plot the histograms
                 if plot_hists and i == j:
+                    if do_flip:
+                        self._add_truth(ax, truth, p1)
+                    else:
+                        self._add_truth(ax, truth,  None, py=p2)
                     max_val = None
 
                     # Plot each chain
                     for chain in chains:
                         if p1 not in chain.parameters:
                             continue
+                        if not chain.config["plot_contour"]:
+                            continue
 
                         param_summary = summary and p1 not in blind
-                        m = self._plot_bars(ax, p1, chain, flip=do_flip, summary=param_summary, truth=truth)
+                        m = self._plot_bars(ax, p1, chain, flip=do_flip, summary=param_summary)
 
                         if max_val is None or m > max_val:
                             max_val = m
-                    if do_flip:
-                        ax.set_xlim(0, 1.1 * max_val)
-                    else:
-                        ax.set_ylim(0, 1.1 * max_val)
+
+                    if num_chain_points:
+                        m = self._plot_point_histogram(ax, subgroups, p1, flip=do_flip)
+                        if max_val is None or m > max_val:
+                            max_val = m
+
+                    if max_val is not None:
+                        if do_flip:
+                            ax.set_xlim(0, 1.1 * max_val)
+                        else:
+                            ax.set_ylim(0, 1.1 * max_val)
 
                 else:
                     for chain in chains:
                         if p1 not in chain.parameters or p2 not in chain.parameters:
                             continue
-
+                        if not chain.config["plot_contour"]:
+                            continue
                         h = None
                         if p1 in chain.parameters and p2 in chain.parameters:
-                            h = self._plot_contour(ax, chain, p1, p2, truth=truth, color_extents=color_param_extents)
+                            h = self._plot_contour(ax, chain, p1, p2, color_extents=color_param_extents)
                         cp = chain.config["color_params"]
                         if h is not None and cp is not None and cp not in cbar_done:
                             cbar_done.append(cp)
@@ -171,9 +194,18 @@ class Plotter(object):
                             cbar.set_label(label, fontsize=14)
                             cbar.solids.set(alpha=1)
 
-        colors = [c.config["colors"] for c in chains]
-        linestyles = [c.config["linestyles"] for c in chains]
-        linewidths = [c.config["linewidths"] for c in chains]
+                    if num_chain_points:
+                        self._plot_points(ax, subgroups, markers, marker_sizes, marker_alphas, p1, p2)
+
+                    self._add_truth(ax, truth, p1, py=p2)
+
+        colors = [c.config["color"] for c in chains]
+        plot_points = [c.config["plot_point"] for c in chains]
+        plot_contours = [c.config["plot_contour"] for c in chains]
+        linestyles = [c.config["linestyle"] for c in chains]
+        linewidths = [c.config["linewidth"] for c in chains]
+        marker_styles = [c.config["marker_style"] for c in chains]
+        marker_sizes = [c.config["marker_size"] for c in chains]
         legend_kwargs = self.parent.config["legend_kwargs"]
         legend_artists = self.parent.config["legend_artists"]
         legend_color_text = self.parent.config["legend_color_text"]
@@ -192,12 +224,28 @@ class Plotter(object):
                 legend_kwargs["markerfirst"] = outside or not legend_artists
             linewidths2 = linewidths if legend_artists else [0]*len(linewidths)
             linestyles2 = linestyles if legend_artists else ["-"]*len(linestyles)
+            marker_sizes2 = marker_sizes if legend_artists else [0]*len(linestyles)
 
-            artists = [plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw)
-                       for i, (n, c, ls, lw) in enumerate(zip(names, colors, linestyles2, linewidths2)) if n is not None]
-            leg = ax.legend(artists, names, **legend_kwargs)
+            artists = []
+            done_names = []
+            final_colors = []
+            for i, (n, c, ls, lw, marker, size, pp, pc) in enumerate(zip(names, colors, linestyles2, linewidths2,
+                                                                         marker_styles, marker_sizes2, plot_points, plot_contours)):
+                if n is None or n in done_names:
+                    continue
+                done_names.append(n)
+                final_colors.append(c)
+                size = np.sqrt(size)  # plot vs scatter use size differently, hence the sqrt
+                if pc and not pp:
+                    artists.append(plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw))
+                elif not pc and pp:
+                    artists.append(plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=0, marker=marker, markersize=size))
+                else:
+                    artists.append(plt.Line2D((0, 1), (0, 0), color=c, ls=ls, lw=lw, marker=marker, markersize=size))
+
+            leg = ax.legend(artists, done_names, **legend_kwargs)
             if legend_color_text:
-                for text, c in zip(leg.get_texts(), colors):
+                for text, c in zip(leg.get_texts(), final_colors):
                     text.set_weight("medium")
                     text.set_color(c)
             if not outside:
@@ -348,25 +396,25 @@ class Plotter(object):
                     if p in chain.parameters:
                         chain_row = chain.get_data(p)
                         self._plot_walk(ax, p, chain_row, truth=truth.get(p),
-                                        extents=extents.get(p), convolve=convolve, color=chain.config["colors"])
+                                        extents=extents.get(p), convolve=convolve, color=chain.config["color"])
                         truth[p] = None
             else:
                 if i == 0 and plot_posterior:
                     for chain in chains:
                         if chain.posterior is not None:
                             self._plot_walk(ax, "$\log(P)$", chain.posterior - chain.posterior.max(),
-                                            convolve=convolve, color=chain.config["colors"])
+                                            convolve=convolve, color=chain.config["color"])
                 else:
                     if log_weight is None:
                         log_weight = np.any([chain.weights.mean() < 0.1 for chain in chains])
                     if log_weight:
                         for chain in chains:
                             self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(chain.weights),
-                                            convolve=convolve, color=chain.config["colors"])
+                                            convolve=convolve, color=chain.config["color"])
                     else:
                         for chain in chains:
                             self._plot_walk(ax, "$w$", chain.weights,
-                                            convolve=convolve, color=chain.config["colors"])
+                                            convolve=convolve, color=chain.config["color"])
 
         if filename is not None:
             if isinstance(filename, str):
@@ -470,9 +518,11 @@ class Plotter(object):
             for chain in chains:
                 if p in chain.parameters:
                     param_summary = summary and p not in blind
-                    m = self._plot_bars(ax, p, chain, summary=param_summary, truth=truth)
+                    m = self._plot_bars(ax, p, chain, summary=param_summary)
                     if max_val is None or m > max_val:
                         max_val = m
+
+            self._add_truth(ax, truth, None, py=p)
             ax.set_ylim(0, 1.1 * max_val)
             ax.set_xlabel(p, fontsize=label_font_size)
 
@@ -587,7 +637,7 @@ class Plotter(object):
             ax_first = row[0]
             ax_first.set_axis_off()
 
-            colour = chain.config["colors"]
+            colour = chain.config["color"]
             text_colour = "k" if not legend_color_text else colour
 
             ax_first.text(0, 0.5, ns, transform=ax_first.transAxes, fontsize=label_font_size, verticalalignment="center", color=text_colour, weight="medium")
@@ -842,12 +892,16 @@ class Plotter(object):
         for chain in chains:
             if parameter not in chain.parameters:
                 continue  # pragma: no cover
-            data = chain.get_data(parameter)
-            if chain.grid:
-                min_prop = data.min()
-                max_prop = data.max()
+            if not chain.config["plot_contour"]:
+                min_prop = chain.posterior_max_params[parameter]
+                max_prop = min_prop
             else:
-                min_prop, max_prop = get_extents(data, chain.weights, plot=True, wide_extents=wide_extents)
+                data = chain.get_data(parameter)
+                if chain.grid:
+                    min_prop = data.min()
+                    max_prop = data.max()
+                else:
+                    min_prop, max_prop = get_extents(data, chain.weights, plot=True, wide_extents=wide_extents)
             if min_val is None or min_prop < min_val:
                 min_val = min_prop
             if max_val is None or max_prop > max_val:
@@ -862,37 +916,33 @@ class Plotter(object):
             levels = 2 * norm.cdf(self.parent.config["sigmas"]) - 1.0
         return levels
 
-    def _plot_contour(self, ax, chain, px, py, truth=None, color_extents=None):  # pragma: no cover
+    def _plot_points(self, ax, chains_groups, markers, sizes, alphas, py, px):  # pragma: no cover
+        for marker, chains, size, alpha in zip(markers, chains_groups, sizes, alphas):
+            res = self.parent.analysis.get_max_posteriors(parameters=[px, py], chains=chains, squeeze=False)
+            xs = [r[px] for r in res if r is not None]
+            ys = [r[py] for r in res if r is not None]
+            cs = [c.config["color"] for c, r in zip(chains, res) if r is not None]
+            h = ax.scatter(xs, ys, marker=marker, c=cs, s=size, linewidth=0.7, alpha=alpha)
+        return h
+
+    def _plot_contour(self, ax, chain, px, py, color_extents=None):  # pragma: no cover
 
         levels = self._get_levels()
         cloud = chain.config["cloud"]
-        smooth = chain.config["smooth"]
-        colour = chain.config["colors"]
-        bins = chain.config["bins"]
+        colour = chain.config["color"]
         shade = chain.config["shade"]
         shade_alpha = chain.config["shade_alpha"]
         shade_gradient = chain.config["shade_gradient"]
-        linestyle = chain.config["linestyles"]
-        linewidth = chain.config["linewidths"]
-        cmap = chain.config["cmaps"]
-        kde = chain.config["kde"]
+        linestyle = chain.config["linestyle"]
+        linewidth = chain.config["linewidth"]
+        cmap = chain.config["cmap"]
         contour_labels = self.parent.config["contour_labels"]
 
         h = None
+        color_data = chain.get_color_data()
         x = chain.get_data(py)
         y = chain.get_data(px)
-        w = chain.weights
-        color_data = chain.get_color_data()
         color_extent = color_extents.get(chain.config["color_params"])
-
-        if chain.grid:
-            binsx = get_grid_bins(x)
-            binsy = get_grid_bins(y)
-            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
-        else:
-            binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalised=False)
-            binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalised=False)
-            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         cf = self.parent.color_finder
         colours = self._scale_colours(colour, len(levels), shade_gradient)
@@ -902,18 +952,8 @@ class Plotter(object):
         colours2 = [cf.scale_colour(colours[0], sub)] + \
                    [cf.scale_colour(c, sub) for c in colours[:-1]]
 
-        x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
-        y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
-        if kde:
-            nn = x_centers.size * 2  # Double samples for KDE because smooth
-            x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
-            y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
-            xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
-            coords = np.vstack((xx.flatten(), yy.flatten())).T
-            data = np.vstack((x, y)).T
-            hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
-        elif smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
+        hist, x_centers, y_centers = self._get_smoothed_histogram2d(chain, py, px)
+
         hist[hist == 0] = 1E-16
         vals = self._convert_to_stdev(hist.T)
         if cloud:
@@ -940,28 +980,33 @@ class Plotter(object):
                          linestyles=linestyle, linewidths=linewidth)
 
         if contour_labels is not None:
+            lvls = [l for l in con.levels if l != 0.0]
             if contour_labels == "sigma":
                 sigmas = self.parent.config["sigmas"]
-                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(con.levels, sigmas[1:])])
+                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(lvls, sigmas[1:])])
             else:
-                fmt = dict([(l, '%d\\%%' % (100 * l)) for l in con.levels])
-            ax.clabel(con, con.levels, inline=True, fmt=fmt, fontsize=self.parent.config["contour_label_font_size"])
-        if truth is not None:
-            truth_value = truth.get(px)
-            if truth_value is not None:
-                ax.axhline(truth_value, **self.parent.config_truth)
-            truth_value = truth.get(py)
-            if truth_value is not None:
-                ax.axvline(truth_value, **self.parent.config_truth)
+                fmt = dict([(l, '%d\\%%' % (100 * l)) for l in lvls])
+            ax.clabel(con, lvls, inline=True, fmt=fmt, fontsize=self.parent.config["contour_label_font_size"])
         return h
 
-    def _plot_bars(self, ax, parameter, chain, flip=False, summary=False, truth=None):  # pragma: no cover
+    def _add_truth(self, ax, truth, px, py=None):  # pragma: no cover
+        if truth is not None:
+            if px is not None:
+                truth_value = truth.get(px)
+                if truth_value is not None:
+                    ax.axhline(truth_value, **self.parent.config_truth)
+            if py is not None:
+                truth_value = truth.get(py)
+                if truth_value is not None:
+                    ax.axvline(truth_value, **self.parent.config_truth)
+
+    def _plot_bars(self, ax, parameter, chain, flip=False, summary=False):  # pragma: no cover
 
         # Get values from config
-        colour = chain.config["colors"]
-        linestyle = chain.config["linestyles"]
+        colour = chain.config["color"]
+        linestyle = chain.config["linestyle"]
         bar_shade = chain.config["bar_shade"]
-        linewidth = chain.config["linewidths"]
+        linewidth = chain.config["linewidth"]
         bins = chain.config["bins"]
         smooth = chain.config["smooth"]
         kde = chain.config["kde"]
@@ -985,6 +1030,8 @@ class Plotter(object):
             else:
                 bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
             hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
+            if chain.power is not None:
+                hist = hist ** chain.power
             edge_center = 0.5 * (edges[:-1] + edges[1:])
             xs, ys = edge_center, hist
             ax.hist(xs, weights=ys, bins=bins, histtype="step",
@@ -1013,14 +1060,29 @@ class Plotter(object):
                             ax.set_title(r"$%s = %s$" % (parameter.strip("$"), t), fontsize=title_size)
                         else:
                             ax.set_title(r"$%s$" % t, fontsize=title_size)
-        if truth is not None:
-            truth_value = truth.get(parameter)
-            if truth_value is not None:
-                if flip:
-                    ax.axhline(truth_value, **self.parent.config_truth)
-                else:
-                    ax.axvline(truth_value, **self.parent.config_truth)
         return ys.max()
+
+    def _plot_point_histogram(self, ax, chains_groups, parameter, flip=False):  # pragma: no cover
+        max_val = 0
+        for chains in chains_groups:
+            if len(chains) < 10:  # You probably dont want a contour if you only have a small group
+                continue  # And even if you do, it'll be so inaccurate...
+            res = self.parent.analysis.get_max_posteriors(parameters=parameter, chains=chains, squeeze=False)
+            xs = [r[parameter] for r in res if r is not None]
+            colour = chains[0].config["color"]
+            num_bins = int(max(5, np.power(len(xs), 0.4)))
+            hist, bin_edges = np.histogram(xs, bins=num_bins, normed=True)
+            if hist.max() > max_val:
+                max_val = hist.max()
+            if flip:
+                orientation = "horizontal"
+            else:
+                orientation = "vertical"
+
+            bin_center = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+            xs, ys = bin_center, hist
+            ax.hist(xs, weights=ys, bins=bin_edges, histtype="step", color=colour, orientation=orientation)
+        return max_val
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
                    convolve=None, color=None):  # pragma: no cover
@@ -1064,3 +1126,42 @@ class Plotter(object):
         colours = [self.parent.color_finder.scale_colour(colour, scale) for scale in scales]
         return colours
 
+    def _get_smoothed_histogram2d(self, chain, param1, param2):  # pragma: no cover
+        # No test coverage here because
+        smooth = chain.config["smooth"]
+        bins = chain.config["bins"]
+        kde = chain.config["kde"]
+
+        x = chain.get_data(param1)
+        y = chain.get_data(param2)
+        w = chain.weights
+
+        if chain.grid:
+            binsx = get_grid_bins(x)
+            binsy = get_grid_bins(y)
+            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
+        else:
+            binsx, smooth = get_smoothed_bins(smooth, bins, x, w, marginalised=False)
+            binsy, _ = get_smoothed_bins(smooth, bins, y, w, marginalised=False)
+            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
+
+        if chain.power is not None:
+            hist = hist ** chain.power
+
+        x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
+        y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
+
+        if kde:
+            nn = x_centers.size * 2  # Double samples for KDE because smooth
+            x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
+            y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
+            xx, yy = meshgrid(x_centers, y_centers, indexing='ij')
+            coords = np.vstack((xx.flatten(), yy.flatten())).T
+            data = np.vstack((x, y)).T
+            hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
+            if chain.power is not None:
+                hist = hist ** chain.power
+        elif smooth:
+            hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
+
+        return hist, x_centers, y_centers

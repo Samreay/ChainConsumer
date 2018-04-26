@@ -30,21 +30,21 @@ class Colors(object):
         self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "grey",
                                "lblue", "magenta", "lgreen", "brown", "black", "orange"]
 
+    def format(self, color):
+        if isinstance(color, np.ndarray):
+            color = rgb2hex(color)
+        if color[0] == "#":
+            return color
+        elif color in self.color_map:
+            return self.color_map[color]
+        elif color in self.aliases:
+            alias = self.aliases[color]
+            return self.color_map[alias]
+        else:
+            raise ValueError("Color %s is not mapped. Please give a hex code" % color)
+
     def get_formatted(self, list_colors):
-        formatted = []
-        for c in list_colors:
-            if isinstance(c, np.ndarray):
-                c = rgb2hex(c)
-            if c[0] == "#":
-                formatted.append(c)
-            elif c in self.color_map:
-                formatted.append(self.color_map[c])
-            elif c in self.aliases:
-                alias = self.aliases[c]
-                formatted.append(self.color_map[alias])
-            else:
-                raise ValueError("Color %s is not mapped. Please give a hex code" % c)
-        return formatted
+        return [self.format(c) for c in list_colors]
 
     def get_default(self):
         return self.get_formatted(self.default_colors)

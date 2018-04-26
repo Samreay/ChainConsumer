@@ -108,6 +108,7 @@ def test_geweke_index_failed():
 
 
 def test_geweke_default():
+    np.random.seed(0)
     data = np.vstack((np.random.normal(loc=0.0, size=100000),
                       np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()

@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import norm
 
 from chainconsumer import ChainConsumer
 
@@ -56,3 +57,17 @@ class TestChain(object):
         minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
         assert np.isclose(minv, -3, atol=0.001)
         assert np.isclose(maxv, 3, atol=0.001)
+
+    def test_plotter_extents6(self):
+        c = ChainConsumer()
+        for mid in np.linspace(-1, 1, 3):
+            data = np.random.normal(loc=0, size=1000)
+            posterior = norm.logpdf(data)
+            data += mid
+            c.add_chain(data, parameters=['x'], posterior=posterior, plot_point=True, plot_contour=False)
+
+        c.configure()
+        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        assert np.isclose(minv, -1, atol=0.01)
+        assert np.isclose(maxv, 1, atol=0.01)
+

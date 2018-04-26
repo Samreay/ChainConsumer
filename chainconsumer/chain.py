@@ -1,14 +1,27 @@
 import logging
 import numpy as np
 
+from .colors import Colors
+from .analysis import Analysis
+
 
 class Chain(object):
+
+    colors = Colors()  # Static colors object to do color mapping
+
     def __init__(self, chain, parameters, name, weights=None, posterior=None, walkers=None,
-                 grid=False, num_free_params=None, num_eff_data_points=None, color=None, linewidth=None,
-                 linestyle=None, kde=None, shade_alpha=None):
+                 grid=False, num_free_params=None, num_eff_data_points=None, power=None,
+                 statistics="max", color=None, linestyle=None, linewidth=None, cloud=None,
+                 shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
+                 bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
+                 cmap=None, num_cloud=None, plot_contour=True, plot_point=False, marker_style=None,
+                 marker_size=None, marker_alpha=None):
         self.chain = chain
         self.parameters = parameters
         self.name = name
+
+        self.posterior_max_index = None
+        self.posterior_max_params = {}
 
         if weights is None:
             weights = np.ones(chain.shape[0])
@@ -16,6 +29,9 @@ class Chain(object):
 
         if posterior is not None:
             posterior = posterior.squeeze()
+            self.posterior_max_index = np.argmax(posterior)
+            for i, p in enumerate(parameters):
+                self.posterior_max_params[p] = chain[self.posterior_max_index, i]
 
         self.weights = weights
         self.posterior = posterior
@@ -23,6 +39,8 @@ class Chain(object):
         self.grid = grid
         self.num_free_params = num_free_params
         self.num_eff_data_points = num_eff_data_points
+        self.power = power
+
         self._logger = logging.getLevelName(self.__class__.__name__)
 
         # Storing config overrides
@@ -35,8 +53,63 @@ class Chain(object):
         self.summaries = {}
         self.config = {}
 
+        self.configure(statistics=statistics, color=color, linestyle=linestyle,
+                       linewidth=linewidth, cloud=cloud, shade=shade, shade_alpha=shade_alpha,
+                       shade_gradient=shade_gradient, bar_shade=bar_shade, bins=bins,
+                       kde=kde, smooth=smooth, color_params=color_params,
+                       plot_color_params=plot_color_params, cmap=cmap, num_cloud=num_cloud,
+                       plot_contour=plot_contour, plot_point=plot_point, marker_style=marker_style,
+                       marker_size=marker_size, marker_alpha=marker_alpha)
         self.validate_chain()
         self.validated_params = set()
+
+    def configure(self, statistics=None, color=None, linestyle=None, linewidth=None, cloud=None,
+                 shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
+                 bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
+                 cmap=None, num_cloud=None, marker_style=None, marker_size=None, marker_alpha=None,
+                 plot_contour=True, plot_point=False):
+
+        if statistics is not None:
+            assert isinstance(statistics, str), "statistics should be a string"
+            assert statistics in list(Analysis.summaries), \
+                "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
+            self.config["statistics"] = statistics
+
+        if color is not None:
+            color = self.colors.format(color)
+            self.config["color"] = color
+
+        # See I wish I didnt have to do this, but I get too many issues raised when people
+        # pass in the weirdest stuff and expect it to work.
+        self._validate_config("linestyle", linestyle, str)
+        self._validate_config("linewidth", linewidth, int, float)
+        self._validate_config("cloud", cloud, bool)
+        self._validate_config("shade", shade, bool)
+        self._validate_config("shade_alpha", shade_alpha, int, float)
+        self._validate_config("shade_gradient", shade_gradient, int, float)
+        self._validate_config("bar_shade", bar_shade, bool)
+        self._validate_config("bins", bins, int, float)
+        self._validate_config("kde", kde, int, float, bool)
+        self._validate_config("smooth", smooth, int, float, bool)
+        self._validate_config("color_params", color_params, str)
+        self._validate_config("plot_color_params", plot_color_params, bool)
+        self._validate_config("cmap", cmap, str)
+        self._validate_config("num_cloud", num_cloud, int, float)
+        self._validate_config("marker_style", marker_style, str)
+        self._validate_config("marker_size", marker_size, int, float)
+        self._validate_config("marker_alpha", marker_alpha, int, float)
+        self._validate_config("plot_contour", plot_contour, bool)
+        self._validate_config("plot_point", plot_point, bool)
+
+    def update_unset_config(self, name, value):
+        if self.config.get(name) is None:
+            self.config[name] = value
+
+    def _validate_config(self, name, value, *types):
+        if value is not None:
+            assert isinstance(value, tuple(types)), \
+                "%s, which is %s, should be type of: %s" % (name, value, " or ".join([t.__name__ for t in types]))
+            self.config[name] = value
 
     def validate_chain(self):
         # So many people request help when the pass in junk data without realising it.
@@ -62,7 +135,7 @@ class Chain(object):
         if self.posterior is not None:
             assert len(self.posterior.shape) == 1, "posterior should be a 1D array, have instead %s" % str(self.posterior.shape)
             assert self.posterior.size == self.chain.shape[0], "Chain %s has %d steps but %d log-posterior values" % \
-                                                               (self.name, self.posterior.size, self.chain.shape[0])
+                                                               (self.name, self.chain.shape[0], self.posterior.size)
             assert np.all(np.isfinite(self.posterior)), "Chain %s has NaN or inf in the log-posterior" % self.name
         if self.num_free_params is not None:
             assert isinstance(self.num_free_params, (int, float)), \
@@ -75,10 +148,10 @@ class Chain(object):
             assert np.isfinite(self.num_eff_data_points), "num_eff_data_points is either infinite or NaN"
             assert self.num_eff_data_points > 0, "num_eff_data_points must be positive"
 
-    def reset_config(self):
-        self.config = {}
-        self.summaries = {}
-        self.validated_params = set()
+    # def reset_config(self):
+    #     self.config = {}
+    #     self.summaries = {}
+    #     self.validated_params = set()
 
     def get_summary(self, param, callback):
         if param in self.summaries:

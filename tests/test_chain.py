@@ -238,19 +238,19 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, color="#4286f4")
         c.configure()
-        assert c.chains[0].config["colors"] == "#4286f4"
+        assert c.chains[0].config["color"] == "#4286f4"
 
     def test_override_linewidth(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, linewidth=2.0)
         c.configure(linewidths=[100])
-        assert c.chains[0].config["linewidths"] == 2.0
+        assert c.chains[0].config["linewidth"] == 2.0
 
     def test_override_linestyle(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, linestyle="--")
         c.configure()
-        assert c.chains[0].config["linestyles"] == "--"
+        assert c.chains[0].config["linestyle"] == "--"
 
     def test_override_shade_alpha(self):
         c = ChainConsumer()

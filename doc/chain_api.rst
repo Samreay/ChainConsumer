@@ -41,6 +41,7 @@ used for getting data or LaTeX analysis of the chains fed in.
 * :func:`chainconsumer.analysis.Analysis.get_latex_table` - Return a LaTeX table of the parameter summaries.
 * :func:`chainconsumer.analysis.Analysis.get_parameter_text` - Return LaTeX text for specified parameter bounds.
 * :func:`chainconsumer.analysis.Analysis.get_summary` - Get the parameter bounds for your chains.
+* :func:`chainconsumer.analysis.Analysis.get_max_posteriors` - Get the parameters for the point with greatest posterior.
 * :func:`chainconsumer.analysis.Analysis.get_correlations` - Get the parameters and correlation matrix for a chain.
 * :func:`chainconsumer.analysis.Analysis.get_correlation_table` - Get a chain's correlation matrix as a LaTeX table.
 * :func:`chainconsumer.analysis.Analysis.get_covariance` - Get the parameters and covariance matrix for a chain.

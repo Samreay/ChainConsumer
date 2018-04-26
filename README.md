@@ -58,6 +58,11 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.26.0
+* Adding ability to pass in a power to raise the surface to for each chain.
+* Adding methods to retrieve the maximum posterior point: `Analysis.get_max_posteriors`
+* Adding ability to plot maximum posterior points. Can control `marker_size`, `marker_style`, `marker_alpha`, and whether to plot contours, points or both.
+* Finishing migration of configuration options you can specify when adding chains rather than configuring all chains with `configure`.
 ##### 0.25.2
 * (Attempting to) enable fully automated releases to Github, PyPI, Zenodo and conda.
 

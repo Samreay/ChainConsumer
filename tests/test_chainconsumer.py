@@ -24,6 +24,13 @@ class TestChain(object):
         c.add_chain(self.data, name="B")
         assert c._all_names() == ["A", "B"]
 
+    def test_get_chain_via_object(self):
+        c = ChainConsumer()
+        c.add_chain(self.data, name="A")
+        c.add_chain(self.data, name="B")
+        assert c._get_chain(c.chains[0]) == 0
+        assert c._get_chain(c.chains[1]) == 1
+
     def test_summary_bad_input1(self):
         with pytest.raises(AssertionError):
             ChainConsumer().add_chain(self.data).configure(summary_area=None)

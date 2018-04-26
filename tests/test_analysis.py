@@ -105,6 +105,17 @@ class TestChain(object):
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
+    def test_summary_power(self):
+        tolerance = 4e-2
+        consumer = ChainConsumer()
+        data = np.random.normal(loc=0, scale=np.sqrt(2), size=1000000)
+        consumer.add_chain(data, power=2.0)
+        summary = consumer.analysis.get_summary()
+        actual = np.array(list(summary.values())[0])
+        expected = np.array([-1.0, 0.0, 1.0])
+        diff = np.abs(expected - actual)
+        assert np.all(diff < tolerance)
+
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])
@@ -915,3 +926,59 @@ class TestChain(object):
         assert np.isclose(xmax, summary[1], atol=0.05)
         assert np.isclose(xval[0], summary[0], atol=0.05)
         assert np.isclose(xval[1], summary[2], atol=0.05)
+
+    def test_max_likelihood_1(self):
+        c = ChainConsumer()
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        posterior = norm.logpdf(data).sum(axis=1)
+        data[:, 1] += 1
+        c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
+        result = c.analysis.get_max_posteriors()
+        x, y = result["x"], result["y"]
+        assert np.isclose(x, 0, atol=0.05)
+        assert np.isclose(y, 1, atol=0.05)
+
+    def test_max_likelihood_2(self):
+        c = ChainConsumer()
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        posterior = norm.logpdf(data).sum(axis=1)
+        data[:, 1] += 2
+        c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
+        c.add_chain(data + 3, parameters=["x", "y"], name="B")
+        result = c.analysis.get_max_posteriors(parameters=["x", "y"], chains="A")
+        x, y = result["x"], result["y"]
+        assert np.isclose(x, 0, atol=0.05)
+        assert np.isclose(y, 2, atol=0.05)
+
+    def test_max_likelihood_3(self):
+        c = ChainConsumer()
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        posterior = norm.logpdf(data).sum(axis=1)
+        data[:, 1] += 3
+        c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
+        c.add_chain(data + 3, parameters=["x", "y"], name="B")
+        result = c.analysis.get_max_posteriors(chains="A")
+        x, y = result["x"], result["y"]
+        assert np.isclose(x, 0, atol=0.05)
+        assert np.isclose(y, 3, atol=0.05)
+
+    def test_max_likelihood_4(self):
+        c = ChainConsumer()
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        posterior = norm.logpdf(data).sum(axis=1)
+        data[:, 1] += 2
+        c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
+        c.add_chain(data + 3, parameters=["x", "y"], name="B")
+        result = c.analysis.get_max_posteriors(parameters="x", chains="A", squeeze=False)
+        assert len(result) == 1
+        x = result[0]["x"]
+        assert np.isclose(x, 0, atol=0.05)
+
+    def test_max_likelihood_5_failure(self):
+        c = ChainConsumer()
+        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data[:, 1] += 2
+        c.add_chain(data, parameters=["x", "y"], name="A")
+        result = c.analysis.get_max_posteriors(parameters="x", chains="A")
+        print(result)
+        assert result is None

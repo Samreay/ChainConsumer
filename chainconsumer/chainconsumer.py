@@ -1,7 +1,6 @@
 import numpy as np
 import logging
 
-
 from .comparisons import Comparison
 from .diagnostic import Diagnostic
 from .plotter import Plotter
@@ -18,7 +17,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.25.2"
+    __version__ = "0.26.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -44,13 +43,17 @@ class ChainConsumer(object):
         self.config_truth = {}
         self._configured = False
         self._configured_truth = False
-        for c in self.chains:
-            c.reset_config()
+        # for c in self.chains:
+        #     c.reset_config()
 
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
-                  grid=False, num_free_params=None, num_eff_data_points=None, color=None, linewidth=None,
-                  linestyle=None, kde=None, shade_alpha=None):
-        """ Add a chain to the consumer.
+                  grid=False, num_eff_data_points=None, num_free_params=None, color=None, linewidth=None,
+                  linestyle=None, kde=None, shade=None, shade_alpha=None, power=None, marker_style=None, marker_size=None,
+                  marker_alpha=None, plot_contour=None, plot_point=None, statistics=None, cloud=None,
+                  shade_gradient=None, bar_shade=None, bins=None, smooth=None, color_params=None,
+                  plot_color_params=None, cmap=None, num_cloud=None):
+        """
+        Add a chain to the consumer.
 
         Parameters
         ----------
@@ -89,14 +92,62 @@ class ChainConsumer(object):
             loading in multiple chains to perform model comparison.    
         color : str(hex), optional
             Provide a colour for the chain. Can be used instead of calling `configure` for convenience.
-        linestyle : str, optional
-            Provide a line style to plot the contour. Can be used instead of calling `configure` for convenience.
         linewidth : float, optional
             Provide a line width to plot the contours. Can be used instead of calling `configure` for convenience.
+        linestyle : str, optional
+            Provide a line style to plot the contour. Can be used instead of calling `configure` for convenience.
         kde : bool|float, optional
             Set the `kde` value for this specific chain. Can be used instead of calling `configure` for convenience.
+        shade : booloptional
+            If set, overrides the default behaviour and plots filled contours or not. If a list of
+            bools is passed, you can turn shading on or off for specific chains.
         shade_alpha : float, optional
             Filled contour alpha value. Can be used instead of calling `configure` for convenience.
+        power : float, optional
+            The power to raise the posterior surface to. Useful for inflating or deflating uncertainty for debugging.
+        marker_style : str|, optional
+            The marker style to use when plotting points. Defaults to `'.'`
+        marker_size : numeric|, optional
+            Size of markers, if plotted. Defaults to `4`.
+        marker_alpha : numeric, optional
+            The alpha values when plotting markers.
+        plot_contour : bool, optional
+            Whether to plot the whole contour (as opposed to a point). Defaults to true for less than
+            25 concurrent chains.
+        plot_point : bool, optional
+            Whether to plot a maximum likelihood point. Defaults to true for more then 24 chains.
+        statistics : string, optional
+            Which sort of statistics to use. Defaults to `"max"` for maximum likelihood
+            statistics. Other available options are `"mean"`, `"cumulative"`, `"max_symmetric"`,
+            `"max_closest"` and `"max_central"`. In the
+            very, very rare case you want to enable different statistics for different
+            chains, you can pass in a list of strings.
+        cloud : bool, optional
+            If set, overrides the default behaviour and plots the cloud or not        shade_gradient :
+        bar_shade : bool, optional
+            If set to true, shades in confidence regions in under histogram. By default
+            this happens if you less than 3 chains, but is disabled if you are comparing
+            more chains. You can pass a list if you wish to shade some chains but not others.
+        bins : int|float, optional
+            The number of bins to use. By default uses :math:`\frac{\sqrt{n}}{10}`, where
+            :math:`n` are the number of data points. Giving an integer will set the number
+            of bins to the given value. Giving a float will scale the number of bins, such
+            that giving ``bins=1.5`` will result in using :math:`\frac{1.5\sqrt{n}}{10}` bins.
+            Note this parameter is most useful if `kde=False` is also passed, so you
+            can actually see the bins and not a KDE.        smooth : 
+        color_params : str, optional
+            The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set
+            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain, 
+            it will respectively  use the weights, log weights, or posterior, to colour the points.
+        plot_color_params : bool, optional
+            Whether or not the colour parameter should also be plotted as a posterior surface.
+        cmaps : str, optional
+            The matplotlib colourmap to use in the `colour_param`. If you have multiple `color_param`s, you can
+            specific a different cmap for each variable. By default ChainConsumer will cycle between several
+            cmaps.
+        num_cloud : int, optional
+            The number of scatter points to show when enabling `cloud` or setting one of the parameters
+            to colour scatter. Defaults to 15k per chain.
             
         Returns
         -------
@@ -129,13 +180,18 @@ class ChainConsumer(object):
                 meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
                 chain = np.vstack([m.flatten() for m in meshes]).T
                 weights = weights.flatten()
-                assert weights.size == chain[:, 0].size, "Error, given weight array size disagrees with parameter sampling"
+                assert weights.size == chain[:,
+                                       0].size, "Error, given weight array size disagrees with parameter sampling"
 
         if len(chain.shape) == 1:
             chain = chain[None].T
 
         if name is None:
             name = "Chain %d" % len(self.chains)
+
+        if power is not None:
+            assert isinstance(power, int) or isinstance(power, float), "Power should be numeric, but is %s" % type(
+                power)
 
         if self._default_parameters is None and parameters is not None:
             self._default_parameters = parameters
@@ -167,7 +223,12 @@ class ChainConsumer(object):
 
         c = Chain(chain, parameters, name, weights=weights, posterior=posterior, walkers=walkers,
                   grid=grid, num_free_params=num_free_params, num_eff_data_points=num_eff_data_points,
-                  color=color, linewidth=linewidth, linestyle=linestyle, kde=kde, shade_alpha=shade_alpha)
+                  color=color, linewidth=linewidth, linestyle=linestyle, kde=kde, shade_alpha=shade_alpha, power=power,
+                  marker_style=marker_style, marker_size=marker_size, marker_alpha=marker_alpha,
+                  plot_contour=plot_contour, plot_point=plot_point, statistics=statistics, cloud=cloud,
+                  shade=shade, shade_gradient=shade_gradient, bar_shade=bar_shade, bins=bins, smooth=smooth,
+                  color_params=color_params, plot_color_params=plot_color_params, cmap=cmap,
+                  num_cloud=num_cloud)
         self.chains.append(c)
         self._init_params()
         return self
@@ -208,8 +269,9 @@ class ChainConsumer(object):
                   serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, rainbow=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
-                  num_cloud=None, color_params=None, plot_color_params=False, cmaps=None, usetex=True,
-                  diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
+                  num_cloud=None, color_params=None, plot_color_params=False, cmaps=None,
+                  plot_contour=None, plot_point=None, marker_style=None, marker_size=None, marker_alpha=None,
+                  usetex=True, diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
                   spacing=None, contour_labels=None, contour_label_font_size=10,
                   legend_kwargs=None, legend_location=None, legend_artists=None,
                   legend_color_text=True, watermark_text_kwargs=None, summary_area=0.6827):  # pragma: no cover
@@ -305,10 +367,21 @@ class ChainConsumer(object):
             it will respectively  use the weights, log weights, or posterior, to colour the points.
         plot_color_params : bool|list[bool], optional
             Whether or not the colour parameter should also be plotted as a posterior surface.
-        cmaps : str|list[str]
+        cmaps : str|list[str], optional
             The matplotlib colourmap to use in the `colour_param`. If you have multiple `color_param`s, you can
             specific a different cmap for each variable. By default ChainConsumer will cycle between several
             cmaps.
+        plot_contour : bool|list[bool], optional
+            Whether to plot the whole contour (as opposed to a point). Defaults to true for less than
+            25 concurrent chains.
+        plot_point : bool|list[bool], optional
+            Whether to plot a maximum likelihood point. Defaults to true for more then 24 chains.
+        marker_style : str|list[str], optional
+            The marker style to use when plotting points. Defaults to `'.'`
+        marker_size : numeric|list[numeric], optional
+            Size of markers, if plotted. Defaults to `4`.
+        marker_alpha : numeric|list[numeric], optional
+            The alpha values when plotting markers.
         usetex : bool, optional
             Whether or not to parse text as LaTeX in plots.
         diagonal_tick_labels : bool, optional
@@ -358,15 +431,13 @@ class ChainConsumer(object):
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
         if isinstance(statistics, str):
+            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
             statistics = [statistics.lower()] * len(self.chains)
         elif isinstance(statistics, list):
             for i, l in enumerate(statistics):
                 statistics[i] = l.lower()
         else:
             raise ValueError("statistics is not a string or a list!")
-        for s in statistics:
-            assert s in list(self.analysis._summaries.keys()), \
-                "statistics %s not recognised. Should be in %s" % (s, self.analysis._summaries.keys())
 
         # Determine KDEs
         if isinstance(kde, bool) or isinstance(kde, float):
@@ -403,8 +474,11 @@ class ChainConsumer(object):
             color_params = [None] * num_chains
         else:
             if isinstance(color_params, str):
-                color_params = [color_params if color_params in cs.parameters + ["log_weights", "weights", "posterior"] else None for cs in self.chains]
-                color_params = [None if c == "posterior" and self.chains[i].posterior is None else c for i, c in enumerate(color_params)]
+                color_params = [
+                    color_params if color_params in cs.parameters + ["log_weights", "weights", "posterior"] else None
+                    for cs in self.chains]
+                color_params = [None if c == "posterior" and self.chains[i].posterior is None else c for i, c in
+                                enumerate(color_params)]
             elif isinstance(color_params, list) or isinstance(color_params, tuple):
                 for c, chain in zip(color_params, self.chains):
                     p = chain.parameters
@@ -448,10 +522,8 @@ class ChainConsumer(object):
                         colors.append(colour_list[ci])
                         ci += 1
         elif isinstance(colors, str):
-                colors = [colors] * len(self.chains)
+            colors = [colors] * len(self.chains)
         colors = self.color_finder.get_formatted(colors)
-        colors_override = [c.color for c in self.chains]
-        colors = [c2 if c2 is not None else c1 for c1, c2 in zip(colors, colors_override)]
 
         # Determine linestyles
         if linestyles is None:
@@ -465,17 +537,12 @@ class ChainConsumer(object):
                     i = (i + 1) % len(self._linestyles)
         elif isinstance(linestyles, str):
             linestyles = [linestyles] * len(self.chains)
-        linestyles_override = [c.linestyle for c in self.chains]
-        linestyles = [c2 if c2 is not None else c1 for c1, c2 in zip(linestyles, linestyles_override)]
-
 
         # Determine linewidths
         if linewidths is None:
             linewidths = [1.0] * len(self.chains)
         elif isinstance(linewidths, float) or isinstance(linewidths, int):
             linewidths = [linewidths] * len(self.chains)
-        linewidths_override = [c.linewidth for c in self.chains]
-        linewidths = [c2 if c2 is not None else c1 for c1, c2 in zip(linewidths, linewidths_override)]
 
         # Determine clouds
         if cloud is None:
@@ -511,9 +578,6 @@ class ChainConsumer(object):
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
 
-        shade_alpha_override = [c.shade_alpha for c in self.chains]
-        shade_alpha = [c2 if c2 is not None else c1 for c1, c2 in zip(shade_alpha, shade_alpha_override)]
-
         if shade_gradient is None:
             shade_gradient = 1.0
         if isinstance(shade_gradient, float):
@@ -522,20 +586,47 @@ class ChainConsumer(object):
             assert len(shade_gradient) == num_chains, \
                 "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains)
 
+        contour_over_points = num_chains < 20
+
+        if plot_contour is None:
+            plot_contour = [contour_over_points if chain.posterior is not None else True for chain in self.chains]
+        elif isinstance(plot_contour, bool):
+            plot_contour = [plot_contour] * num_chains
+
+        if plot_point is None:
+            plot_point = [not contour_over_points] * num_chains
+        elif isinstance(plot_point, bool):
+            plot_point = [plot_point] * num_chains
+
+        if marker_style is None:
+            marker_style = ['.'] * num_chains
+        elif isinstance(marker_style, str):
+            marker_style = [marker_style] * num_chains
+
+        if marker_size is None:
+            marker_size = [4] * num_chains
+        elif isinstance(marker_style, (int, float)):
+            marker_size = [marker_size] * num_chains
+
+        if marker_alpha is None:
+            marker_alpha = [1.0] * num_chains
+        elif isinstance(marker_alpha, (int, float)):
+            marker_alpha = [marker_alpha] * num_chains
+
         # Figure out if we should display parameter summaries
         if summary is not None:
-            summary = summary and len(self.chains) == 1
+            summary = summary and num_chains == 1
 
         # Figure out bar shading
         if bar_shade is None:
-            bar_shade = len(self.chains) <= 3
+            bar_shade = num_chains <= 3
         if isinstance(bar_shade, bool):
-            bar_shade = [bar_shade] * len(self.chains)
+            bar_shade = [bar_shade] * num_chains
 
         # Figure out how many sigmas to plot
         if sigmas is None:
             if num_chains == 1:
-                sigmas = np.array([0, 1, 2, 3])
+                sigmas = np.array([0, 1, 2])
             else:
                 sigmas = np.array([0, 1, 2])
         if sigmas[0] != 0:
@@ -546,7 +637,7 @@ class ChainConsumer(object):
             assert isinstance(contour_labels, str), "contour_labels parameter should be a string"
             contour_labels = contour_labels.lower()
             assert contour_labels in ["sigma", "confidence"], "contour_labels should be either sigma or confidence"
-        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float),\
+        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float), \
             "contour_label_font_size needs to be numeric"
 
         if legend_artists is None:
@@ -562,12 +653,15 @@ class ChainConsumer(object):
         elif num_chains == 3:
             labelspacing = 0.2
         else:
-            labelspacing = 0.1
+            labelspacing = 0.15
         legend_kwargs_default = {
             "labelspacing": labelspacing,
-            "loc":  "upper right",
+            "loc": "upper right",
             "frameon": False,
-            "fontsize": label_font_size
+            "fontsize": label_font_size,
+            "handlelength": 1,
+            "handletextpad": 0.2,
+            "borderaxespad": 0.0
         }
         legend_kwargs_default.update(legend_kwargs)
 
@@ -588,23 +682,27 @@ class ChainConsumer(object):
         # List options
         for i, c in enumerate(self.chains):
             try:
-                c.config["shade"] = shade[i]
-                c.config["shade_alpha"] = shade_alpha[i]
-                c.config["shade_gradient"] = shade_gradient[i]
-                c.config["bar_shade"] = bar_shade[i]
-                c.config["bins"] = bins[i]
-                c.config["kde"] = kde[i]
-                c.config["cloud"] = cloud[i]
-                c.config["linewidths"] = linewidths[i]
-                c.config["linestyles"] = linestyles[i]
-                c.config["colors"] = colors[i]
-                c.config["smooth"] = smooth[i]
-                c.config["color_params"] = color_params[i]
-                c.config["plot_color_params"] = plot_color_params[i]
-                c.config["cmaps"] = cmaps[i]
-                c.config["num_cloud"] = num_cloud[i]
-                c.config["statistics"] = statistics[i]
-
+                c.update_unset_config("statistics", statistics[i])
+                c.update_unset_config("color", colors[i])
+                c.update_unset_config("linestyle", linestyles[i])
+                c.update_unset_config("linewidth", linewidths[i])
+                c.update_unset_config("cloud", cloud[i])
+                c.update_unset_config("shade", shade[i])
+                c.update_unset_config("shade_alpha", shade_alpha[i])
+                c.update_unset_config("shade_gradient", shade_gradient[i])
+                c.update_unset_config("bar_shade", bar_shade[i])
+                c.update_unset_config("bins", bins[i])
+                c.update_unset_config("kde", kde[i])
+                c.update_unset_config("smooth", smooth[i])
+                c.update_unset_config("color_params", color_params[i])
+                c.update_unset_config("plot_color_params", plot_color_params[i])
+                c.update_unset_config("cmap", cmaps[i])
+                c.update_unset_config("num_cloud", num_cloud[i])
+                c.update_unset_config("marker_style", marker_style[i])
+                c.update_unset_config("marker_size", marker_size[i])
+                c.update_unset_config("marker_alpha", marker_alpha[i])
+                c.update_unset_config("plot_contour", plot_contour[i])
+                c.update_unset_config("plot_point", plot_point[i])
                 c.config["summary_area"] = summary_area
 
             except IndentationError as e:
@@ -703,6 +801,8 @@ class ChainConsumer(object):
         return con
 
     def _get_chain(self, chain):
+        if isinstance(chain, Chain):
+            return self.chains.index(chain)
         if isinstance(chain, str):
             names = [c.name for c in self.chains]
             assert chain in names, "Chain %s not found!" % chain
@@ -780,5 +880,3 @@ class ChainConsumer(object):
     def comparison_table(self, *args, **kwargs):  # pragma: no cover
         print("This method is deprecated. Please use chainConsumer.comparison.comparison_table instead")
         return self.comparison.comparison_table(*args, **kwargs)
-
-
