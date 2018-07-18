@@ -131,7 +131,7 @@ class Analysis(object):
         else:
             if isinstance(chains, (int, str)):
                 chains = [chains]
-            chains = [self.parent.chains[self.parent._get_chain(c)] for c in chains]
+            chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
 
         for chain in chains:
             res = {}
@@ -174,7 +174,7 @@ class Analysis(object):
         else:
             if isinstance(chains, (int, str)):
                 chains = [chains]
-            chains = [self.parent.chains[self.parent._get_chain(c)] for c in chains]
+            chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
 
         if isinstance(parameters, str):
             parameters = [parameters]
@@ -244,7 +244,8 @@ class Analysis(object):
                 2D covariance matrix.
         """
         index = self.parent._get_chain(chain)
-        chain = self.parent.chains[index]
+        assert len(index) == 1, "Please specify only one chain, have %d chains" % len(index)
+        chain = self.parent.chains[index[0]]
         if parameters is None:
             parameters = chain.parameters
 

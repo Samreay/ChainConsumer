@@ -48,7 +48,8 @@ class Diagnostic(object):
             return np.all([self.gelman_rubin(k, threshold=threshold) for k in range(len(self.parent.chains))])
 
         index = self.parent._get_chain(chain)
-        chain = self.parent.chains[index]
+        assert len(index) == 1, "Please specify only one chain, have %d chains" % len(index)
+        chain = self.parent.chains[index[0]]
 
         num_walkers = chain.walkers
         parameters = chain.parameters
@@ -101,7 +102,8 @@ class Diagnostic(object):
             return np.all([self.geweke(k, threshold=threshold) for k in range(len(self.parent.chains))])
 
         index = self.parent._get_chain(chain)
-        chain = self.parent.chains[index]
+        assert len(index) == 1, "Please specify only one chain, have %d chains" % len(index)
+        chain = self.parent.chains[index[0]]
 
         num_walkers = chain.walkers
         assert num_walkers is not None and num_walkers > 0, \

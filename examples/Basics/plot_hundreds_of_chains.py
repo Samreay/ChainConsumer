@@ -71,3 +71,31 @@ c.configure(legend_artists=True)
 
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# If you've loaded a whole host of chains in, but only want to focus on one
+# set, you can also pick out all chains with the same name when plotting.
+
+fig = c.plotter.plot(chains="Sim1")
+fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# Finally, we should clarify what exactly the points mean! If you don't specify
+# anything, by defaults the points represent the coordinates of the
+# maximum posterior value. However, in high dimensional surfaces, this maximum
+# value across all dimensions can be different to the maximum posterior value
+# of a 2D slice. If we want to plot, instead of the global maximum as defined
+# by the posterior values, the maximum point of each 2D slice, we can specify
+# to `configure` that `global_point=False`.
+
+c.configure(legend_artists=True, global_point=False)
+fig = c.plotter.plot(chains="Sim1")
+fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# Note here that the histograms have disappeared. This is because the maximal
+# point changes for each pair of parameters, and so none of the points can
+# be used in a histogram. Whilst one could use the maximum point, marginalising
+# across all parameters, this can be misleading if only two parameters
+# are requested to be plotted. As such, we do not report histograms for
+# the maximal 2D posterior points.

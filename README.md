@@ -58,6 +58,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.26.1
+* Adding ability to plot maximum points on 2D contour, not just global posterior maximum.
+* Fixing truth dictionary mutation on `plot_walks`
+
 ##### 0.26.0
 * Adding ability to pass in a power to raise the surface to for each chain.
 * Adding methods to retrieve the maximum posterior point: `Analysis.get_max_posteriors`

@@ -158,7 +158,7 @@ class Plotter(object):
                         if max_val is None or m > max_val:
                             max_val = m
 
-                    if num_chain_points:
+                    if num_chain_points and self.parent.config["global_point"]:
                         m = self._plot_point_histogram(ax, subgroups, p1, flip=do_flip)
                         if max_val is None or m > max_val:
                             max_val = m
@@ -395,9 +395,8 @@ class Plotter(object):
                 for chain in chains:
                     if p in chain.parameters:
                         chain_row = chain.get_data(p)
-                        self._plot_walk(ax, p, chain_row, truth=truth.get(p),
-                                        extents=extents.get(p), convolve=convolve, color=chain.config["color"])
-                        truth[p] = None
+                        self._plot_walk(ax, p, chain_row, extents=extents.get(p), convolve=convolve, color=chain.config["color"])
+                self._plot_walk_truth(ax, truth.get(p))
             else:
                 if i == 0 and plot_posterior:
                     for chain in chains:
@@ -728,7 +727,7 @@ class Plotter(object):
         else:
             if isinstance(chains, str) or isinstance(chains, int):
                 chains = [chains]
-            chains = [self.parent._get_chain(c) for c in chains]
+            chains = [i for c in chains for i in self.parent._get_chain(c)]
 
         chains = [self.parent.chains[i] for i in chains]
 
@@ -893,8 +892,12 @@ class Plotter(object):
             if parameter not in chain.parameters:
                 continue  # pragma: no cover
             if not chain.config["plot_contour"]:
-                min_prop = chain.posterior_max_params[parameter]
-                max_prop = min_prop
+                if self.parent.config["global_point"]:
+                    min_prop = chain.posterior_max_params.get(parameter)
+                    max_prop = min_prop
+                else:
+                    data = chain.get_data(parameter)
+                    min_prop, max_prop = get_extents(data, chain.weights, tiny=True)
             else:
                 data = chain.get_data(parameter)
                 if chain.grid:
@@ -917,10 +920,23 @@ class Plotter(object):
         return levels
 
     def _plot_points(self, ax, chains_groups, markers, sizes, alphas, py, px):  # pragma: no cover
+        global_point = self.parent.config["global_point"]
         for marker, chains, size, alpha in zip(markers, chains_groups, sizes, alphas):
-            res = self.parent.analysis.get_max_posteriors(parameters=[px, py], chains=chains, squeeze=False)
-            xs = [r[px] for r in res if r is not None]
-            ys = [r[py] for r in res if r is not None]
+            if global_point:
+                res = self.parent.analysis.get_max_posteriors(parameters=[px, py], chains=chains, squeeze=False)
+                xs = [r[px] for r in res if r is not None]
+                ys = [r[py] for r in res if r is not None]
+            else:
+                xs, ys, res = [], [], []
+                for chain in chains:
+                    if px in chain.parameters and py in chain.parameters:
+                        hist, x_centers, y_centers = self._get_smoothed_histogram2d(chain, py, px)
+                        index = np.unravel_index(hist.argmax(), hist.shape)
+                        ys.append(x_centers[index[0]])
+                        xs.append(y_centers[index[1]])
+                        res.append({"px": xs[-1], "py": ys[-1]})
+                    else:
+                        res.append(None)
             cs = [c.config["color"] for c, r in zip(chains, res) if r is not None]
             h = ax.scatter(xs, ys, marker=marker, c=cs, s=size, linewidth=0.7, alpha=alpha)
         return h
@@ -1104,8 +1120,9 @@ class Plotter(object):
             filt = np.ones(convolve) / convolve
             filtered = np.convolve(data, filt, mode="same")
             ax.plot(x[:-1], filtered[:-1], ls=':', color=color2, alpha=1)
-        if truth is not None:
-            ax.axhline(truth, **self.parent.config_truth)
+
+    def _plot_walk_truth(self, ax, truth):
+        ax.axhline(truth, **self.parent.config_truth)
 
     def _convert_to_stdev(self, sigma):  # pragma: no cover
         # From astroML

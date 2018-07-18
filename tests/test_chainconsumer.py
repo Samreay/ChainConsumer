@@ -5,7 +5,7 @@ from scipy.stats import skewnorm
 from chainconsumer import ChainConsumer
 
 
-class TestChain(object):
+class TestChainConsumer(object):
     np.random.seed(1)
     n = 2000000
     data = np.random.normal(loc=5.0, scale=1.5, size=n)
@@ -28,8 +28,10 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.data, name="A")
         c.add_chain(self.data, name="B")
-        assert c._get_chain(c.chains[0]) == 0
-        assert c._get_chain(c.chains[1]) == 1
+        assert c._get_chain(c.chains[0])[0] == 0
+        assert c._get_chain(c.chains[1])[0] == 1
+        assert len(c._get_chain(c.chains[0])) == 1
+        assert len(c._get_chain(c.chains[1])) == 1
 
     def test_summary_bad_input1(self):
         with pytest.raises(AssertionError):
@@ -165,7 +167,7 @@ class TestChain(object):
 
     def test_remove_multiple_chains_fails(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).remove_chain(chain=[0, 0])
+            ChainConsumer().add_chain(self.data).remove_chain(chain=[0,0])
 
     def test_shade_alpha_algorithm1(self):
         consumer = ChainConsumer()

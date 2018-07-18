@@ -17,7 +17,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.26.0"
+    __version__ = "0.26.1"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -251,7 +251,7 @@ class ChainConsumer(object):
         if isinstance(chain, str) or isinstance(chain, int):
             chain = [chain]
 
-        chain = sorted([self._get_chain(c) for c in chain])[::-1]
+        chain = sorted([i for c in chain for i in self._get_chain(c)])[::-1]
         assert len(chain) == len(list(set(chain))), "Error, you are trying to remove a chain more than once."
 
         for index in chain:
@@ -270,7 +270,7 @@ class ChainConsumer(object):
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
                   num_cloud=None, color_params=None, plot_color_params=False, cmaps=None,
-                  plot_contour=None, plot_point=None, marker_style=None, marker_size=None, marker_alpha=None,
+                  plot_contour=None, plot_point=None, global_point=True, marker_style=None, marker_size=None, marker_alpha=None,
                   usetex=True, diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
                   spacing=None, contour_labels=None, contour_label_font_size=10,
                   legend_kwargs=None, legend_location=None, legend_artists=None,
@@ -376,6 +376,10 @@ class ChainConsumer(object):
             25 concurrent chains.
         plot_point : bool|list[bool], optional
             Whether to plot a maximum likelihood point. Defaults to true for more then 24 chains.
+        global_point : bool, optional
+            Whether the point which gets plotted is the global posterior maximum, or the marginalised 2D 
+            posterior maximum. Note that when you use marginalised 2D maximums for the points, you do not
+             get the 1D histograms. Defaults to `True`, for a global maximum value.
         marker_style : str|list[str], optional
             The marker style to use when plotting points. Defaults to `'.'`
         marker_size : numeric|list[numeric], optional
@@ -678,6 +682,7 @@ class ChainConsumer(object):
         assert isinstance(summary_area, float), "summary_area needs to be a float, not %s!" % type(summary_area)
         assert summary_area > 0, "summary_area should be a positive number, instead is %s!" % summary_area
         assert summary_area < 1, "summary_area must be less than unity, instead is %s!" % summary_area
+        assert isinstance(global_point, bool), "global_point should be a bool"
 
         # List options
         for i, c in enumerate(self.chains):
@@ -731,6 +736,7 @@ class ChainConsumer(object):
         self.config["legend_artists"] = legend_artists
         self.config["legend_color_text"] = legend_color_text
         self.config["watermark_text_kwargs"] = watermark_text_kwargs_default
+        self.config["global_point"] = global_point
 
         self._configured = True
         return self
@@ -788,28 +794,29 @@ class ChainConsumer(object):
             A new ChainConsumer instance with the same settings as the parent instance, containing
             ``num_walker`` chains.
         """
-        index = self._get_chain(chain)
-        chain = self.chains[index]
-
-        assert chain.walkers is not None, "The chain you have selected was not added with any walkers!"
-        num_walkers = chain.walkers
-        data = np.split(chain.chain, num_walkers)
-        ws = np.split(chain.weights, num_walkers)
+        indexes = self._get_chain(chain)
         con = ChainConsumer()
-        for j, (c, w) in enumerate(zip(data, ws)):
-            con.add_chain(c, weights=w, name="Chain %d" % j, parameters=chain.parameters)
+
+        for index in indexes:
+            chain = self.chains[index]
+            assert chain.walkers is not None, "The chain you have selected was not added with any walkers!"
+            num_walkers = chain.walkers
+            data = np.split(chain.chain, num_walkers)
+            ws = np.split(chain.weights, num_walkers)
+            for j, (c, w) in enumerate(zip(data, ws)):
+                con.add_chain(c, weights=w, name="Chain %d" % j, parameters=chain.parameters)
         return con
 
     def _get_chain(self, chain):
         if isinstance(chain, Chain):
-            return self.chains.index(chain)
+            return [self.chains.index(chain)]
         if isinstance(chain, str):
             names = [c.name for c in self.chains]
             assert chain in names, "Chain %s not found!" % chain
-            index = names.index(chain)
+            index = [i for i, n in enumerate(names) if chain == n]
         elif isinstance(chain, int):
             assert chain < len(self.chains), "Chain index %d not found!" % chain
-            index = chain
+            index = [chain]
         else:
             raise ValueError("Type %s not recognised for chain" % type(chain))
         return index
