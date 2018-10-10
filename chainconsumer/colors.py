@@ -28,7 +28,7 @@ class Colors(object):
             "e": "grey", "lg": "lgreen", "lb": "lblue"
         }
         self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "grey",
-                               "lblue", "magenta", "lgreen", "brown", "black", "orange"]
+                               "lblue", "magenta", "green", "brown", "black", "orange"]
 
     def format(self, color):
         if isinstance(color, np.ndarray):
