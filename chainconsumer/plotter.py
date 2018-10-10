@@ -396,7 +396,8 @@ class Plotter(object):
                     if p in chain.parameters:
                         chain_row = chain.get_data(p)
                         self._plot_walk(ax, p, chain_row, extents=extents.get(p), convolve=convolve, color=chain.config["color"])
-                self._plot_walk_truth(ax, truth.get(p))
+                if truth.get(p) is not None:
+                    self._plot_walk_truth(ax, truth.get(p))
             else:
                 if i == 0 and plot_posterior:
                     for chain in chains:
