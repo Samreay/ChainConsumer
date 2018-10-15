@@ -425,6 +425,14 @@ class ChainConsumer(object):
         ChainConsumer
             Itself, to allow chaining calls.
         """
+        # Dirty way of ensuring overrides happen when requested
+        l = locals()
+        explicit = []
+        for k in l.keys():
+            if l[k] is not None:
+                explicit.append(k)
+                if k.endswith("s"):
+                    explicit.append(k[:-1])
         self._init_params()
 
         num_chains = len(self.chains)
@@ -687,27 +695,27 @@ class ChainConsumer(object):
         # List options
         for i, c in enumerate(self.chains):
             try:
-                c.update_unset_config("statistics", statistics[i])
-                c.update_unset_config("color", colors[i])
-                c.update_unset_config("linestyle", linestyles[i])
-                c.update_unset_config("linewidth", linewidths[i])
-                c.update_unset_config("cloud", cloud[i])
-                c.update_unset_config("shade", shade[i])
-                c.update_unset_config("shade_alpha", shade_alpha[i])
-                c.update_unset_config("shade_gradient", shade_gradient[i])
-                c.update_unset_config("bar_shade", bar_shade[i])
-                c.update_unset_config("bins", bins[i])
-                c.update_unset_config("kde", kde[i])
-                c.update_unset_config("smooth", smooth[i])
-                c.update_unset_config("color_params", color_params[i])
-                c.update_unset_config("plot_color_params", plot_color_params[i])
-                c.update_unset_config("cmap", cmaps[i])
-                c.update_unset_config("num_cloud", num_cloud[i])
-                c.update_unset_config("marker_style", marker_style[i])
-                c.update_unset_config("marker_size", marker_size[i])
-                c.update_unset_config("marker_alpha", marker_alpha[i])
-                c.update_unset_config("plot_contour", plot_contour[i])
-                c.update_unset_config("plot_point", plot_point[i])
+                c.update_unset_config("statistics", statistics[i], override=explicit)
+                c.update_unset_config("color", colors[i], override=explicit)
+                c.update_unset_config("linestyle", linestyles[i], override=explicit)
+                c.update_unset_config("linewidth", linewidths[i], override=explicit)
+                c.update_unset_config("cloud", cloud[i], override=explicit)
+                c.update_unset_config("shade", shade[i], override=explicit)
+                c.update_unset_config("shade_alpha", shade_alpha[i], override=explicit)
+                c.update_unset_config("shade_gradient", shade_gradient[i], override=explicit)
+                c.update_unset_config("bar_shade", bar_shade[i], override=explicit)
+                c.update_unset_config("bins", bins[i], override=explicit)
+                c.update_unset_config("kde", kde[i], override=explicit)
+                c.update_unset_config("smooth", smooth[i], override=explicit)
+                c.update_unset_config("color_params", color_params[i], override=explicit)
+                c.update_unset_config("plot_color_params", plot_color_params[i], override=explicit)
+                c.update_unset_config("cmap", cmaps[i], override=explicit)
+                c.update_unset_config("num_cloud", num_cloud[i], override=explicit)
+                c.update_unset_config("marker_style", marker_style[i], override=explicit)
+                c.update_unset_config("marker_size", marker_size[i], override=explicit)
+                c.update_unset_config("marker_alpha", marker_alpha[i], override=explicit)
+                c.update_unset_config("plot_contour", plot_contour[i], override=explicit)
+                c.update_unset_config("plot_point", plot_point[i], override=explicit)
                 c.config["summary_area"] = summary_area
 
             except IndentationError as e:

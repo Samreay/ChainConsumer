@@ -58,6 +58,12 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.26.2
+* Fixing bug with `plot_walks` that required truth values.
+* Fixing flaw in `configure` to allow for updating values.
+* Fixing bug where summary values are cached without reference to the summary statistic method.
+
+
 ##### 0.26.1
 * Adding ability to plot maximum points on 2D contour, not just global posterior maximum.
 * Fixing truth dictionary mutation on `plot_walks`

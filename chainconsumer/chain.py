@@ -101,8 +101,8 @@ class Chain(object):
         self._validate_config("plot_contour", plot_contour, bool)
         self._validate_config("plot_point", plot_point, bool)
 
-    def update_unset_config(self, name, value):
-        if self.config.get(name) is None:
+    def update_unset_config(self, name, value, override=None):
+        if (override is not None and name in override) or self.config.get(name) is None:
             self.config[name] = value
 
     def _validate_config(self, name, value, *types):
@@ -154,10 +154,13 @@ class Chain(object):
     #     self.validated_params = set()
 
     def get_summary(self, param, callback):
-        if param in self.summaries:
-            return self.summaries[param]
+        stat = "%s %s" % (self.config["statistics"], self.config["summary_area"])
+        if stat in self.summaries.keys() and param in self.summaries[stat]:
+            return self.summaries[stat][param]
         result = callback(self, param)
-        self.summaries[param] = result
+        if stat not in self.summaries.keys():
+            self.summaries[stat] = {}
+        self.summaries[stat][param] = result
         return result
 
     def get_color_data(self):
