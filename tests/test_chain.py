@@ -244,7 +244,7 @@ class TestChain(object):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, linewidth=2.0)
         c.configure(linewidths=[100])
-        assert c.chains[0].config["linewidth"] == 2.0
+        assert c.chains[0].config["linewidth"] == 100
 
     def test_override_linestyle(self):
         c = ChainConsumer()
@@ -271,3 +271,16 @@ class TestChain(object):
         c.add_chain([x, y], weights=z, grid=True, kde=2.0)
         c.configure()
         assert not c.chains[0].config["kde"]
+
+    def test_cache_invalidation(self):
+        c = ChainConsumer()
+        c.add_chain(normal(size=(1000000, 1)), parameters=["a"])
+        c.configure(summary_area=0.68)
+        summary1 = c.analysis.get_summary()
+        c.configure(summary_area=0.95)
+        summary2 = c.analysis.get_summary()
+        assert np.isclose(summary1["a"][0], -1, atol=1e-2)
+        assert np.isclose(summary2["a"][0], -2, atol=1e-2)
+        assert np.isclose(summary1["a"][1], summary2["a"][1], atol=1e-2)
+        assert np.isclose(summary1["a"][2], 1, atol=1e-2)
+        assert np.isclose(summary2["a"][2], 2, atol=1e-2)

@@ -313,7 +313,7 @@ class Analysis(object):
             bins = chain.config['bins']
             bins, smooth = get_smoothed_bins(smooth, bins, data, chain.weights)
 
-        hist, edges = np.histogram(data, bins=bins, normed=True, weights=chain.weights)
+        hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
             hist = hist ** chain.power
         edge_centers = 0.5 * (edges[1:] + edges[:-1])

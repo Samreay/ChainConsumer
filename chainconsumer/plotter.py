@@ -1046,7 +1046,7 @@ class Plotter(object):
                 bins = get_grid_bins(chain_row)
             else:
                 bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
-            hist, edges = np.histogram(chain_row, bins=bins, normed=True, weights=weights)
+            hist, edges = np.histogram(chain_row, bins=bins, density=True, weights=weights)
             if chain.power is not None:
                 hist = hist ** chain.power
             edge_center = 0.5 * (edges[:-1] + edges[1:])
@@ -1088,7 +1088,7 @@ class Plotter(object):
             xs = [r[parameter] for r in res if r is not None]
             colour = chains[0].config["color"]
             num_bins = int(max(5, np.power(len(xs), 0.4)))
-            hist, bin_edges = np.histogram(xs, bins=num_bins, normed=True)
+            hist, bin_edges = np.histogram(xs, bins=num_bins, density=True)
             if hist.max() > max_val:
                 max_val = hist.max()
             if flip:
