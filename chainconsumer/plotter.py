@@ -538,7 +538,7 @@ class Plotter(object):
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
                      filename=None, chains=None, figsize=1.0, errorbar=False, include_truth_chain=True,
                      blind=None, watermark=None, extra_parameter_spacing=0.5,
-                     vertical_spacing_ratio=1.0):  # pragma: no cover
+                     vertical_spacing_ratio=1.0, show_names=True):  # pragma: no cover
         """ Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -585,6 +585,8 @@ class Plotter(object):
             Increase horizontal space for parameter values
         vertical_spacing_ratio : float, optional
             Increase vertical space for each model
+        show_names : bool, optional
+            Whether to show chain names or not. Defaults to `True`.
 
         Returns
         -------
@@ -604,13 +606,19 @@ class Plotter(object):
                 chains = [c for c in chains if c.name != truth]
             truth = self.parent.analysis.get_summary(chains=truth, parameters=parameters)
 
-        max_model_name = self._get_size_of_texts([chain.name for chain in chains])
         max_param = self._get_size_of_texts(parameters)
         fid_dpi = 65  # Seriously I have no idea what value this should be
         param_width = extra_parameter_spacing + max(0.5, max_param / fid_dpi)
-        model_width = 0.25 + (max_model_name / fid_dpi)
 
-        gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
+        if show_names:
+            max_model_name = self._get_size_of_texts([chain.name for chain in chains])
+            model_width = 0.25 + (max_model_name / fid_dpi)
+            gridspec_kw = {'width_ratios': [model_width] + [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
+            ncols = 1 + len(parameters)
+        else:
+            model_width = 0
+            gridspec_kw = {'width_ratios': [param_width] * len(parameters), 'height_ratios': [1] * len(chains)}
+            ncols = len(parameters)
 
         top_spacing = 0.3
         bottom_spacing = 0.2
@@ -621,7 +629,7 @@ class Plotter(object):
         bottom_ratio = bottom_spacing / height
 
         figsize = (width * figsize, height * figsize)
-        fig, axes = plt.subplots(nrows=len(chains), ncols=1 + len(parameters), figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
+        fig, axes = plt.subplots(nrows=len(chains), ncols=ncols, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
         label_font_size = self.parent.config["label_font_size"]
         legend_color_text = self.parent.config["legend_color_text"]
@@ -633,16 +641,19 @@ class Plotter(object):
             cs, ws, ps, = chain.chain, chain.weights, chain.parameters
             gs, ns = chain.grid, chain.name
 
-            # First one put name of model
-            ax_first = row[0]
-            ax_first.set_axis_off()
-
             colour = chain.config["color"]
-            text_colour = "k" if not legend_color_text else colour
 
-            ax_first.text(0, 0.5, ns, transform=ax_first.transAxes, fontsize=label_font_size, verticalalignment="center", color=text_colour, weight="medium")
+            # First one put name of model
+            if show_names:
+                ax_first = row[0]
+                ax_first.set_axis_off()
+                text_colour = "k" if not legend_color_text else colour
+                ax_first.text(0, 0.5, ns, transform=ax_first.transAxes, fontsize=label_font_size, verticalalignment="center", color=text_colour, weight="medium")
+                cols = row[1:]
+            else:
+                cols = row
 
-            for ax, p in zip(row[1:], parameters):
+            for ax, p in zip(cols, parameters):
                 # Set up the frames
                 if i > 0:
                     ax.spines['top'].set_visible(False)
@@ -692,7 +703,8 @@ class Plotter(object):
                         max_vals[p] = m
 
         for i, row in enumerate(axes):
-            for ax, p in zip(row[1:], parameters):
+            index = 1 if show_names else 0
+            for ax, p in zip(row[index:], parameters):
                 if not errorbar:
                     ax.set_ylim(0, 1.1 * max_vals[p])
 
