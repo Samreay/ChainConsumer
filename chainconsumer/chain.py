@@ -19,6 +19,7 @@ class Chain(object):
         self.chain = chain
         self.parameters = parameters
         self.name = name
+        self.mcmc_chain = True
 
         self.posterior_max_index = None
         self.posterior_max_params = {}

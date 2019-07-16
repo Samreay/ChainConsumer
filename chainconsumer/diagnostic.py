@@ -6,7 +6,7 @@ from scipy.stats import normaltest
 class Diagnostic(object):
     def __init__(self, parent):
         self.parent = parent
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger("chainconsumer")
 
     def gelman_rubin(self, chain=None, threshold=0.05):
         r""" Runs the Gelman Rubin diagnostic on the supplied chains.

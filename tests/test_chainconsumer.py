@@ -183,8 +183,8 @@ class TestChainConsumer(object):
         consumer.configure()
         alpha0 = consumer.chains[0].config["shade_alpha"]
         alpha1 = consumer.chains[0].config["shade_alpha"]
-        assert alpha0 == 1.0 / 2.0
-        assert alpha1 == 1.0 / 2.0
+        assert alpha0 == 1.0 / np.sqrt(2.0)
+        assert alpha1 == 1.0 / np.sqrt(2.0)
 
     def test_shade_alpha_algorithm3(self):
         consumer = ChainConsumer()
@@ -194,6 +194,22 @@ class TestChainConsumer(object):
         consumer.configure()
         alphas = [c.config["shade_alpha"] for c in consumer.chains]
         assert len(alphas) == 3
-        assert alphas[0] == 1.0 / 3.0
-        assert alphas[1] == 1.0 / 3.0
-        assert alphas[2] == 1.0 / 3.0
+        assert alphas[0] == 1.0 / np.sqrt(3.0)
+        assert alphas[1] == 1.0 / np.sqrt(3.0)
+        assert alphas[2] == 1.0 / np.sqrt(3.0)
+
+    def test_covariance(self):
+        mean = [0, 1]
+        cov = [[1, 1], [1, 2.5]]
+        c = ChainConsumer()
+        c.add_covariance(mean, cov)
+        mean_obs = np.mean(c.chains[0].chain, axis=0)
+        cov_obs = np.cov(c.chains[0].chain.T)
+        assert np.all(np.isclose(mean, mean_obs, atol=1e-2))
+        assert np.all(np.isclose(cov, cov_obs, atol=1e-2))
+
+    def test_marker(self):
+        loc = [0, 1, 2]
+        c = ChainConsumer()
+        c.add_marker(loc)
+        assert np.all(np.equal(loc, c.chains[0].chain[0, :]))

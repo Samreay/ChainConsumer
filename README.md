@@ -58,6 +58,14 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.27.0
+* Now restores default `rcParams` for `usetex` and `font-family` after plotting.
+* All logging now under logger name `chainconsumer` to make it easy to hide if needed.
+* Formula for computing `shade_alpha` now uses sqrt(num_chains) instead of num_chains.
+* `get_latex_table` now accepts a filename input to save the parameters to.
+* Adding `add_covariance` to compliment `add_chain` - useful for Fisher matrix forecasts and similar. Just invert it first for me.
+* Adding `add_marker` to allow easy inclusion of markers in the plots.
+
 ##### 0.26.3
 * Adding ability to turn off chain names in `plot_summary`.
 
@@ -75,6 +83,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 * Adding methods to retrieve the maximum posterior point: `Analysis.get_max_posteriors`
 * Adding ability to plot maximum posterior points. Can control `marker_size`, `marker_style`, `marker_alpha`, and whether to plot contours, points or both.
 * Finishing migration of configuration options you can specify when adding chains rather than configuring all chains with `configure`.
+
 ##### 0.25.2
 * (Attempting to) enable fully automated releases to Github, PyPI, Zenodo and conda.
 

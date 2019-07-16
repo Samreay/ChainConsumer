@@ -8,7 +8,7 @@ from .helpers import get_latex_table_frame
 class Comparison(object):
     def __init__(self, parent):
         self.parent = parent
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger("chainconsumer")
 
     def dic(self):
         r""" Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.

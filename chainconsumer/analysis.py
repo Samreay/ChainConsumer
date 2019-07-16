@@ -3,6 +3,7 @@ import numpy as np
 from scipy.integrate import simps
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
+
 from .helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
 from .kde import MegKDE
 
@@ -13,7 +14,7 @@ class Analysis(object):
 
     def __init__(self, parent):
         self.parent = parent
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger("chainconsumer")
 
         self._summaries = {
             "max": self.get_parameter_summary_max,
@@ -25,7 +26,7 @@ class Analysis(object):
         }
 
     def get_latex_table(self, parameters=None, transpose=False, caption=None,
-                        label="tab:model_params", hlines=True, blank_fill="--"):  # pragma: no cover
+                        label="tab:model_params", hlines=True, blank_fill="--", filename=None):  # pragma: no cover
         """ Generates a LaTeX table from parameter summaries.
 
         Parameters
@@ -47,6 +48,8 @@ class Analysis(object):
         blank_fill : str, optional
             If a framework does not have a particular parameter, will fill that cell of
             the table with this string.
+        filename : str, optional
+            The file to save the output string to
 
         Returns
         -------
@@ -59,8 +62,9 @@ class Analysis(object):
             assert isinstance(p, str), \
                 "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
-        num_chains = len(self.parent.chains)
-        fit_values = self.get_summary(squeeze=False)
+        chains = self.parent.get_mcmc_chains()
+        num_chains = len(chains)
+        fit_values = self.get_summary(squeeze=False, chains=chains)
         if label is None:
             label = ""
         if caption is None:
@@ -77,7 +81,7 @@ class Analysis(object):
         if hlines:
             center_text += hline_text + "\t\t"
         if transpose:
-            center_text += " & ".join(["Parameter"] + [c.name for c in self.parent.chains]) + end_text
+            center_text += " & ".join(["Parameter"] + [c.name for c in chains]) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
             for p in parameters:
@@ -92,7 +96,7 @@ class Analysis(object):
             center_text += " & ".join(["Model"] + parameters) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
-            for name, chain_res in zip([c.name for c in self.parent.chains], fit_values):
+            for name, chain_res in zip([c.name for c in chains], fit_values):
                 arr = ["\t\t" + name]
                 for p in parameters:
                     if p in chain_res:
@@ -103,6 +107,10 @@ class Analysis(object):
         if hlines:
             center_text += "\t\t" + hline_text
         final_text = get_latex_table_frame(caption, label) % (column_text, center_text)
+
+        if filename is not None:
+            with open(filename, "w") as f:
+                f.write(final_text)
 
         return final_text
 
@@ -127,11 +135,12 @@ class Analysis(object):
         """
         results = []
         if chains is None:
-            chains = self.parent.chains
+            chains = self.parent.get_mcmc_chains()
         else:
             if isinstance(chains, (int, str)):
                 chains = [chains]
-            chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
+            if isinstance(chains[0], (int, str)):
+                chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
 
         for chain in chains:
             res = {}

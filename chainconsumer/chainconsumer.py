@@ -17,11 +17,11 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.26.3"
+    __version__ = "0.27.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger("chainconsumer")
         self.color_finder = Colors()
         self._all_colours = self.color_finder.get_default()
         self._cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
@@ -46,14 +46,16 @@ class ChainConsumer(object):
         # for c in self.chains:
         #     c.reset_config()
 
+    def get_mcmc_chains(self):
+        return [c for c in self.chains if c.mcmc_chain]
+
     def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
                   grid=False, num_eff_data_points=None, num_free_params=None, color=None, linewidth=None,
                   linestyle=None, kde=None, shade=None, shade_alpha=None, power=None, marker_style=None, marker_size=None,
                   marker_alpha=None, plot_contour=None, plot_point=None, statistics=None, cloud=None,
                   shade_gradient=None, bar_shade=None, bins=None, smooth=None, color_params=None,
                   plot_color_params=None, cmap=None, num_cloud=None):
-        """
-        Add a chain to the consumer.
+        """ Add a chain to the consumer.
 
         Parameters
         ----------
@@ -108,7 +110,7 @@ class ChainConsumer(object):
         marker_style : str|, optional
             The marker style to use when plotting points. Defaults to `'.'`
         marker_size : numeric|, optional
-            Size of markers, if plotted. Defaults to `4`.
+            Size of markers, if plotted. Defaults to `20`.
         marker_alpha : numeric, optional
             The alpha values when plotting markers.
         plot_contour : bool, optional
@@ -233,9 +235,70 @@ class ChainConsumer(object):
         self._init_params()
         return self
 
-    def remove_chain(self, chain=-1):
+    def add_covariance(self, mean, covariance, parameters=None, name=None, **kwargs):
+        """ Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
+
+        Parameters
+        ----------
+        mean : list|np.ndarray
+            The an array of mean values.
+        covariance : list|np.ndarray
+            The 2D array describing the covariance. Dimensions should agree with the `mean` input.
+        parameters : list[str], optional
+            A list of parameter names, one for each column (dimension) in the mean array.
+        name : str, optional
+            The name of the chain. Used when plotting multiple chains at once.
+        kwargs :
+            Extra arguments about formatting - identical to what you would find in `add_chain`. `linewidth`, `color`,
+            etc.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
         """
-        Removes a chain from ChainConsumer. Calling this will require any configurations set to be redone!
+        chain = np.random.multivariate_normal(mean, covariance, size=1000000)
+        self.add_chain(chain, parameters=parameters, name=name, **kwargs)
+        self.chains[-1].mcmc_chain = False  # So we dont plot this when looking at walks, etc
+        return self
+
+    def add_marker(self, location, parameters=None, name=None, color=None, marker_size=None,
+                   marker_style=None, marker_alpha=None):
+        """ Add a marker to the plot at the given location.
+
+        Parameters
+        ----------
+        location : list|np.ndarray
+            The coordinates to place the marker
+        parameters : list[str], optional
+            A list of parameter names, one for each column (dimension) in the mean array.
+        name : str, optional
+            The name of the chain. Used when plotting multiple chains at once.
+        color : str(hex), optional
+            Provide a colour for the chain. Can be used instead of calling `configure` for convenience.
+        marker_style : str|, optional
+            The marker style to use when plotting points. Defaults to `'.'`
+        marker_size : numeric|, optional
+            Size of markers, if plotted. Defaults to `20`.
+        marker_alpha : numeric, optional
+            The alpha values when plotting markers.
+
+        Returns
+        -------
+        ChainConsumer
+            Itself, to allow chaining calls.
+        """
+        chain = np.vstack((location, location))
+        posterior = np.array([0, 1])
+        self.add_chain(chain, parameters=parameters, posterior=posterior, name=name, color=color, marker_size=marker_size,
+                       marker_style=marker_style, marker_alpha=marker_alpha, plot_point=True, plot_contour=False)
+        self.chains[-1].mcmc_chain = False  # So we dont plot this when looking at walks, etc
+        return self
+
+    def remove_chain(self, chain=-1):
+        """ Removes a chain from ChainConsumer.
+
+        Calling this will require any configurations set to be redone!
 
         Parameters
         ----------
@@ -383,7 +446,7 @@ class ChainConsumer(object):
         marker_style : str|list[str], optional
             The marker style to use when plotting points. Defaults to `'.'`
         marker_size : numeric|list[numeric], optional
-            Size of markers, if plotted. Defaults to `4`.
+            Size of markers, if plotted. Defaults to `20`.
         marker_alpha : numeric|list[numeric], optional
             The alpha values when plotting markers.
         usetex : bool, optional
@@ -585,7 +648,7 @@ class ChainConsumer(object):
                 else:
                     shade_alpha = 1.0
             else:
-                shade_alpha = 1.0 / num_chains
+                shade_alpha = 1.0 / np.sqrt(num_chains)
         # Decrease the shading amount if there are colour scatter points
         if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
@@ -616,7 +679,7 @@ class ChainConsumer(object):
             marker_style = [marker_style] * num_chains
 
         if marker_size is None:
-            marker_size = [4] * num_chains
+            marker_size = [20] * num_chains
         elif isinstance(marker_style, (int, float)):
             marker_size = [marker_size] * num_chains
 

@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 from matplotlib.textpath import TextPath
 from numpy import meshgrid
@@ -15,7 +16,7 @@ from .kde import MegKDE
 class Plotter(object):
     def __init__(self, parent):
         self.parent = parent
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger("chainconsumer")
 
     def plot(self, figsize="GROW", parameters=None, chains=None, extents=None, filename=None,
              display=False, truth=None, legend=None, blind=None, watermark=None):  # pragma: no cover
@@ -280,6 +281,7 @@ class Plotter(object):
         if display:
             plt.show()
 
+        self.restore_rc_params()
         return fig
 
     def _save_fig(self, fig, filename, dpi):  # pragma: no cover
@@ -370,7 +372,7 @@ class Plotter(object):
         """
 
         chains, parameters, truth, extents, _ = self._sanitise(chains, parameters, truth, extents)
-
+        chains = [c for c in chains if c.mcmc_chain]
         n = len(parameters)
         extra = 0
         if plot_weights:
@@ -423,6 +425,9 @@ class Plotter(object):
                 self._save_fig(fig, f, 300)
         if display:
             plt.show()
+
+        self.restore_rc_params()
+
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
@@ -516,6 +521,8 @@ class Plotter(object):
             ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
             max_val = None
             for chain in chains:
+                if not chain.config["plot_contour"]:
+                    continue
                 if p in chain.parameters:
                     param_summary = summary and p not in blind
                     m = self._plot_bars(ax, p, chain, summary=param_summary)
@@ -533,6 +540,9 @@ class Plotter(object):
                 self._save_fig(fig, f, 300)
         if display:
             plt.show()
+
+        self.restore_rc_params()
+
         return fig
 
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
@@ -721,6 +731,8 @@ class Plotter(object):
         if display:
             plt.show()
 
+        self.restore_rc_params()
+
         return fig
 
     def _get_size_of_texts(self, texts):  # pragma: no cover
@@ -791,6 +803,13 @@ class Plotter(object):
         elif isinstance(blind, bool) and blind:
             blind = parameters
 
+        self.set_rc_params()
+
+        return chains, parameters, truth, extents, blind
+
+    def set_rc_params(self):
+        self.parent.config["usetex_old"] = matplotlib.rcParams["text.usetex"]
+        self.parent.config["serif_old"] = matplotlib.rcParams["font.family"]
         if self.parent.config["usetex"]:
             plt.rc('text', usetex=True)
         else:
@@ -800,7 +819,9 @@ class Plotter(object):
         else:
             plt.rc('font', family='sans-serif')
 
-        return chains, parameters, truth, extents, blind
+    def restore_rc_params(self):
+        plt.rc('text', usetex=self.parent.config["usetex_old"])
+        plt.rc('font', family=self.parent.config["serif_old"])
 
     def _get_custom_extents(self, parameters, chains, external_extents, wide_extents=True):  # pragma: no cover
         extents = {}
@@ -905,12 +926,16 @@ class Plotter(object):
             if parameter not in chain.parameters:
                 continue  # pragma: no cover
             if not chain.config["plot_contour"]:
-                if self.parent.config["global_point"]:
-                    min_prop = chain.posterior_max_params.get(parameter)
-                    max_prop = min_prop
+                data = chain.get_data(parameter)
+                if data.size < 10:
+                    min_prop, max_prop = np.min(data), np.max(data)
                 else:
-                    data = chain.get_data(parameter)
-                    min_prop, max_prop = get_extents(data, chain.weights, tiny=True)
+                    if self.parent.config["global_point"]:
+                        min_prop = chain.posterior_max_params.get(parameter)
+                        max_prop = min_prop
+                    else:
+                        data = chain.get_data(parameter)
+                        min_prop, max_prop = get_extents(data, chain.weights, tiny=True)
             else:
                 data = chain.get_data(parameter)
                 if chain.grid:
@@ -943,11 +968,18 @@ class Plotter(object):
                 xs, ys, res = [], [], []
                 for chain in chains:
                     if px in chain.parameters and py in chain.parameters:
-                        hist, x_centers, y_centers = self._get_smoothed_histogram2d(chain, py, px)
-                        index = np.unravel_index(hist.argmax(), hist.shape)
-                        ys.append(x_centers[index[0]])
-                        xs.append(y_centers[index[1]])
-                        res.append({"px": xs[-1], "py": ys[-1]})
+                        x = chain.get_data(px)
+                        y = chain.get_data(py)
+                        if x.size <= 2:  # Marker only
+                            xs.append(x[0])
+                            ys.append(y[0])
+                            res.append({"px": x[0], "py": y[0]})
+                        else:
+                            hist, x_centers, y_centers = self._get_smoothed_histogram2d(chain, py, px)
+                            index = np.unravel_index(hist.argmax(), hist.shape)
+                            ys.append(x_centers[index[0]])
+                            xs.append(y_centers[index[1]])
+                            res.append({"px": xs[-1], "py": ys[-1]})
                     else:
                         res.append(None)
             cs = [c.config["color"] for c, r in zip(chains, res) if r is not None]
