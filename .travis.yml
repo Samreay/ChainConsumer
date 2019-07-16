@@ -44,7 +44,7 @@ deploy:
     script: ./conda/deploy_anaconda.sh
     skip_cleanup: true
     on:
-      python: 3.6
+      python: 3.7
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
   - provider: pypi
@@ -57,11 +57,11 @@ deploy:
     on:
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
-      python: 3.6
+      python: 3.7
   - provider: releases
     api_key: "${GITHUB_API_KEY2}"
     skip_cleanup: true
     on:
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
-      python: 3.6
+      python: 3.7
