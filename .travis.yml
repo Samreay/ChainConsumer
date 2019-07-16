@@ -10,6 +10,10 @@ env:
     global:
         - GH_REF: github.com/samreay/ChainConsumer.git
 
+dist: xenial
+services:
+  - xvfb
+
 install:
     - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - chmod +x miniconda.sh
@@ -24,11 +28,6 @@ install:
     - pip install wheel twine
     - pip install -r requirements.txt
     - ulimit -s unlimited
-
-before_script:
-    - "export DISPLAY=:99.0"
-    - "sh -e /etc/init.d/xvfb start"
-    - sleep 3
 
 script:
     - python setup.py clean install
