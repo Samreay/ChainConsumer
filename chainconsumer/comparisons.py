@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from scipy.interpolate import griddata
 import numpy as np
 import logging

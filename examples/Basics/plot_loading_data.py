@@ -31,7 +31,7 @@ filename2 = directory + os.sep + filename + ".npy"
 np.savetxt(filename1, data)
 np.save(filename2, data)
 
-# Now the normal way of giving data is passing a numpy array and parameter separately
+# Now the normal way of giving data is passing a # -*- coding: utf-8 -*-numpy array and parameter separately
 c = ChainConsumer().add_chain(data, parameters=parameters)
 fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

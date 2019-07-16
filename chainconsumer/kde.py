@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from scipy import spatial
 import numpy as np
 

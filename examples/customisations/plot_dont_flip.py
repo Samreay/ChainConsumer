@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 =====================
 Flips, Ticks and Size

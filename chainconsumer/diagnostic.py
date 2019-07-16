@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import logging
 from scipy.stats import normaltest

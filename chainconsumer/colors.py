@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from matplotlib.colors import rgb2hex
 import matplotlib.cm as cm
 import numpy as np

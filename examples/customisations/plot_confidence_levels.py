@@ -33,7 +33,8 @@ fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
 c.configure(flip=False, sigma2d=True, sigmas=[1, 2])
-fig = c.plotter.plot()
+fig = c.plotter.plot()# -*- coding: utf-8 -*-
+
 
 
 fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

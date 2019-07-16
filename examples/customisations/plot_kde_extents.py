@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 ========================
 Gaussian KDE and Extents

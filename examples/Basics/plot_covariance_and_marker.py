@@ -11,6 +11,7 @@ Or maybe its just a random point you want to put on the plot.
 It's all easy to do.
 
 """
+# -*- coding: utf-8 -*-
 from chainconsumer import ChainConsumer
 
 mean = [1, 5]
