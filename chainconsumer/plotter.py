@@ -19,6 +19,9 @@ class Plotter(object):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
 
+        self.usetex_old = matplotlib.rcParams["text.usetex"]
+        self.serif_old = matplotlib.rcParams["font.family"]
+
     def plot(self, figsize="GROW", parameters=None, chains=None, extents=None, filename=None,
              display=False, truth=None, legend=None, blind=None, watermark=None):  # pragma: no cover
         """ Plot the chain!
@@ -282,7 +285,6 @@ class Plotter(object):
         if display:
             plt.show()
 
-        self.restore_rc_params()
         return fig
 
     def _save_fig(self, fig, filename, dpi):  # pragma: no cover
@@ -427,8 +429,6 @@ class Plotter(object):
         if display:
             plt.show()
 
-        self.restore_rc_params()
-
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
@@ -541,8 +541,6 @@ class Plotter(object):
                 self._save_fig(fig, f, 300)
         if display:
             plt.show()
-
-        self.restore_rc_params()
 
         return fig
 
@@ -732,8 +730,6 @@ class Plotter(object):
         if display:
             plt.show()
 
-        self.restore_rc_params()
-
         return fig
 
     def _get_size_of_texts(self, texts):  # pragma: no cover
@@ -809,8 +805,6 @@ class Plotter(object):
         return chains, parameters, truth, extents, blind
 
     def set_rc_params(self):
-        self.parent.config["usetex_old"] = matplotlib.rcParams["text.usetex"]
-        self.parent.config["serif_old"] = matplotlib.rcParams["font.family"]
         if self.parent.config["usetex"]:
             plt.rc('text', usetex=True)
         else:
@@ -821,8 +815,8 @@ class Plotter(object):
             plt.rc('font', family='sans-serif')
 
     def restore_rc_params(self):
-        plt.rc('text', usetex=self.parent.config["usetex_old"])
-        plt.rc('font', family=self.parent.config["serif_old"])
+        plt.rc('text', usetex=self.usetex_old)
+        plt.rc('font', family=self.serif_old)
 
     def _get_custom_extents(self, parameters, chains, external_extents, wide_extents=True):  # pragma: no cover
         extents = {}
