@@ -815,6 +815,12 @@ class Plotter(object):
             plt.rc('font', family='sans-serif')
 
     def restore_rc_params(self):
+        """ Restores the matplotlib rc parameters modified by usetex and serif.
+
+        Unfortunately this cannot be automated because you cannot invoke it whilst you have
+        an active figure object or matplotlib will destroy you. So do all your plotting, close
+        the plots, and then you can call this.
+        """
         plt.rc('text', usetex=self.usetex_old)
         plt.rc('font', family=self.serif_old)
 
