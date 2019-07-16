@@ -56,7 +56,7 @@ class ChainConsumer(object):
                   marker_alpha=None, plot_contour=None, plot_point=None, statistics=None, cloud=None,
                   shade_gradient=None, bar_shade=None, bins=None, smooth=None, color_params=None,
                   plot_color_params=None, cmap=None, num_cloud=None):
-        """ Add a chain to the consumer.
+        r""" Add a chain to the consumer.
 
         Parameters
         ----------
@@ -237,7 +237,7 @@ class ChainConsumer(object):
         return self
 
     def add_covariance(self, mean, covariance, parameters=None, name=None, **kwargs):
-        """ Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
+        r""" Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
 
         Parameters
         ----------
@@ -265,7 +265,7 @@ class ChainConsumer(object):
 
     def add_marker(self, location, parameters=None, name=None, color=None, marker_size=None,
                    marker_style=None, marker_alpha=None):
-        """ Add a marker to the plot at the given location.
+        r""" Add a marker to the plot at the given location.
 
         Parameters
         ----------
@@ -297,7 +297,7 @@ class ChainConsumer(object):
         return self
 
     def remove_chain(self, chain=-1):
-        """ Removes a chain from ChainConsumer.
+        r""" Removes a chain from ChainConsumer.
 
         Calling this will require any configurations set to be redone!
 
@@ -814,7 +814,7 @@ class ChainConsumer(object):
         return self
 
     def configure_truth(self, **kwargs):  # pragma: no cover
-        """ Configure the arguments passed to the ``axvline`` and ``axhline``
+        r""" Configure the arguments passed to the ``axvline`` and ``axhline``
         methods when plotting truth values.
 
         If you do not call this explicitly, the :func:`plot` method will
@@ -845,7 +845,7 @@ class ChainConsumer(object):
         return self
 
     def divide_chain(self, chain=0):
-        """
+        r"""
         Returns a ChainConsumer instance containing all the walks of a given chain
         as individual chains themselves.
 
