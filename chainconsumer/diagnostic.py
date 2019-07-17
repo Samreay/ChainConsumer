@@ -10,7 +10,7 @@ class Diagnostic(object):
         self._logger = logging.getLogger("chainconsumer")
 
     def gelman_rubin(self, chain=None, threshold=0.05):
-        r""" Runs the Gelman Rubin diagnostic on the supplied chains.
+        r""" Runs the Gelman-Rubin diagnostic on the supplied chains.
 
         Parameters
         ----------
