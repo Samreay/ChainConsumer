@@ -26,11 +26,11 @@ install:
     - if [ "$TRAVIS_PYTHON_VERSION" == "2.7" ]; then pip install matplotlib==2.0.0 ; fi
     - hash -r
     - pip install wheel twine
+    - pip install .
     - pip install -r requirements.txt
     - ulimit -s unlimited
 
 script:
-    - python setup.py clean install
     - py.test --cov=chainconsumer -vv
 
 after_success:
