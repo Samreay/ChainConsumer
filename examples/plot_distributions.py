@@ -24,4 +24,4 @@ c = ChainConsumer().add_chain(data, parameters=params)
 
 fig = c.plotter.plot_distributions(truth=means)
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

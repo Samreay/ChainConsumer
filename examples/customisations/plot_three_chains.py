@@ -30,4 +30,4 @@ if __name__ == "__main__":
         .add_chain(data3, name="Chain3") \
         .plotter.plot()
 
-    fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+    fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

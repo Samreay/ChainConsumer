@@ -25,4 +25,4 @@ parameters = ["$x$", "$y$", "$z$", "$a$", "$b$", "$c$"]
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(colors="#388E3C")
 fig = c.plotter.plot(parameters=parameters[:4], figsize="page")
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

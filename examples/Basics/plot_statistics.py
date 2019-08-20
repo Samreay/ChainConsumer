@@ -27,42 +27,42 @@ parameters = ["$x$", "$y$"]
 # Now the normal way of giving data is passing a numpy array and parameter separately
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable cumulative statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="cumulative")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable mean statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="mean")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable maximum symmetric statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_symmetric")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable maximum closest statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_shortest")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Or we can enable maximum central statistics
 
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(statistics="max_central")
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # We can also take advantage of the ability to pass lists to ChainConsumer's
@@ -76,4 +76,4 @@ for stat in stats:
     c.add_chain(data, parameters=parameters, name=stat.replace("_", " ").title())
 c.configure(statistics=stats, bar_shade=True)
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

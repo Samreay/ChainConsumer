@@ -34,7 +34,7 @@ c.configure(linestyles=["-", "--", "-"], linewidths=[1.0, 3.0, 1.0],
             shade_alpha=[0.2, 0.1, 0.0], bar_shade=[True, False, False])
 fig = c.plotter.plot()
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # List options are useful for when the properties of the chains are
@@ -52,4 +52,4 @@ c.add_chain(d1, parameters=["$x$", "$y$"]).add_chain(d2).add_chain(d3, linestyle
 c.configure(linestyles=":", linewidths=2)
 fig = c.plotter.plot()
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

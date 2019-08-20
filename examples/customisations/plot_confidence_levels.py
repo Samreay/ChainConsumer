@@ -25,7 +25,7 @@ c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
 c.configure(flip=False, sigma2d=False, sigmas=[1, 2])  # The default case, so you don't need to specify sigma2d
 fig = c.plotter.plot()
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # Demonstrating the 1D Gaussian confidence levels. Notice the change in contour size
@@ -37,4 +37,4 @@ fig = c.plotter.plot()# -*- coding: utf-8 -*-
 
 
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

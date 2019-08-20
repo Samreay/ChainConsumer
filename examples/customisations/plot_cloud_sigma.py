@@ -26,4 +26,4 @@ c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
 c.configure(summary=False, bins=1.4, cloud=True, sigmas=np.linspace(0, 2, 10))
 fig = c.plotter.plot()
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

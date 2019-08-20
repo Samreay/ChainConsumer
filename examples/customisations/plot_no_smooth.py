@@ -30,4 +30,4 @@ fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
 # If we wanted to display the plot interactively...
 # fig = c.plotter.plot(display=True, figsize="column", truth=[0.0, 4.0])
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

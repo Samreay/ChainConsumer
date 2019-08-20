@@ -30,4 +30,4 @@ c.add_chain(data2, parameters=["$x$", "$y$", "$z$", "$t$"], name="b")
 c.configure(color_params=["$g$", "$t$"])
 fig = c.plotter.plot(figsize=1.75)
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

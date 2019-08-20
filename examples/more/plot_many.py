@@ -33,4 +33,4 @@ c.configure(color_params="$H_0$", shade=[True, True, False],
             shade_alpha=0.2, bar_shade=True, linestyles=["-", "--", "-"])
 fig = c.plotter.plot(figsize=2.0, extents=[[0, 1], [0, 1.5]])
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

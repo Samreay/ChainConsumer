@@ -28,4 +28,4 @@ c.add_chain(data + 2, name="KDE x2!")
 c.configure(kde=[True, False, 2.0], shade_alpha=0.1, flip=False)
 fig = c.plotter.plot(extents=[(-2, 4), (0, 9)])
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

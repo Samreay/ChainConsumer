@@ -25,4 +25,4 @@ c.configure(linestyles=["-", "--"], linewidths=[1.0, 2.0],
             shade=[True, False], shade_alpha=[0.2, 0.0])
 fig = c.plotter.plot()
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

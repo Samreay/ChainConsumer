@@ -27,7 +27,7 @@ c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
 c.configure(color_params="$z$")
 fig = c.plotter.plot(figsize=1.0)
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # You can also plot the weights or posterior if they are specified. Showing weights here.
@@ -37,7 +37,7 @@ c = ChainConsumer().add_chain(data[:, :2], parameters=["$x$", "$y$"], weights=we
 c.configure(color_params="weights")
 fig = c.plotter.plot(figsize=3.0)
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
 ###############################################################################
 # And showing the posterior color parameter here
@@ -48,4 +48,4 @@ c = ChainConsumer().add_chain(data[:, :2], parameters=["$x$", "$y$"], weights=we
 c.configure(color_params="posterior")
 fig = c.plotter.plot(figsize=3.0)
 
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

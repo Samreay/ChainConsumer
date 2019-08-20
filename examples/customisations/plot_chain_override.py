@@ -28,4 +28,4 @@ c.add_chain(data2, parameters=["x", "y"], color="#4286f4", shade_alpha=1.0, name
 c.add_chain(data3, parameters=["x", "y"], color="lg", kde=1.5, linewidth=2.0, name="Green smoothed")
 
 fig = c.plotter.plot()
-fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
