@@ -34,5 +34,5 @@ c.add_chain(data1, parameters=["$x$", "$y$"])
 c.add_chain(data2, parameters=["$x$", "$z$"])
 fig = c.plotter.plot_walks(truth={"$x$": -1, "$y$": 1, "$z$": -2}, convolve=100)
 
-fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

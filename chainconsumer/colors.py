@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from matplotlib.colors import rgb2hex
-import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 import numpy as np
 # Colours drawn from material designs colour pallet at https://material.io/guidelines/style/color.html
 
@@ -50,8 +50,8 @@ class Colors(object):
     def get_default(self):
         return self.get_formatted(self.default_colors)
 
-    def get_colormap(self, num, scale=0.7):  # pragma: no cover
-        color_list = self.get_formatted(cm.rainbow(np.linspace(0, 1, num)))
+    def get_colormap(self, num, cmap_name, scale=0.7):  # pragma: no cover
+        color_list = self.get_formatted(plt.get_cmap(cmap_name)(np.linspace(0.05, 0.9, num)))
         scales = scale + (1 - scale) * np.abs(1 - np.linspace(0, 2, num))
         scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales)]
         return scaled

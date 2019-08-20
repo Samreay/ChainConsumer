@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 =======================
-Rainbow and Custom Bins
+Cmap and Custom Bins
 =======================
 
-Invoke rainbow colour scheme and choose how many bins to use with your data.
+Invoke the cmap colour scheme and choose how many bins to use with your data.
 
-By default, the rainbow colour scheme is used if you have many, many chains. You can
-enable it before that point if you wish. You can also pick how many bins you want to
-display your data with.
+By default, the cmap colour scheme is used if you have many, many chains. You can
+enable it before that point if you wish and pass in the cmap you want to use.
+
+You can also pick how many bins you want to display your data with.
 
 You can see that in this example, we pick too many bins and would not get good
 summaries. If you simply want more (or less) bins than the default estimate,
@@ -37,7 +38,7 @@ c.add_chain(data, name="A")
 c.add_chain(data2, name="B")
 c.add_chain(data3, name="C")
 c.add_chain(data4, name="D")
-c.configure(bins=50, rainbow=True)
+c.configure(bins=50, cmap="plasma")
 fig = c.plotter.plot(figsize=0.75)  # Also making the figure 75% of its original size, for fun
 
-fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

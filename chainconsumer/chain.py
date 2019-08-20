@@ -16,7 +16,7 @@ class Chain(object):
                  shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
                  bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
                  cmap=None, num_cloud=None, plot_contour=True, plot_point=False, marker_style=None,
-                 marker_size=None, marker_alpha=None):
+                 marker_size=None, marker_alpha=None, zorder=None):
         self.chain = chain
         self.parameters = parameters
         self.name = name
@@ -61,7 +61,7 @@ class Chain(object):
                        kde=kde, smooth=smooth, color_params=color_params,
                        plot_color_params=plot_color_params, cmap=cmap, num_cloud=num_cloud,
                        plot_contour=plot_contour, plot_point=plot_point, marker_style=marker_style,
-                       marker_size=marker_size, marker_alpha=marker_alpha)
+                       marker_size=marker_size, marker_alpha=marker_alpha, zorder=zorder)
         self.validate_chain()
         self.validated_params = set()
 
@@ -69,7 +69,7 @@ class Chain(object):
                  shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
                  bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
                  cmap=None, num_cloud=None, marker_style=None, marker_size=None, marker_alpha=None,
-                 plot_contour=True, plot_point=False):
+                 plot_contour=True, plot_point=False, zorder=None):
 
         if statistics is not None:
             assert isinstance(statistics, str), "statistics should be a string"
@@ -102,6 +102,7 @@ class Chain(object):
         self._validate_config("marker_alpha", marker_alpha, int, float)
         self._validate_config("plot_contour", plot_contour, bool)
         self._validate_config("plot_point", plot_point, bool)
+        self._validate_config("zorder", zorder, int)
 
     def update_unset_config(self, name, value, override=None):
         if (override is not None and name in override) or self.config.get(name) is None:
@@ -123,6 +124,8 @@ class Chain(object):
         assert len(self.weights.shape) == 1, "Weights should be a 1D array, have instead %s" % str(self.weights.shape)
         assert self.weights.size == self.chain.shape[0], "Chain %s has %d steps but %d weights" % \
                                                          (self.name, self.weights.size, self.chain.shape[0])
+        assert self.chain.shape[0] > 0, "Chain has shape %s, which means it has 0 steps!" % str(self.chain.shape)
+        assert np.sum(self.weights) > 0, "Chain weights sum to zero, this is not good"
         if self.walkers is not None:
             assert int(self.walkers) == self.walkers, "Walkers should be an integer!"
             assert self.chain.shape[0] % self.walkers == 0, \

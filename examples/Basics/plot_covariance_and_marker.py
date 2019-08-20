@@ -24,4 +24,4 @@ c.add_marker(mean, parameters=parameters, name="Marker!", marker_style="*", mark
 c.configure(usetex=False, serif=False)
 fig = c.plotter.plot()
 
-fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

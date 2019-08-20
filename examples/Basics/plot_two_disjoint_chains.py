@@ -24,4 +24,4 @@ c.add_chain(data, parameters=["$x$", "$y$", r"$\alpha$"])
 c.add_chain(data2, parameters=["$x$", "$y$", r"$\alpha$", r"$\gamma$"])
 fig = c.plotter.plot()
 
-fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

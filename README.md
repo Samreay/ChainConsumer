@@ -58,6 +58,11 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.28.0
+* Removing `rainbow` option and replacing with `cmap` so you can specify the cmap used, not just rainbow.
+* Adding `zorder` configuration option to epxlicitly order contours.
+* Adding extra checks to try and catch bad chains on load.
+
 ##### 0.27.0
 * Now restores default `rcParams` for `usetex` and `font-family` after plotting.
 * All logging now under logger name `chainconsumer` to make it easy to hide if needed.

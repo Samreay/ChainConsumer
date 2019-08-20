@@ -18,7 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.27.0"
+    __version__ = "0.28.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -55,7 +55,7 @@ class ChainConsumer(object):
                   linestyle=None, kde=None, shade=None, shade_alpha=None, power=None, marker_style=None, marker_size=None,
                   marker_alpha=None, plot_contour=None, plot_point=None, statistics=None, cloud=None,
                   shade_gradient=None, bar_shade=None, bins=None, smooth=None, color_params=None,
-                  plot_color_params=None, cmap=None, num_cloud=None):
+                  plot_color_params=None, cmap=None, num_cloud=None, zorder=None):
         r""" Add a chain to the consumer.
 
         Parameters
@@ -151,6 +151,8 @@ class ChainConsumer(object):
         num_cloud : int, optional
             The number of scatter points to show when enabling `cloud` or setting one of the parameters
             to colour scatter. Defaults to 15k per chain.
+        zorder : int, optional
+            The zorder to pass to `matplotlib` when plotting to determine visual order in the plot.
             
         Returns
         -------
@@ -231,7 +233,7 @@ class ChainConsumer(object):
                   plot_contour=plot_contour, plot_point=plot_point, statistics=statistics, cloud=cloud,
                   shade=shade, shade_gradient=shade_gradient, bar_shade=bar_shade, bins=bins, smooth=smooth,
                   color_params=color_params, plot_color_params=plot_color_params, cmap=cmap,
-                  num_cloud=num_cloud)
+                  num_cloud=num_cloud, zorder=zorder)
         self.chains.append(c)
         self._init_params()
         return self
@@ -330,7 +332,7 @@ class ChainConsumer(object):
         return self
 
     def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
-                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, rainbow=None,
+                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, cmap=None,
                   colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
                   cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
                   num_cloud=None, color_params=None, plot_color_params=False, cmaps=None,
@@ -338,7 +340,8 @@ class ChainConsumer(object):
                   usetex=True, diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
                   spacing=None, contour_labels=None, contour_label_font_size=10,
                   legend_kwargs=None, legend_location=None, legend_artists=None,
-                  legend_color_text=True, watermark_text_kwargs=None, summary_area=0.6827):  # pragma: no cover
+                  legend_color_text=True, watermark_text_kwargs=None, summary_area=0.6827,
+                  zorder=None):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -383,8 +386,11 @@ class ChainConsumer(object):
             that giving ``bins=1.5`` will result in using :math:`\frac{1.5\sqrt{n}}{10}` bins.
             Note this parameter is most useful if `kde=False` is also passed, so you
             can actually see the bins and not a KDE.
-        rainbow : bool|list[bool], optional
-            Set to True to force use of rainbow colours
+        cmap : str, optional
+            Set to the matplotlib colour map you want to use to overwrite the default colours.
+            Note that this parameter overwrites colours. The `cmaps` parameters is different,
+            and used when you ask for an extra dimension to be used to colour scatter points.
+            See the online examples to see the difference.
         colors : str(hex)|list[str(hex)], optional
             Provide a list of colours to use for each chain. If you provide more chains
             than colours, you *will* get the rainbow colour spectrum. If you only pass
@@ -483,7 +489,9 @@ class ChainConsumer(object):
             Options to pass to the fontdict property when generating text for the watermark.
         summary_area : float, optional
             The confidence interval used when generating parameter summaries. Defaults to 1 sigma, aka 0.6827
-            
+        zorder : int, optional
+            The zorder to pass to `matplotlib` to determine visual ordering when plotting.
+
         Returns
         -------
         ChainConsumer
@@ -501,8 +509,8 @@ class ChainConsumer(object):
 
         num_chains = len(self.chains)
 
-        assert rainbow is None or colors is None, \
-            "You cannot both ask for rainbow colours and then give explicit colours"
+        assert cmap is None or colors is None, \
+            "You cannot both ask for cmap colours and then give explicit colours"
 
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
@@ -581,12 +589,12 @@ class ChainConsumer(object):
 
         # Determine colours
         if colors is None:
-            if rainbow:
-                colors = self.color_finder.get_colormap(num_chains)
+            if cmap:
+                colors = self.color_finder.get_colormap(num_chains, cmap)
             else:
                 if num_chains > len(self._all_colours):
                     num_needed_colours = np.sum([c is None for c in color_params])
-                    colour_list = self.color_finder.get_colormap(num_needed_colours)
+                    colour_list = self.color_finder.get_colormap(num_needed_colours, "inferno")
                 else:
                     colour_list = self._all_colours
                 colors = []
@@ -699,6 +707,9 @@ class ChainConsumer(object):
         if isinstance(bar_shade, bool):
             bar_shade = [bar_shade] * num_chains
 
+        if zorder is None:
+            zorder = [1] * num_chains
+
         # Figure out how many sigmas to plot
         if sigmas is None:
             if num_chains == 1:
@@ -780,6 +791,7 @@ class ChainConsumer(object):
                 c.update_unset_config("marker_alpha", marker_alpha[i], override=explicit)
                 c.update_unset_config("plot_contour", plot_contour[i], override=explicit)
                 c.update_unset_config("plot_point", plot_point[i], override=explicit)
+                c.update_unset_config("zorder", zorder[i], override=explicit)
                 c.config["summary_area"] = summary_area
 
             except IndentationError as e:
@@ -837,9 +849,13 @@ class ChainConsumer(object):
         """
         if kwargs.get("ls") is None and kwargs.get("linestyle") is None:
             kwargs["ls"] = "--"
-            kwargs["dashes"] = (3, 3)
+            # kwargs["dashes"] = (3, 3)
+        if kwargs.get("lw") is None and kwargs.get("linewidth") is None:
+            kwargs["linewidth"] = 1
         if kwargs.get("color") is None:
             kwargs["color"] = "#000000"
+        if kwargs.get("zorder") is None:
+            kwargs["zorder"] = 100
         self.config_truth = kwargs
         self._configured_truth = True
         return self

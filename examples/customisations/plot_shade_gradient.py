@@ -24,4 +24,4 @@ c.add_chain(data2, parameters=["$x$", "$y$"])
 c.configure(shade_gradient=[0.1, 3.0], colors=['o', 'k'], sigmas=[0, 1, 2, 3], shade_alpha=1.0)
 fig = c.plotter.plot()
 
-fig.set_size_inches(4.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+fig.set_size_inches(0 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -997,6 +997,7 @@ class Plotter(object):
         shade_gradient = chain.config["shade_gradient"]
         linestyle = chain.config["linestyle"]
         linewidth = chain.config["linewidth"]
+        zorder = chain.config["zorder"]
         cmap = chain.config["cmap"]
         contour_labels = self.parent.config["contour_labels"]
 
@@ -1035,11 +1036,11 @@ class Plotter(object):
             if color_data is None:
                 h = None
 
-        if shade:
+        if shade and shade_alpha > 0:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours,
-                        alpha=shade_alpha)
+                        alpha=shade_alpha, zorder=zorder)
         con = ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2,
-                         linestyles=linestyle, linewidths=linewidth)
+                         linestyles=linestyle, linewidths=linewidth, zorder=zorder)
 
         if contour_labels is not None:
             lvls = [l for l in con.levels if l != 0.0]
@@ -1072,6 +1073,7 @@ class Plotter(object):
         bins = chain.config["bins"]
         smooth = chain.config["smooth"]
         kde = chain.config["kde"]
+        zorder = chain.config["zorder"]
         title_size = self.parent.config["label_font_size"]
 
         chain_row = chain.get_data(parameter)
@@ -1079,9 +1081,9 @@ class Plotter(object):
         if smooth or kde:
             xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain, parameter)
             if flip:
-                ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth)
+                ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth, zorder=zorder)
             else:
-                ax.plot(xs, ys, color=colour, ls=linestyle, lw=linewidth)
+                ax.plot(xs, ys, color=colour, ls=linestyle, lw=linewidth, zorder=zorder)
         else:
             if flip:
                 orientation = "horizontal"
@@ -1097,7 +1099,8 @@ class Plotter(object):
             edge_center = 0.5 * (edges[:-1] + edges[1:])
             xs, ys = edge_center, hist
             ax.hist(xs, weights=ys, bins=bins, histtype="step",
-                        color=colour, orientation=orientation, ls=linestyle, lw=linewidth)
+                    color=colour, orientation=orientation,
+                    ls=linestyle, lw=linewidth, zorder=zorder)
         interp_type = "linear" if smooth else "nearest"
         interpolator = interp1d(xs, ys, kind=interp_type)
 
@@ -1113,9 +1116,9 @@ class Plotter(object):
                         upper = xs.max()
                     x = np.linspace(lower, upper, 1000)
                     if flip:
-                        ax.fill_betweenx(x, np.zeros(x.shape), interpolator(x), color=colour, alpha=0.2)
+                        ax.fill_betweenx(x, np.zeros(x.shape), interpolator(x), color=colour, alpha=0.2, zorder=zorder)
                     else:
-                        ax.fill_between(x, np.zeros(x.shape), interpolator(x), color=colour, alpha=0.2)
+                        ax.fill_between(x, np.zeros(x.shape), interpolator(x), color=colour, alpha=0.2, zorder=zorder)
                     if summary:
                         t = self.parent.analysis.get_parameter_text(*fit_values)
                         if isinstance(parameter, str):
@@ -1143,7 +1146,8 @@ class Plotter(object):
 
             bin_center = 0.5 * (bin_edges[:-1] + bin_edges[1:])
             xs, ys = bin_center, hist
-            ax.hist(xs, weights=ys, bins=bin_edges, histtype="step", color=colour, orientation=orientation)
+            ax.hist(xs, weights=ys, bins=bin_edges, histtype="step",
+                    color=colour, orientation=orientation)
         return max_val
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
