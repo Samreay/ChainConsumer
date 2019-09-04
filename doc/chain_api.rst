@@ -16,6 +16,8 @@ The methods found in the ChainConsumer class itself all relate to add, manipulat
 the chains fed in.
 
 * :func:`chainconsumer.ChainConsumer.add_chain` - Add a chain!
+* :func:`chainconsumer.ChainConsumer.add_marker` - Add a marker!
+* :func:`chainconsumer.ChainConsumer.add_covariance` - Add a Gaussian to the mix.
 * :func:`chainconsumer.ChainConsumer.divide_chain` - Split a chain into multiple chains to inspect each walk.
 * :func:`chainconsumer.ChainConsumer.remove_chain` - Remove a chain.
 * :func:`chainconsumer.ChainConsumer.configure` - Configure ChainConsumer.
@@ -32,6 +34,7 @@ used for generating plots.
 * :func:`chainconsumer.plotter.Plotter.plot_walks` - Plot the walks to visually inspect convergence.
 * :func:`chainconsumer.plotter.Plotter.plot_distributions` - Plot the marginalised distributions only.
 * :func:`chainconsumer.plotter.Plotter.plot_summary` - Plot the marginalised distributions only.
+* :func:`chainconsumer.plotter.Plotter.plot_contour` - Pass in an axis for a contour plot on an external figure.
 
 Analysis Class
 --------------
