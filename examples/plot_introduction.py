@@ -22,18 +22,21 @@ more information.
 
 import numpy as np
 from chainconsumer import ChainConsumer
+from scipy.stats import lognorm
 
 np.random.seed(0)
-data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+data = lognorm.rvs(0.95, loc=0, size=(10000, 2))
 
 c = ChainConsumer()
-c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
-
+c.add_chain(data, parameters=["$x_1$", "$x_2$"]).configure(flip=True)
+#fig = c.plotter.plot(figsize="column", truth=[4.0, 4.0], log_scales=True )
+# c.plotter.plot_walks(log_scales={"$x_1$": False})
+#c.plotter.plot_distributions(log_scales=True)
+c.plotter.plot_summary(log_scales=True, errorbar=True)
 # If we wanted to save to file, we would instead have written
 # fig = c.plotter.plot(filename="location", figsize="column", truth=[0.0, 4.0])
 
 # If we wanted to display the plot interactively...
 # fig = c.plotter.plot(display=True, figsize="column", truth=[0.0, 4.0])
 
-fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+#fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

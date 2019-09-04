@@ -58,6 +58,13 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.29.0
+* Warning the user if `configure` is called multiple times.
+* Allowing parameters to be a number when calling `get_latex_table`
+* Adding log scales when plotting.
+* Adding the ability to plot a contour on an arbitrary axis via new method `plot_contour`
+
+
 ##### 0.28.0
 * Removing `rainbow` option and replacing with `cmap` so you can specify the cmap used, not just rainbow.
 * Adding `zorder` configuration option to epxlicitly order contours.

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from matplotlib.ticker import MaxNLocator, ScalarFormatter
+from matplotlib.ticker import MaxNLocator, ScalarFormatter, LogLocator
 from matplotlib.textpath import TextPath
 from numpy import meshgrid
 from scipy.interpolate import interp1d
@@ -23,7 +23,7 @@ class Plotter(object):
         self.serif_old = matplotlib.rcParams["font.family"]
 
     def plot(self, figsize="GROW", parameters=None, chains=None, extents=None, filename=None,
-             display=False, truth=None, legend=None, blind=None, watermark=None):  # pragma: no cover
+             display=False, truth=None, legend=None, blind=None, watermark=None, log_scales=None):  # pragma: no cover
         """ Plot the chain!
 
         Parameters
@@ -61,6 +61,10 @@ class Plotter(object):
             or can pass in a string (or list of strings) which specify the parameters to blind.
         watermark : str, optional
             A watermark to add to the figure
+        log_scales : bool, list[bool] or dict[bool], optional
+            Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
+            names to set to true, a dictionary of param names with true/false
+            or just a bool (just `True` would set everything to log scales).
 
         Returns
         -------
@@ -69,8 +73,9 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth,
-                                                                          extents, color_p=True, blind=blind)
+        chains, parameters, truth, extents, blind, log_scales = self._sanitise(chains, parameters, truth,
+                                                                               extents, color_p=True, blind=blind,
+                                                                               log_scales=log_scales)
         names = [chain.name for chain in chains]
 
         if legend is None:
@@ -114,7 +119,7 @@ class Plotter(object):
         flip = (len(parameters) == 2 and plot_hists and self.parent.config["flip"])
 
         fig, axes, params1, params2, extents = self._get_figure(parameters, chains=chains, figsize=figsize, flip=flip,
-                                                                external_extents=extents, blind=blind)
+                                                                external_extents=extents, blind=blind, log_scales=log_scales)
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
 
@@ -323,7 +328,7 @@ class Plotter(object):
 
     def plot_walks(self, parameters=None, truth=None, extents=None, display=False,
                    filename=None, chains=None, convolve=None, figsize=None,
-                   plot_weights=True, plot_posterior=True, log_weight=None):  # pragma: no cover
+                   plot_weights=True, plot_posterior=True, log_weight=None, log_scales=None):  # pragma: no cover
         """ Plots the chain walk; the parameter values as a function of step index.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -366,6 +371,10 @@ class Plotter(object):
         log_weight : bool, optional
             Whether to display weights in log space or not. If None, the value is
             inferred by the mean weights of the plotted chains.
+        log_scales : bool, list[bool] or dict[bool], optional
+            Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
+            names to set to true, a dictionary of param names with true/false
+            or just a bool (just `True` would set everything to log scales).
 
         Returns
         -------
@@ -374,7 +383,8 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, _ = self._sanitise(chains, parameters, truth, extents)
+        chains, parameters, truth, extents, _, log_scales = self._sanitise(chains, parameters, truth, extents, log_scales=log_scales)
+
         chains = [c for c in chains if c.mcmc_chain]
         n = len(parameters)
         extra = 0
@@ -400,7 +410,8 @@ class Plotter(object):
                 for chain in chains:
                     if p in chain.parameters:
                         chain_row = chain.get_data(p)
-                        self._plot_walk(ax, p, chain_row, extents=extents.get(p), convolve=convolve, color=chain.config["color"])
+                        log = log_scales.get(p, False)
+                        self._plot_walk(ax, p, chain_row, extents=extents.get(p), convolve=convolve, color=chain.config["color"], log_scale=log)
                 if truth.get(p) is not None:
                     self._plot_walk_truth(ax, truth.get(p))
             else:
@@ -432,7 +443,7 @@ class Plotter(object):
         return fig
 
     def plot_distributions(self, parameters=None, truth=None, extents=None, display=False,
-                           filename=None, chains=None, col_wrap=4, figsize=None, blind=None):  # pragma: no cover
+                           filename=None, chains=None, col_wrap=4, figsize=None, blind=None, log_scales=None):  # pragma: no cover
         """ Plots the 1D parameter distributions for verification purposes.
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -467,6 +478,10 @@ class Plotter(object):
         blind : bool|string|list[string], optional
             Whether to blind axes values. Can be set to `True` to blind all parameters,
             or can pass in a string (or list of strings) which specify the parameters to blind.
+        log_scales : bool, list[bool] or dict[bool], optional
+            Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
+            names to set to true, a dictionary of param names with true/false
+            or just a bool (just `True` would set everything to log scales).
 
         Returns
         -------
@@ -474,7 +489,7 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind)
+        chains, parameters, truth, extents, blind, log_scales = self._sanitise(chains, parameters, truth, extents, blind=blind, log_scales=log_scales)
 
         n = len(parameters)
         num_cols = min(n, col_wrap)
@@ -511,15 +526,22 @@ class Plotter(object):
             p = parameters[i]
 
             ax.set_yticks([])
+            if log_scales.get(p, False):
+                ax.set_xscale('log')
             if p in blind:
                 ax.set_xticks([])
             else:
                 if diagonal_tick_labels:
                     _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
                 _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
-                ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-                ax.xaxis.set_major_formatter(formatter)
+
+                if log_scales.get(p, False):
+                    ax.xaxis.set_major_locator(LogLocator(numticks=max_ticks))
+                else:
+                    ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                    ax.xaxis.set_major_formatter(formatter)
             ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
+
             max_val = None
             for chain in chains:
                 if not chain.config["plot_contour"]:
@@ -547,7 +569,7 @@ class Plotter(object):
     def plot_summary(self, parameters=None, truth=None, extents=None, display=False,
                      filename=None, chains=None, figsize=1.0, errorbar=False, include_truth_chain=True,
                      blind=None, watermark=None, extra_parameter_spacing=0.5,
-                     vertical_spacing_ratio=1.0, show_names=True):  # pragma: no cover
+                     vertical_spacing_ratio=1.0, show_names=True, log_scales=None):  # pragma: no cover
         """ Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -596,6 +618,10 @@ class Plotter(object):
             Increase vertical space for each model
         show_names : bool, optional
             Whether to show chain names or not. Defaults to `True`.
+        log_scales : bool, list[bool] or dict[bool], optional
+            Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
+            names to set to true, a dictionary of param names with true/false
+            or just a bool (just `True` would set everything to log scales).
 
         Returns
         -------
@@ -604,7 +630,7 @@ class Plotter(object):
 
         """
         wide_extents = not errorbar
-        chains, parameters, truth, extents, blind = self._sanitise(chains, parameters, truth, extents, blind=blind, wide_extents=wide_extents)
+        chains, parameters, truth, extents, blind, log_scales = self._sanitise(chains, parameters, truth, extents, blind=blind, wide_extents=wide_extents, log_scales=log_scales)
 
         all_names = [c.name for c in self.parent.chains]
 
@@ -672,6 +698,8 @@ class Plotter(object):
                     ax.set_xticks([])
                 ax.set_yticks([])
                 ax.set_xlim(extents[p])
+                if log_scales.get(p):
+                    ax.set_xscale('log')
 
                 # Put title in
                 if i == 0:
@@ -738,7 +766,9 @@ class Plotter(object):
         widths = [TextPath((0, 0), text, usetex=usetex, size=size).get_extents().width for text in texts]
         return max(widths)
 
-    def _sanitise(self, chains, parameters, truth, extents, color_p=False, blind=None, wide_extents=True):  # pragma: no cover
+    def _sanitise(self, chains, parameters, truth, extents, color_p=False,
+                  blind=None, wide_extents=True, log_scales=None):  # pragma: no cover
+
         if not self.parent._configured:
             self.parent.configure()
         if not self.parent._configured_truth:
@@ -793,6 +823,24 @@ class Plotter(object):
 
         extents = self._get_custom_extents(parameters, chains, extents, wide_extents=wide_extents)
 
+        if log_scales is None:
+            log_scales = {}
+        elif isinstance(log_scales, str):
+            log_scales = {log_scales: True}
+        elif isinstance(log_scales, list):
+            old = log_scales
+            log_scales = {}
+            for i, item in enumerate(old):
+                if isinstance(item, bool):
+                    log_scales[parameters[i]] = item
+                elif isinstance(item, int):
+                    log_scales[parameters[item]] = True
+                elif isinstance(item, str):
+                    log_scales[item] = True
+
+        elif isinstance(log_scales, bool):
+            log_scales = dict([(p, log_scales) for p in parameters])
+
         if blind is None:
             blind = []
         elif isinstance(blind, str):
@@ -802,7 +850,7 @@ class Plotter(object):
 
         self.set_rc_params()
 
-        return chains, parameters, truth, extents, blind
+        return chains, parameters, truth, extents, blind, log_scales
 
     def set_rc_params(self):
         if self.parent.config["usetex"]:
@@ -834,7 +882,7 @@ class Plotter(object):
         return extents
 
     def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None,
-                    chains=None, blind=None):  # pragma: no cover
+                    chains=None, blind=None, log_scales=None):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.parent.config["max_ticks"]
         spacing = self.parent.config["spacing"]
@@ -883,6 +931,23 @@ class Plotter(object):
                     ax.set_xticks([])
                     ax.set_yticks([])
                 else:
+                    logx = False
+                    logy = False
+                    if p1 == p2:
+                        if log_scales.get(p1):
+                            if flip and j == n - 1:
+                                ax.set_yscale('log')
+                                logy = True
+                            else:
+                                ax.set_xscale('log')
+                                logx = True
+                    else:
+                        if log_scales.get(p1):
+                            ax.set_yscale('log')
+                            logy = True
+                        if log_scales.get(p2):
+                            ax.set_xscale('log')
+                            logx = True
                     if i != n - 1 or (flip and j == n - 1):
                         ax.set_xticks([])
                     else:
@@ -905,14 +970,20 @@ class Plotter(object):
                         if diagonal_tick_labels:
                             _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
                         _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
-                        ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-                        ax.xaxis.set_major_formatter(formatter)
+                        if not logx:
+                            ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                            ax.xaxis.set_major_formatter(formatter)
+                        else:
+                            ax.xaxis.set_major_locator(LogLocator(numticks=max_ticks))
                     if display_y_ticks:
                         if diagonal_tick_labels:
                             _ = [l.set_rotation(45) for l in ax.get_yticklabels()]
                         _ = [l.set_fontsize(tick_font_size) for l in ax.get_yticklabels()]
-                        ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-                        ax.yaxis.set_major_formatter(formatter)
+                        if not logy:
+                            ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+                            ax.yaxis.set_major_formatter(formatter)
+                        else:
+                            ax.yaxis.set_major_locator(LogLocator(numticks=max_ticks))
                     if i != j or not plot_hists:
                         ax.set_ylim(extents[p1])
                     elif flip and i == 1:
@@ -1151,7 +1222,7 @@ class Plotter(object):
         return max_val
 
     def _plot_walk(self, ax, parameter, data, truth=None, extents=None,
-                   convolve=None, color=None):  # pragma: no cover
+                   convolve=None, color=None, log_scale=False):  # pragma: no cover
         if extents is not None:
             ax.set_ylim(extents)
         assert convolve is None or isinstance(convolve, int), \
@@ -1163,7 +1234,11 @@ class Plotter(object):
             color = "#0345A1"
         ax.scatter(x, data, c=color, s=2, marker=".", edgecolors="none", alpha=0.5)
         max_ticks = self.parent.config["max_ticks"]
-        ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
+        if log_scale:
+            ax.set_yscale('log')
+            ax.yaxis.set_major_locator(LogLocator(numticks=max_ticks))
+        else:
+            ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
 
         if convolve is not None:
             color2 = self.parent.color_finder.scale_colour(color, 0.5)

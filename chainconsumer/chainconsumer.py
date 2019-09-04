@@ -18,7 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
-    __version__ = "0.28.0"
+    __version__ = "0.29.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -33,6 +33,7 @@ class ChainConsumer(object):
         self._init_params()
         self._gauss_mode = 'reflect'
         self._configured = False
+        self._num_configure_calls = 0
 
         self.plotter = Plotter(self)
         self.diagnostic = Diagnostic(self)
@@ -497,6 +498,12 @@ class ChainConsumer(object):
         ChainConsumer
             Itself, to allow chaining calls.
         """
+        # Warn the user if configure has been invoked multiple times
+        self._num_configure_calls += 1
+        if self._num_configure_calls > 1:
+            self._logger.warning("Configure has been called %d times - this is not good - it should be once!" % self._num_configure_calls)
+            self._logger.warning("To avoid this, load your chains in first, then call analysis/plotting methods")
+
         # Dirty way of ensuring overrides happen when requested
         l = locals()
         explicit = []
