@@ -32,7 +32,7 @@ class Analysis(object):
 
         Parameters
         ----------
-        parameters : list[str], optional
+        parameters : list[str], int optional
             A list of what parameters to include in the table. By default, includes all parameters
         transpose : bool, optional
             Defaults to False, which gives each column as a parameter, each chain (framework)
@@ -59,6 +59,8 @@ class Analysis(object):
         """
         if parameters is None:
             parameters = self.parent._all_parameters
+        elif isinstance(parameters, int):
+            parameters = self.parent._all_parameters[:parameters]
         for p in parameters:
             assert isinstance(p, str), \
                 "Generating a LaTeX table requires all parameters have labels"
