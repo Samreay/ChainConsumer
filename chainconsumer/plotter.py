@@ -769,19 +769,7 @@ class Plotter(object):
     def _sanitise(self, chains, parameters, truth, extents, color_p=False,
                   blind=None, wide_extents=True, log_scales=None):  # pragma: no cover
 
-        if not self.parent._configured:
-            self.parent.configure()
-        if not self.parent._configured_truth:
-            self.parent.configure_truth()
-
-        if chains is None:
-            chains = list(range(len(self.parent.chains)))
-        else:
-            if isinstance(chains, str) or isinstance(chains, int):
-                chains = [chains]
-            chains = [i for c in chains for i in self.parent._get_chain(c)]
-
-        chains = [self.parent.chains[i] for i in chains]
+        chains = self._sanitise_chains(chains)
 
         if color_p:
             # Get all parameters to plot, taking into account some of them
@@ -1058,6 +1046,42 @@ class Plotter(object):
             h = ax.scatter(xs, ys, marker=marker, c=cs, s=size, linewidth=0.7, alpha=alpha)
         return h
 
+    def _sanitise_chains(self, chains):
+
+        if not self.parent._configured:
+            self.parent.configure()
+        if not self.parent._configured_truth:
+            self.parent.configure_truth()
+
+        if chains is None:
+            chains = list(range(len(self.parent.chains)))
+        else:
+            if isinstance(chains, str) or isinstance(chains, int):
+                chains = [chains]
+            chains = [i for c in chains for i in self.parent._get_chain(c)]
+
+        chains = [self.parent.chains[i] for i in chains]
+        return chains
+
+    def plot_contour(self, ax, parameter_x, parameter_y, chains=None):
+        """ A lightweight method to plot contours in an external axis given two specified parameters
+
+        Parameters
+        ==========
+        ax : matplotlib axis
+            The axis to plot on
+        parameter_x : str
+            The name of the parameter to plot for the x axis. Must be the string label of the parameter.
+        parameter_y : str
+            The name of the parameter to plot for the y axis. Must be the string label of the parameter.
+        chains : int|str, list[str|int], optional
+            Used to specify which chain to show if more than one chain is loaded in.
+            Can be an integer, specifying the chain index, or a str, specifying the chain name, or a list of either.
+        """
+        chains = self._sanitise_chains(chains)
+        for chain in chains:
+            self._plot_contour(ax, chain, parameter_y, parameter_x)
+
     def _plot_contour(self, ax, chain, px, py, color_extents=None):  # pragma: no cover
 
         levels = self._get_levels()
@@ -1071,7 +1095,8 @@ class Plotter(object):
         zorder = chain.config["zorder"]
         cmap = chain.config["cmap"]
         contour_labels = self.parent.config["contour_labels"]
-
+        if color_extents is None:
+            color_extents = {}
         h = None
         color_data = chain.get_color_data()
         x = chain.get_data(py)
