@@ -21,8 +21,7 @@ def get_extents(data, weight, plot=False, wide_extents=True, tiny=False):
 
 
 def get_bins(chains):
-    proposal = [max(35, np.floor(1.0 * np.power(chain.chain.shape[0] / chain.chain.shape[1], 0.25)))
-                for chain in chains]
+    proposal = [max(35, np.floor(1.0 * np.power(chain.chain.shape[0] / chain.chain.shape[1], 0.25))) for chain in chains]
     return proposal
 
 
@@ -50,4 +49,3 @@ def get_latex_table_frame(caption, label):  # pragma: no cover
         %s    \end{tabular}
 \end{table}"""
     return base_string % (caption, label, "%s", "%s")
-

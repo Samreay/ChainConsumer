@@ -48,7 +48,7 @@ class Comparison(object):
                 num_params = chain.chain.shape[1]
                 means = np.array([np.average(chain.chain[:, ii], weights=chain.weights) for ii in range(num_params)])
                 d = -2 * p
-                d_of_mean = griddata(chain.chain, d, means, method='nearest')[0]
+                d_of_mean = griddata(chain.chain, d, means, method="nearest")[0]
                 mean_d = np.average(d, weights=chain.weights)
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
@@ -96,8 +96,7 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warn("You need to set %s for chain %s to get the BIC" %
-                                  (missing[:-2], chain.name))
+                self._logger.warn("You need to set %s for chain %s to get the BIC" % (missing[:-2], chain.name))
             else:
                 bics_bool.append(True)
                 bics.append(n_free * np.log(n_data) - 2 * np.max(p))
@@ -150,11 +149,10 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warn("You need to set %s for chain %s to get the AIC" %
-                                  (missing[:-2], chain.name))
+                self._logger.warn("You need to set %s for chain %s to get the AIC" % (missing[:-2], chain.name))
             else:
                 aics_bool.append(True)
-                c_cor = (1.0 * n_free * (n_free + 1) / (n_data - n_free - 1))
+                c_cor = 1.0 * n_free * (n_free + 1) / (n_data - n_free - 1)
                 aics.append(2.0 * (n_free + c_cor - np.max(p)))
         if len(aics) > 0:
             aics -= np.min(aics)
@@ -168,8 +166,9 @@ class Comparison(object):
                 i += 1
         return aics_fin
 
-    def comparison_table(self, caption=None, label="tab:model_comp", hlines=True,
-                         aic=True, bic=True, dic=True, sort="bic", descending=True):  # pragma: no cover
+    def comparison_table(
+        self, caption=None, label="tab:model_comp", hlines=True, aic=True, bic=True, dic=True, sort="bic", descending=True
+    ):  # pragma: no cover
         """
         Return a LaTeX ready table of model comparisons.
 
@@ -218,8 +217,7 @@ class Comparison(object):
         hline_text = "\\hline\n"
         if hlines:
             center_text += hline_text
-        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") \
-                       + (" & DIC " if dic else "") + end_text
+        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") + (" & DIC " if dic else "") + end_text
         if hlines:
             center_text += "\t" + hline_text
         if aic:

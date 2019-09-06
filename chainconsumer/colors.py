@@ -2,6 +2,7 @@
 from matplotlib.colors import rgb2hex
 import matplotlib.pyplot as plt
 import numpy as np
+
 # Colours drawn from material designs colour pallet at https://material.io/guidelines/style/color.html
 
 
@@ -21,15 +22,24 @@ class Colors(object):
             "grey": "#9E9E9E",
             "orange": "#FB8C00",
             "amber": "#FFB300",
-            "brown": "#795548"
+            "brown": "#795548",
         }
         self.aliases = {
-            "b": "blue", "r": "red", "g": "green", "k": "black", "m": "magenta", "c": "cyan",
-            "o": "orange", "y": "yellow", "a": "amber", "p": "purple",
-            "e": "grey", "lg": "lgreen", "lb": "lblue"
+            "b": "blue",
+            "r": "red",
+            "g": "green",
+            "k": "black",
+            "m": "magenta",
+            "c": "cyan",
+            "o": "orange",
+            "y": "yellow",
+            "a": "amber",
+            "p": "purple",
+            "e": "grey",
+            "lg": "lgreen",
+            "lb": "lblue",
         }
-        self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "grey",
-                               "lblue", "magenta", "green", "brown", "black", "orange"]
+        self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "grey", "lblue", "magenta", "green", "brown", "black", "orange"]
 
     def format(self, color):
         if isinstance(color, np.ndarray):
@@ -60,7 +70,7 @@ class Colors(object):
         if isinstance(colour, np.ndarray):
             r, g, b = colour[:3] * 255.0
         else:
-            hexx = colour.strip('#')
+            hexx = colour.strip("#")
             if scalefactor < 0 or len(hexx) != 6:
                 return hexx
             r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)

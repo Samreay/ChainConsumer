@@ -23,11 +23,12 @@ class Analysis(object):
             "cumulative": self.get_parameter_summary_cumulative,
             "max_symmetric": self.get_paramater_summary_max_symmetric,
             "max_shortest": self.get_parameter_summary_max_shortest,
-            "max_central": self.get_parameter_summary_max_central
+            "max_central": self.get_parameter_summary_max_central,
         }
 
-    def get_latex_table(self, parameters=None, transpose=False, caption=None,
-                        label="tab:model_params", hlines=True, blank_fill="--", filename=None):  # pragma: no cover
+    def get_latex_table(
+        self, parameters=None, transpose=False, caption=None, label="tab:model_params", hlines=True, blank_fill="--", filename=None
+    ):  # pragma: no cover
         """ Generates a LaTeX table from parameter summaries.
 
         Parameters
@@ -62,8 +63,7 @@ class Analysis(object):
         elif isinstance(parameters, int):
             parameters = self.parent._all_parameters[:parameters]
         for p in parameters:
-            assert isinstance(p, str), \
-                "Generating a LaTeX table requires all parameters have labels"
+            assert isinstance(p, str), "Generating a LaTeX table requires all parameters have labels"
         num_parameters = len(parameters)
         chains = self.parent.get_mcmc_chains()
         num_chains = len(chains)
@@ -266,8 +266,7 @@ class Analysis(object):
 
         return parameters, cov
 
-    def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations",
-                              label="tab:parameter_correlations"):
+    def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations", label="tab:parameter_correlations"):
         """
         Gets a LaTeX table of parameter correlations.
 
@@ -291,8 +290,7 @@ class Analysis(object):
         parameters, cor = self.get_correlations(chain=chain, parameters=parameters)
         return self._get_2d_latex_table(parameters, cor, caption, label)
 
-    def get_covariance_table(self, chain=0, parameters=None, caption="Parameter Covariance",
-                              label="tab:parameter_covariance"):
+    def get_covariance_table(self, chain=0, parameters=None, caption="Parameter Covariance", label="tab:parameter_covariance"):
         """
         Gets a LaTeX table of parameter covariance.
 
@@ -322,7 +320,7 @@ class Analysis(object):
         if chain.grid:
             bins = get_grid_bins(data)
         else:
-            bins = chain.config['bins']
+            bins = chain.config["bins"]
             bins, smooth = get_smoothed_bins(smooth, bins, data, chain.weights)
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
@@ -388,8 +386,7 @@ class Analysis(object):
         upper_error = upper - maximum
         lower_error = maximum - lower
         if upper_error != 0 and lower_error != 0:
-            resolution = min(np.floor(np.log10(np.abs(upper_error))),
-                            np.floor(np.log10(np.abs(lower_error))))
+            resolution = min(np.floor(np.log10(np.abs(upper_error))), np.floor(np.log10(np.abs(lower_error))))
         elif upper_error == 0 and lower_error != 0:
             resolution = np.floor(np.log10(np.abs(lower_error)))
         elif upper_error != 0 and lower_error == 0:
@@ -432,8 +429,7 @@ class Analysis(object):
         if upper_error_text == lower_error_text:
             text = r"%s\pm %s" % (fmt, "%s") % (maximum, lower_error_text)
         else:
-            text = r"%s^{+%s}_{-%s}" % (fmt, "%s", "%s") % \
-                   (maximum, upper_error_text, lower_error_text)
+            text = r"%s^{+%s}_{-%s}" % (fmt, "%s", "%s") % (maximum, upper_error_text, lower_error_text)
         if factor != 0:
             text = r"\left( %s \right) \times 10^{%d}" % (text, -factor)
         if wrap:

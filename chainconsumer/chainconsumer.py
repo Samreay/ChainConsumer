@@ -18,6 +18,7 @@ class ChainConsumer(object):
     figures, tables, diagnostics, you name it.
 
     """
+
     __version__ = "0.29.0"
 
     def __init__(self):
@@ -26,12 +27,12 @@ class ChainConsumer(object):
         self.color_finder = Colors()
         self._all_colours = self.color_finder.get_default()
         self._cmaps = ["viridis", "inferno", "hot", "Blues", "Greens", "Greys"]
-        self._linestyles = ["-", '--', ':']
+        self._linestyles = ["-", "--", ":"]
         self.chains = []
         self._all_parameters = []
         self._default_parameters = None
         self._init_params()
-        self._gauss_mode = 'reflect'
+        self._gauss_mode = "reflect"
         self._configured = False
         self._num_configure_calls = 0
 
@@ -51,12 +52,41 @@ class ChainConsumer(object):
     def get_mcmc_chains(self):
         return [c for c in self.chains if c.mcmc_chain]
 
-    def add_chain(self, chain, parameters=None, name=None, weights=None, posterior=None, walkers=None,
-                  grid=False, num_eff_data_points=None, num_free_params=None, color=None, linewidth=None,
-                  linestyle=None, kde=None, shade=None, shade_alpha=None, power=None, marker_style=None, marker_size=None,
-                  marker_alpha=None, plot_contour=None, plot_point=None, statistics=None, cloud=None,
-                  shade_gradient=None, bar_shade=None, bins=None, smooth=None, color_params=None,
-                  plot_color_params=None, cmap=None, num_cloud=None, zorder=None):
+    def add_chain(
+        self,
+        chain,
+        parameters=None,
+        name=None,
+        weights=None,
+        posterior=None,
+        walkers=None,
+        grid=False,
+        num_eff_data_points=None,
+        num_free_params=None,
+        color=None,
+        linewidth=None,
+        linestyle=None,
+        kde=None,
+        shade=None,
+        shade_alpha=None,
+        power=None,
+        marker_style=None,
+        marker_size=None,
+        marker_alpha=None,
+        plot_contour=None,
+        plot_point=None,
+        statistics=None,
+        cloud=None,
+        shade_gradient=None,
+        bar_shade=None,
+        bins=None,
+        smooth=None,
+        color_params=None,
+        plot_color_params=None,
+        cmap=None,
+        num_cloud=None,
+        zorder=None,
+    ):
         r""" Add a chain to the consumer.
 
         Parameters
@@ -168,8 +198,7 @@ class ChainConsumer(object):
             else:
                 chain = np.load(chain)
         elif isinstance(chain, dict):
-            assert parameters is None, \
-                "You cannot pass a dictionary and specify parameter names"
+            assert parameters is None, "You cannot pass a dictionary and specify parameter names"
             is_dict = True
             parameters = list(chain.keys())
             chain = np.array([chain[p] for p in parameters]).T
@@ -180,14 +209,14 @@ class ChainConsumer(object):
             assert walkers is None, "If grid is set, walkers should not be"
             assert weights is not None, "If grid is set, you need to supply weights"
             if len(weights.shape) > 1:
-                assert not is_dict, "We cannot construct a meshgrid from a dictionary, as the parameters" \
-                                    "are no longer ordered. Please pass in a flattened array instead."
+                assert not is_dict, (
+                    "We cannot construct a meshgrid from a dictionary, as the parameters" "are no longer ordered. Please pass in a flattened array instead."
+                )
                 self._logger.info("Constructing meshgrid for grid results")
                 meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
                 chain = np.vstack([m.flatten() for m in meshes]).T
                 weights = weights.flatten()
-                assert weights.size == chain[:,
-                                       0].size, "Error, given weight array size disagrees with parameter sampling"
+                assert weights.size == chain[:, 0].size, "Error, given weight array size disagrees with parameter sampling"
 
         if len(chain.shape) == 1:
             chain = chain[None].T
@@ -196,17 +225,17 @@ class ChainConsumer(object):
             name = "Chain %d" % len(self.chains)
 
         if power is not None:
-            assert isinstance(power, int) or isinstance(power, float), "Power should be numeric, but is %s" % type(
-                power)
+            assert isinstance(power, int) or isinstance(power, float), "Power should be numeric, but is %s" % type(power)
 
         if self._default_parameters is None and parameters is not None:
             self._default_parameters = parameters
 
         if parameters is None:
             if self._default_parameters is not None:
-                assert chain.shape[1] == len(self._default_parameters), \
-                    "Chain has %d dimensions, but default parameters have %d dimensions" \
-                    % (chain.shape[1], len(self._default_parameters))
+                assert chain.shape[1] == len(self._default_parameters), "Chain has %d dimensions, but default parameters have %d dimensions" % (
+                    chain.shape[1],
+                    len(self._default_parameters),
+                )
                 parameters = self._default_parameters
                 self._logger.debug("Adding chain using default parameters")
             else:
@@ -214,9 +243,10 @@ class ChainConsumer(object):
                 parameters = ["%d" % x for x in range(chain.shape[1])]
         else:
             self._logger.debug("Adding chain with defined parameters")
-            assert len(parameters) <= chain.shape[1], \
-                "Have only %d columns in chain, but have been given %d parameters names! " \
-                "Please double check this." % (chain.shape[1], len(parameters))
+            assert len(parameters) <= chain.shape[1], "Have only %d columns in chain, but have been given %d parameters names! " "Please double check this." % (
+                chain.shape[1],
+                len(parameters),
+            )
         for p in parameters:
             if p not in self._all_parameters:
                 self._all_parameters.append(p)
@@ -227,14 +257,40 @@ class ChainConsumer(object):
         if color is not None:
             color = self.color_finder.get_formatted([color])[0]
 
-        c = Chain(chain, parameters, name, weights=weights, posterior=posterior, walkers=walkers,
-                  grid=grid, num_free_params=num_free_params, num_eff_data_points=num_eff_data_points,
-                  color=color, linewidth=linewidth, linestyle=linestyle, kde=kde, shade_alpha=shade_alpha, power=power,
-                  marker_style=marker_style, marker_size=marker_size, marker_alpha=marker_alpha,
-                  plot_contour=plot_contour, plot_point=plot_point, statistics=statistics, cloud=cloud,
-                  shade=shade, shade_gradient=shade_gradient, bar_shade=bar_shade, bins=bins, smooth=smooth,
-                  color_params=color_params, plot_color_params=plot_color_params, cmap=cmap,
-                  num_cloud=num_cloud, zorder=zorder)
+        c = Chain(
+            chain,
+            parameters,
+            name,
+            weights=weights,
+            posterior=posterior,
+            walkers=walkers,
+            grid=grid,
+            num_free_params=num_free_params,
+            num_eff_data_points=num_eff_data_points,
+            color=color,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            kde=kde,
+            shade_alpha=shade_alpha,
+            power=power,
+            marker_style=marker_style,
+            marker_size=marker_size,
+            marker_alpha=marker_alpha,
+            plot_contour=plot_contour,
+            plot_point=plot_point,
+            statistics=statistics,
+            cloud=cloud,
+            shade=shade,
+            shade_gradient=shade_gradient,
+            bar_shade=bar_shade,
+            bins=bins,
+            smooth=smooth,
+            color_params=color_params,
+            plot_color_params=plot_color_params,
+            cmap=cmap,
+            num_cloud=num_cloud,
+            zorder=zorder,
+        )
         self.chains.append(c)
         self._init_params()
         return self
@@ -266,8 +322,7 @@ class ChainConsumer(object):
         self.chains[-1].mcmc_chain = False  # So we dont plot this when looking at walks, etc
         return self
 
-    def add_marker(self, location, parameters=None, name=None, color=None, marker_size=None,
-                   marker_style=None, marker_alpha=None):
+    def add_marker(self, location, parameters=None, name=None, color=None, marker_size=None, marker_style=None, marker_alpha=None):
         r""" Add a marker to the plot at the given location.
 
         Parameters
@@ -294,8 +349,18 @@ class ChainConsumer(object):
         """
         chain = np.vstack((location, location))
         posterior = np.array([0, 1])
-        self.add_chain(chain, parameters=parameters, posterior=posterior, name=name, color=color, marker_size=marker_size,
-                       marker_style=marker_style, marker_alpha=marker_alpha, plot_point=True, plot_contour=False)
+        self.add_chain(
+            chain,
+            parameters=parameters,
+            posterior=posterior,
+            name=name,
+            color=color,
+            marker_size=marker_size,
+            marker_style=marker_style,
+            marker_alpha=marker_alpha,
+            plot_point=True,
+            plot_contour=False,
+        )
         self.chains[-1].mcmc_chain = False  # So we dont plot this when looking at walks, etc
         return self
 
@@ -332,17 +397,53 @@ class ChainConsumer(object):
 
         return self
 
-    def configure(self, statistics="max", max_ticks=5, plot_hists=True, flip=True,
-                  serif=True, sigma2d=False, sigmas=None, summary=None, bins=None, cmap=None,
-                  colors=None, linestyles=None, linewidths=None, kde=False, smooth=None,
-                  cloud=None, shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
-                  num_cloud=None, color_params=None, plot_color_params=False, cmaps=None,
-                  plot_contour=None, plot_point=None, global_point=True, marker_style=None, marker_size=None, marker_alpha=None,
-                  usetex=True, diagonal_tick_labels=True, label_font_size=12, tick_font_size=10,
-                  spacing=None, contour_labels=None, contour_label_font_size=10,
-                  legend_kwargs=None, legend_location=None, legend_artists=None,
-                  legend_color_text=True, watermark_text_kwargs=None, summary_area=0.6827,
-                  zorder=None):  # pragma: no cover
+    def configure(
+        self,
+        statistics="max",
+        max_ticks=5,
+        plot_hists=True,
+        flip=True,
+        serif=True,
+        sigma2d=False,
+        sigmas=None,
+        summary=None,
+        bins=None,
+        cmap=None,
+        colors=None,
+        linestyles=None,
+        linewidths=None,
+        kde=False,
+        smooth=None,
+        cloud=None,
+        shade=None,
+        shade_alpha=None,
+        shade_gradient=None,
+        bar_shade=None,
+        num_cloud=None,
+        color_params=None,
+        plot_color_params=False,
+        cmaps=None,
+        plot_contour=None,
+        plot_point=None,
+        global_point=True,
+        marker_style=None,
+        marker_size=None,
+        marker_alpha=None,
+        usetex=True,
+        diagonal_tick_labels=True,
+        label_font_size=12,
+        tick_font_size=10,
+        spacing=None,
+        contour_labels=None,
+        contour_label_font_size=10,
+        legend_kwargs=None,
+        legend_location=None,
+        legend_artists=None,
+        legend_color_text=True,
+        watermark_text_kwargs=None,
+        summary_area=0.6827,
+        zorder=None,
+    ):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.
 
@@ -516,8 +617,7 @@ class ChainConsumer(object):
 
         num_chains = len(self.chains)
 
-        assert cmap is None or colors is None, \
-            "You cannot both ask for cmap colours and then give explicit colours"
+        assert cmap is None or colors is None, "You cannot both ask for cmap colours and then give explicit colours"
 
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
@@ -565,11 +665,8 @@ class ChainConsumer(object):
             color_params = [None] * num_chains
         else:
             if isinstance(color_params, str):
-                color_params = [
-                    color_params if color_params in cs.parameters + ["log_weights", "weights", "posterior"] else None
-                    for cs in self.chains]
-                color_params = [None if c == "posterior" and self.chains[i].posterior is None else c for i, c in
-                                enumerate(color_params)]
+                color_params = [color_params if color_params in cs.parameters + ["log_weights", "weights", "posterior"] else None for cs in self.chains]
+                color_params = [None if c == "posterior" and self.chains[i].posterior is None else c for i, c in enumerate(color_params)]
             elif isinstance(color_params, list) or isinstance(color_params, tuple):
                 for c, chain in zip(color_params, self.chains):
                     p = chain.parameters
@@ -608,7 +705,7 @@ class ChainConsumer(object):
                 ci = 0
                 for c in color_params:
                     if c:
-                        colors.append('#000000')
+                        colors.append("#000000")
                     else:
                         colors.append(colour_list[ci])
                         ci += 1
@@ -674,8 +771,7 @@ class ChainConsumer(object):
         if isinstance(shade_gradient, float):
             shade_gradient = [shade_gradient] * num_chains
         elif isinstance(shade_gradient, list):
-            assert len(shade_gradient) == num_chains, \
-                "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains)
+            assert len(shade_gradient) == num_chains, "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains)
 
         contour_over_points = num_chains < 20
 
@@ -690,7 +786,7 @@ class ChainConsumer(object):
             plot_point = [plot_point] * num_chains
 
         if marker_style is None:
-            marker_style = ['.'] * num_chains
+            marker_style = ["."] * num_chains
         elif isinstance(marker_style, str):
             marker_style = [marker_style] * num_chains
 
@@ -731,8 +827,7 @@ class ChainConsumer(object):
             assert isinstance(contour_labels, str), "contour_labels parameter should be a string"
             contour_labels = contour_labels.lower()
             assert contour_labels in ["sigma", "confidence"], "contour_labels should be either sigma or confidence"
-        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float), \
-            "contour_label_font_size needs to be numeric"
+        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float), "contour_label_font_size needs to be numeric"
 
         if legend_artists is None:
             legend_artists = len(set(linestyles)) > 1 or len(set(linewidths)) > 1
@@ -755,16 +850,11 @@ class ChainConsumer(object):
             "fontsize": label_font_size,
             "handlelength": 1,
             "handletextpad": 0.2,
-            "borderaxespad": 0.0
+            "borderaxespad": 0.0,
         }
         legend_kwargs_default.update(legend_kwargs)
 
-        watermark_text_kwargs_default = {
-            "color": "#333333",
-            "alpha": 0.7,
-            "verticalalignment": "center",
-            "horizontalalignment": "center"
-        }
+        watermark_text_kwargs_default = {"color": "#333333", "alpha": 0.7, "verticalalignment": "center", "horizontalalignment": "center"}
         if watermark_text_kwargs is None:
             watermark_text_kwargs = {}
         watermark_text_kwargs_default.update(watermark_text_kwargs)
@@ -802,9 +892,11 @@ class ChainConsumer(object):
                 c.config["summary_area"] = summary_area
 
             except IndentationError as e:
-                print("Index error when assigning chain properties, make sure you "
-                      "have enough properties set for the number of chains you have loaded! "
-                      "See the stack trace for which config item has the wrong number of entries.")
+                print(
+                    "Index error when assigning chain properties, make sure you "
+                    "have enough properties set for the number of chains you have loaded! "
+                    "See the stack trace for which config item has the wrong number of entries."
+                )
                 raise e
 
         # Non list options

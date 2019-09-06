@@ -9,6 +9,7 @@ class MegKDE(object):
     Adapted from the algorithm specified in the BAMBIS's model specified Wolf 2017
     to support weighted samples.
     """
+
     def __init__(self, train, weights=None, truncation=3.0, nmin=4, factor=1.0):
         """
         Parameters
@@ -43,7 +44,7 @@ class MegKDE(object):
         self.d = np.dot(dx, self.A)  # Sphere-ified data
         self.tree = spatial.cKDTree(self.d)  # kD tree of data
 
-        self.sigma = 2.0 * factor * np.power(self.num_points, -1. / (4 + self.num_dim))  # Starting sigma (bw) of Gauss
+        self.sigma = 2.0 * factor * np.power(self.num_points, -1.0 / (4 + self.num_dim))  # Starting sigma (bw) of Gauss
         self.sigma_fact = -0.5 / (self.sigma * self.sigma)
 
         # Cant get normed probs to work atm, turning off for now as I don't need normed pdfs for contours

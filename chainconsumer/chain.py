@@ -10,13 +10,41 @@ class Chain(object):
 
     colors = Colors()  # Static colors object to do color mapping
 
-    def __init__(self, chain, parameters, name, weights=None, posterior=None, walkers=None,
-                 grid=False, num_free_params=None, num_eff_data_points=None, power=None,
-                 statistics="max", color=None, linestyle=None, linewidth=None, cloud=None,
-                 shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
-                 bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
-                 cmap=None, num_cloud=None, plot_contour=True, plot_point=False, marker_style=None,
-                 marker_size=None, marker_alpha=None, zorder=None):
+    def __init__(
+        self,
+        chain,
+        parameters,
+        name,
+        weights=None,
+        posterior=None,
+        walkers=None,
+        grid=False,
+        num_free_params=None,
+        num_eff_data_points=None,
+        power=None,
+        statistics="max",
+        color=None,
+        linestyle=None,
+        linewidth=None,
+        cloud=None,
+        shade=None,
+        shade_alpha=None,
+        shade_gradient=None,
+        bar_shade=None,
+        bins=None,
+        kde=None,
+        smooth=None,
+        color_params=None,
+        plot_color_params=None,
+        cmap=None,
+        num_cloud=None,
+        plot_contour=True,
+        plot_point=False,
+        marker_style=None,
+        marker_size=None,
+        marker_alpha=None,
+        zorder=None,
+    ):
         self.chain = chain
         self.parameters = parameters
         self.name = name
@@ -55,26 +83,62 @@ class Chain(object):
         self.summaries = {}
         self.config = {}
 
-        self.configure(statistics=statistics, color=color, linestyle=linestyle,
-                       linewidth=linewidth, cloud=cloud, shade=shade, shade_alpha=shade_alpha,
-                       shade_gradient=shade_gradient, bar_shade=bar_shade, bins=bins,
-                       kde=kde, smooth=smooth, color_params=color_params,
-                       plot_color_params=plot_color_params, cmap=cmap, num_cloud=num_cloud,
-                       plot_contour=plot_contour, plot_point=plot_point, marker_style=marker_style,
-                       marker_size=marker_size, marker_alpha=marker_alpha, zorder=zorder)
+        self.configure(
+            statistics=statistics,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            cloud=cloud,
+            shade=shade,
+            shade_alpha=shade_alpha,
+            shade_gradient=shade_gradient,
+            bar_shade=bar_shade,
+            bins=bins,
+            kde=kde,
+            smooth=smooth,
+            color_params=color_params,
+            plot_color_params=plot_color_params,
+            cmap=cmap,
+            num_cloud=num_cloud,
+            plot_contour=plot_contour,
+            plot_point=plot_point,
+            marker_style=marker_style,
+            marker_size=marker_size,
+            marker_alpha=marker_alpha,
+            zorder=zorder,
+        )
         self.validate_chain()
         self.validated_params = set()
 
-    def configure(self, statistics=None, color=None, linestyle=None, linewidth=None, cloud=None,
-                 shade=None, shade_alpha=None, shade_gradient=None, bar_shade=None,
-                 bins=None, kde=None, smooth=None, color_params=None, plot_color_params=None,
-                 cmap=None, num_cloud=None, marker_style=None, marker_size=None, marker_alpha=None,
-                 plot_contour=True, plot_point=False, zorder=None):
+    def configure(
+        self,
+        statistics=None,
+        color=None,
+        linestyle=None,
+        linewidth=None,
+        cloud=None,
+        shade=None,
+        shade_alpha=None,
+        shade_gradient=None,
+        bar_shade=None,
+        bins=None,
+        kde=None,
+        smooth=None,
+        color_params=None,
+        plot_color_params=None,
+        cmap=None,
+        num_cloud=None,
+        marker_style=None,
+        marker_size=None,
+        marker_alpha=None,
+        plot_contour=True,
+        plot_point=False,
+        zorder=None,
+    ):
 
         if statistics is not None:
             assert isinstance(statistics, str), "statistics should be a string"
-            assert statistics in list(Analysis.summaries), \
-                "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
+            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
             self.config["statistics"] = statistics
 
         if color is not None:
@@ -110,8 +174,7 @@ class Chain(object):
 
     def _validate_config(self, name, value, *types):
         if value is not None:
-            assert isinstance(value, tuple(types)), \
-                "%s, which is %s, should be type of: %s" % (name, value, " or ".join([t.__name__ for t in types]))
+            assert isinstance(value, tuple(types)), "%s, which is %s, should be type of: %s" % (name, value, " or ".join([t.__name__ for t in types]))
             self.config[name] = value
 
     def validate_chain(self):
@@ -122,34 +185,45 @@ class Chain(object):
         assert isinstance(self.name, str), "Chain name needs to be a string. It is %s" % type(self.name)
         assert np.all(np.isfinite(self.weights)), "Chain %s has weights which are NaN or inf!" % self.name
         assert len(self.weights.shape) == 1, "Weights should be a 1D array, have instead %s" % str(self.weights.shape)
-        assert self.weights.size == self.chain.shape[0], "Chain %s has %d steps but %d weights" % \
-                                                         (self.name, self.weights.size, self.chain.shape[0])
+        assert self.weights.size == self.chain.shape[0], "Chain %s has %d steps but %d weights" % (self.name, self.weights.size, self.chain.shape[0])
         assert self.chain.shape[0] > 0, "Chain has shape %s, which means it has 0 steps!" % str(self.chain.shape)
         assert np.sum(self.weights) > 0, "Chain weights sum to zero, this is not good"
         if self.walkers is not None:
             assert int(self.walkers) == self.walkers, "Walkers should be an integer!"
-            assert self.chain.shape[0] % self.walkers == 0, \
-                "Chain %s has %d walkers and %d steps... which aren't divisible. They need to be!" % \
-                (self.name, self.walkers, self.chain.shape[0])
+            assert self.chain.shape[0] % self.walkers == 0, "Chain %s has %d walkers and %d steps... which aren't divisible. They need to be!" % (
+                self.name,
+                self.walkers,
+                self.chain.shape[0],
+            )
         assert isinstance(self.grid, bool), "Chain %s has %s for grid, should be a bool" % (self.name, type(self.grid))
         assert self.parameters is not None, "Chain %s has parameter list of None. Please give names" % self.name
-        assert len(self.parameters) == self.chain.shape[1], "Chain %s has %d parameters but data has %d columns" % \
-                                                            (self.name, len(self.parameters), self.chain.shape[1])
+        assert len(self.parameters) == self.chain.shape[1], "Chain %s has %d parameters but data has %d columns" % (
+            self.name,
+            len(self.parameters),
+            self.chain.shape[1],
+        )
         for i, p in enumerate(self.parameters):
             assert isinstance(p, str), "Param index %d, which is %s, needs to be a string!" % (i, p)
         if self.posterior is not None:
             assert len(self.posterior.shape) == 1, "posterior should be a 1D array, have instead %s" % str(self.posterior.shape)
-            assert self.posterior.size == self.chain.shape[0], "Chain %s has %d steps but %d log-posterior values" % \
-                                                               (self.name, self.chain.shape[0], self.posterior.size)
+            assert self.posterior.size == self.chain.shape[0], "Chain %s has %d steps but %d log-posterior values" % (
+                self.name,
+                self.chain.shape[0],
+                self.posterior.size,
+            )
             assert np.all(np.isfinite(self.posterior)), "Chain %s has NaN or inf in the log-posterior" % self.name
         if self.num_free_params is not None:
-            assert isinstance(self.num_free_params, (int, float)), \
-                "Chain %s has num_free_params which is not an integer, its %s" % (self.name, type(self.num_free_params))
+            assert isinstance(self.num_free_params, (int, float)), "Chain %s has num_free_params which is not an integer, its %s" % (
+                self.name,
+                type(self.num_free_params),
+            )
             assert np.isfinite(self.num_free_params), "num_free_params is either infinite or NaN"
             assert self.num_free_params > 0, "num_free_params must be positive"
         if self.num_eff_data_points is not None:
-            assert isinstance(self.num_eff_data_points, (int, float)), \
-                "Chain %s has num_eff_data_points which is not an a number, its %s" % (self.name, type(self.num_eff_data_points))
+            assert isinstance(self.num_eff_data_points, (int, float)), "Chain %s has num_eff_data_points which is not an a number, its %s" % (
+                self.name,
+                type(self.num_eff_data_points),
+            )
             assert np.isfinite(self.num_eff_data_points), "num_eff_data_points is either infinite or NaN"
             assert self.num_eff_data_points > 0, "num_eff_data_points must be positive"
 
