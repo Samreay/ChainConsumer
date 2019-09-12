@@ -58,6 +58,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.29.1
+* Potential bug fix for `log_space` feature.
+
+
 ##### 0.29.0
 * Warning the user if `configure` is called multiple times.
 * Allowing parameters to be a number when calling `get_latex_table`

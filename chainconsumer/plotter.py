@@ -1002,6 +1002,8 @@ class Plotter(object):
                             ax.xaxis.set_major_formatter(formatter)
                         else:
                             ax.xaxis.set_major_locator(LogLocator(numticks=max_ticks))
+                    else:
+                        ax.set_xticks([])
                     if display_y_ticks:
                         if diagonal_tick_labels:
                             _ = [l.set_rotation(45) for l in ax.get_yticklabels()]
@@ -1011,6 +1013,8 @@ class Plotter(object):
                             ax.yaxis.set_major_formatter(formatter)
                         else:
                             ax.yaxis.set_major_locator(LogLocator(numticks=max_ticks))
+                    else:
+                        ax.set_yticks([])
                     if i != j or not plot_hists:
                         ax.set_ylim(extents[p1])
                     elif flip and i == 1:

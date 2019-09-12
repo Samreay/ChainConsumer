@@ -19,7 +19,7 @@ class ChainConsumer(object):
 
     """
 
-    __version__ = "0.29.0"
+    __version__ = "0.29.1"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
