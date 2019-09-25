@@ -22,25 +22,13 @@ data2 = multivariate_normal([0, 0.5], [[1, -0.7], [-0.7, 1]], size=300000)
 data3 = multivariate_normal([2, -1], [[0.5, 0], [0, 0.5]], size=300000)
 
 ###############################################################################
-# And this is how easy it is to shift them:
+# And this is how easy it is to shift them. Note the different means for each dataset!
 
 truth = {"$x$": 1, "$y$": 0}
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain A", shift_params=truth)
 c.add_chain(data2, name="Chain B", shift_params=truth)
 c.add_chain(data3, name="Chain C", shift_params=truth)
-fig = c.plotter.plot(truth=truth)
-
-fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
-
-###############################################################################
-# Here's without the shift:
-
-truth = {"$x$": 1, "$y$": 0}
-c = ChainConsumer()
-c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain A")
-c.add_chain(data2, name="Chain B")
-c.add_chain(data3, name="Chain C")
 fig = c.plotter.plot(truth=truth)
 
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
