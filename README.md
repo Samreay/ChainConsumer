@@ -58,6 +58,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.30.0
+* Bug fix for specifying numeric `loc` to `legend_kwargs`
+* Added `shift_params` when adding chains.
+
 ##### 0.29.1
 * Potential bug fix for `log_space` feature.
 

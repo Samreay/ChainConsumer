@@ -19,7 +19,7 @@ class ChainConsumer(object):
 
     """
 
-    __version__ = "0.29.1"
+    __version__ = "0.30.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -86,6 +86,7 @@ class ChainConsumer(object):
         cmap=None,
         num_cloud=None,
         zorder=None,
+        shift_params=None,
     ):
         r""" Add a chain to the consumer.
 
@@ -184,7 +185,9 @@ class ChainConsumer(object):
             to colour scatter. Defaults to 15k per chain.
         zorder : int, optional
             The zorder to pass to `matplotlib` when plotting to determine visual order in the plot.
-            
+        shift_params : dict|list, optional
+            Shifts the parameters specify to the numeric values. Useful to shift contours to the same location to perform blinded
+            uncertainty comparisons.
         Returns
         -------
         ChainConsumer
@@ -251,6 +254,13 @@ class ChainConsumer(object):
             if p not in self._all_parameters:
                 self._all_parameters.append(p)
 
+        if shift_params is not None:
+            if isinstance(shift_params, list):
+                shift_params = dict([(p, s) for p, s in zip(parameters, shift_params)])
+            for key in shift_params.keys():
+                if key not in parameters:
+                    self._logger.warning("Warning, shift parameter %s is not in list of parameters %s" % (key, parameters))
+
         # Sorry, no KDE for you on a grid.
         if grid:
             kde = None
@@ -290,6 +300,7 @@ class ChainConsumer(object):
             cmap=cmap,
             num_cloud=num_cloud,
             zorder=zorder,
+            shift_params=shift_params,
         )
         self.chains.append(c)
         self._init_params()
@@ -443,6 +454,7 @@ class ChainConsumer(object):
         watermark_text_kwargs=None,
         summary_area=0.6827,
         zorder=None,
+        stack=False,
     ):  # pragma: no cover
         r""" Configure the general plotting parameters common across the bar
         and contour plots.

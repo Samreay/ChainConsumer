@@ -273,7 +273,7 @@ class Plotter(object):
                     text.set_color(c)
             if not outside:
                 loc = legend_kwargs.get("loc") or ""
-                if "right" in loc.lower():
+                if isinstance(loc, str) and "right" in loc.lower():
                     vp = leg._legend_box._children[-1]._children[0]
                     vp.align = "right"
 

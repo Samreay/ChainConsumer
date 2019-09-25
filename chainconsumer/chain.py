@@ -44,6 +44,7 @@ class Chain(object):
         marker_size=None,
         marker_alpha=None,
         zorder=None,
+        shift_params=None,
     ):
         self.chain = chain
         self.parameters = parameters
@@ -63,6 +64,15 @@ class Chain(object):
             for i, p in enumerate(parameters):
                 self.posterior_max_params[p] = chain[self.posterior_max_index, i]
 
+        self.shift_params = shift_params
+        if shift_params is not None:
+            for key in shift_params.keys():
+                try:
+                    index = self.parameters.index(key)
+                    avg = np.average(chain[:, index], weights=weights)
+                    chain[:, index] += shift_params[key] - avg
+                except ValueError:
+                    continue
         self.weights = weights
         self.posterior = posterior
         self.walkers = walkers
