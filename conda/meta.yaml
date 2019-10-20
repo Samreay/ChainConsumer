@@ -19,13 +19,13 @@ requirements:
     - setuptools
     - numpy
     - scipy
-    - matplotlib >1.6.0,<2.1.0
+    - matplotlib >1.6.0,!=2.1.*,!=2.2.*
     - statsmodels >=0.7.0
   run:
     - python
     - numpy
     - scipy
-    - matplotlib >1.6.0,<2.1.0
+    - matplotlib >1.6.0,!=2.1.*,!=2.2.*
     - statsmodels >=0.7.0
 
 

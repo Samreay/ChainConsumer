@@ -58,6 +58,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.30.1
+* Updating `matplotlib` dependency version for conda install. Thanks He Jia!
+
 ##### 0.30.0
 * Bug fix for specifying numeric `loc` to `legend_kwargs`
 * Added `shift_params` when adding chains.
