@@ -29,6 +29,12 @@ Install via `conda`:
 
     conda install -c samreay chainconsumer 
 
+### Python Versions
+
+Due to dependencies dropping support for Python 2.7, from 0.31.0 and onwards, only Python 3 will be supported.
+
+Previous versions will still be installable for Python 2.7 environments, however I'd strong recommend upgrading.
+
 ### Contributors
 
 I would like to thank the following people for their contribution in issues, algorithms and code snippets
@@ -61,6 +67,7 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 ##### 0.31.0
 * Linking colorbar label font size to global label font size option. Thanks Yucheng-Zhang!
 * Allowing chains to be passed in as a pandas DataFrame.
+* Statsmodel update means we are now switching to Python 3 only support.
 
 ##### 0.30.1
 * Updating `matplotlib` dependency version for conda install. Thanks He Jia!
