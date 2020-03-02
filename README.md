@@ -58,6 +58,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.30.2
+* Linking colorbar label font size to global label font size option. Thanks Yucheng-Zhang!
+
 ##### 0.30.1
 * Updating `matplotlib` dependency version for conda install. Thanks He Jia!
 

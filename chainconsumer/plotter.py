@@ -133,6 +133,8 @@ class Plotter(object):
         fig, axes, params1, params2, extents = self._get_figure(
             parameters, chains=chains, figsize=figsize, flip=flip, external_extents=extents, blind=blind, log_scales=log_scales
         )
+        label_font_size = self.parent.config["label_font_size"]
+
         axl = axes.ravel().tolist()
         summary = self.parent.config["summary"]
 
@@ -213,7 +215,7 @@ class Plotter(object):
                                 label = "log(Weights)"
                             elif label == "posterior":
                                 label = "log(Posterior)"
-                            cbar.set_label(label, fontsize=14)
+                            cbar.set_label(label, fontsize=label_font_size)
                             cbar.solids.set(alpha=1)
 
                     if num_chain_points:

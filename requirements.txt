@@ -10,3 +10,4 @@ sphinx_rtd_theme
 codecov
 Pillow
 sphinx_gallery
+pandas

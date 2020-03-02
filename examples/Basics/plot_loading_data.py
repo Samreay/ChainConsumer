@@ -14,6 +14,7 @@ If you want examples of loading grid data, see the grid data example!
 # declared parameters).
 
 import numpy as np
+import pandas as pd
 from numpy.random import multivariate_normal
 import tempfile
 import os
@@ -24,11 +25,13 @@ np.random.seed(4)
 truth = [0, 5]
 data = multivariate_normal(truth, np.eye(2), size=100000)
 parameters = ["$x$", "$y$"]
+df = pd.DataFrame(data, columns=parameters)
+
 directory = tempfile._get_default_tempdir()
 filename = next(tempfile._get_candidate_names())
-filename1 = directory + os.sep + filename + ".txt"
+filename1 = directory + os.sep + filename + ".csv"
 filename2 = directory + os.sep + filename + ".npy"
-np.savetxt(filename1, data)
+df.to_csv(filename1, index=False)
 np.save(filename2, data)
 
 # Now the normal way of giving data is passing a # -*- coding: utf-8 -*-numpy array and parameter separately
@@ -41,6 +44,12 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 
 x, y = data[:, 0], data[:, 1]
 c = ChainConsumer().add_chain([x, y], parameters=parameters)
+fig = c.plotter.plot(truth=truth)
+fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+
+###############################################################################
+# Of course, a true master uses pandas everywhere
+c = ChainConsumer().add_chain(df)
 fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

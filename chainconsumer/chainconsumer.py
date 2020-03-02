@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import pandas as pd
 import logging
 
 from .comparisons import Comparison
@@ -19,7 +20,7 @@ class ChainConsumer(object):
 
     """
 
-    __version__ = "0.30.1"
+    __version__ = "0.31.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -92,13 +93,15 @@ class ChainConsumer(object):
 
         Parameters
         ----------
-        chain : str|ndarray|dict
+        chain : str|ndarray|dict|pandas.DataFrame
             The chain to load. Normally a ``numpy.ndarray``. If a string is found, it
-            interprets the string as a filename and attempts to load it in. If a ``dict``
+            interprets the string as a filename and attempts to load it in using pandas.read_csv. If a ``dict``
             is passed in, it assumes the dict has keys of parameter names and values of
             an array of samples. Notice that using a dictionary puts the order of
             parameters in the output under the control of the python ``dict.keys()`` function.
-            If you passed ``grid`` is set, you can pass in the parameter ranges in list form.
+            If you passed ``grid`` is set, you can pass in the parameter ranges in list form. If you pass
+            a DataFrame, I will look for a "weight" and "posterior" column by default. If they are
+            called something different, extract them and pass them directly into weights and posterior.
         parameters : list[str], optional
             A list of parameter names, one for each column (dimension) in the chain. This parameter
             should remain ``None`` if a dictionary is given as ``chain``, as the parameter names
@@ -196,10 +199,10 @@ class ChainConsumer(object):
         is_dict = False
         assert chain is not None, "You cannot have a chain of None"
         if isinstance(chain, str):
-            if chain.endswith("txt"):
-                chain = np.loadtxt(chain)
-            else:
+            if chain.lower().endswith(".npy"):
                 chain = np.load(chain)
+            else:
+                chain = pd.read_csv(chain)
         elif isinstance(chain, dict):
             assert parameters is None, "You cannot pass a dictionary and specify parameter names"
             is_dict = True
@@ -207,6 +210,16 @@ class ChainConsumer(object):
             chain = np.array([chain[p] for p in parameters]).T
         elif isinstance(chain, list):
             chain = np.array(chain).T
+
+        if isinstance(chain, pd.DataFrame):
+            assert parameters is None, "You cannot pass a DataFrame and use parameter names, we're using the columns names"
+            parameters = list(chain.columns)
+            if "weight" in parameters:
+                weights = chain["weight"]
+            if "posterior" in parameters:
+                posterior = chain["posterior"]
+            parameters = [p for p in parameters if p not in ["weight", "posterior"]]
+            chain = chain[parameters].to_numpy()
 
         if grid:
             assert walkers is None, "If grid is set, walkers should not be"

@@ -1,18 +1,23 @@
 import numpy as np
+import pandas as pd
+from scipy.stats import norm
 from numpy.random import normal
 import pytest
-
+import sys
+sys.path.append("..")
 from chainconsumer.chain import Chain
 from chainconsumer.chainconsumer import ChainConsumer
 
 
 class TestChain(object):
     d = normal(size=(100, 3))
+    d2 = normal(size=(1000000, 3))
     bad = d.copy()
     bad[0, 0] = np.nan
     p = ["a", "b", "c"]
     n = "A"
     w = np.ones(100)
+    w2 = np.ones(1000000)
 
     def test_good_chain(self):
         Chain(self.d, self.p, self.n)
@@ -279,8 +284,49 @@ class TestChain(object):
         summary1 = c.analysis.get_summary()
         c.configure(summary_area=0.95)
         summary2 = c.analysis.get_summary()
-        assert np.isclose(summary1["a"][0], -1, atol=1e-2)
-        assert np.isclose(summary2["a"][0], -2, atol=1e-2)
-        assert np.isclose(summary1["a"][1], summary2["a"][1], atol=1e-2)
-        assert np.isclose(summary1["a"][2], 1, atol=1e-2)
-        assert np.isclose(summary2["a"][2], 2, atol=1e-2)
+        assert np.isclose(summary1["a"][0], -1, atol=0.03)
+        assert np.isclose(summary2["a"][0], -2, atol=0.03)
+        assert np.isclose(summary1["a"][2], 1, atol=0.03)
+        assert np.isclose(summary2["a"][2], 2, atol=0.03)
+
+    def test_pass_in_dataframe1(self):
+        df = pd.DataFrame(self.d2, columns=self.p)
+        c = ChainConsumer()
+        c.add_chain(df)
+        summary1 = c.analysis.get_summary()
+        assert np.isclose(summary1["a"][0], -1, atol=0.03)
+        assert np.isclose(summary1["a"][1], 0, atol=0.05)
+        assert np.isclose(summary1["a"][2], 1, atol=0.03)
+        assert np.isclose(summary1["b"][0], -1, atol=0.03)
+        assert np.isclose(summary1["c"][0], -1, atol=0.03)
+
+    def test_pass_in_dataframe2(self):
+        df = pd.DataFrame(self.d2, columns=self.p)
+        df["weight"] = self.w2
+        c = ChainConsumer()
+        c.add_chain(df)
+        summary1 = c.analysis.get_summary()
+        assert np.isclose(summary1["a"][0], -1, atol=0.03)
+        assert np.isclose(summary1["a"][1], 0, atol=0.05)
+        assert np.isclose(summary1["a"][2], 1, atol=0.03)
+        assert np.isclose(summary1["b"][0], -1, atol=0.03)
+        assert np.isclose(summary1["c"][0], -1, atol=0.03)
+
+    def test_pass_in_dataframe3(self):
+        data = np.random.uniform(-4, 6, size=(1000000, 1))
+        weight = norm.pdf(data)
+        df = pd.DataFrame(data, columns=["a"])
+        df["weight"] = weight
+        c = ChainConsumer()
+        c.add_chain(df)
+        summary1 = c.analysis.get_summary()
+        assert np.isclose(summary1["a"][0], -1, atol=0.03)
+        assert np.isclose(summary1["a"][1], 0, atol=0.05)
+        assert np.isclose(summary1["a"][2], 1, atol=0.03)
+
+if __name__ == "__main__":
+    import sys
+    sys.path.append("..")
+    c = TestChain()
+    
+    c.test_pass_in_dataframe2()
