@@ -102,7 +102,7 @@ def test_geweke_index_failed():
     data = np.vstack((np.random.normal(loc=0.0, size=100000),
                       np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
-    data[98000:, :] += 0.3
+    data[98000:, :] += 0.5
     consumer.add_chain(data, walkers=20, name="c1")
     assert not consumer.diagnostic.geweke(chain=0)
 
