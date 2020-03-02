@@ -42,7 +42,7 @@ class Comparison(object):
             p = chain.posterior
             if p is None:
                 dics_bool.append(False)
-                self._logger.warn("You need to set the posterior for chain %s to get the DIC" % chain.name)
+                self._logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
             else:
                 dics_bool.append(True)
                 num_params = chain.chain.shape[1]
@@ -96,7 +96,7 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warn("You need to set %s for chain %s to get the BIC" % (missing[:-2], chain.name))
+                self._logger.warning("You need to set %s for chain %s to get the BIC" % (missing[:-2], chain.name))
             else:
                 bics_bool.append(True)
                 bics.append(n_free * np.log(n_data) - 2 * np.max(p))
@@ -149,7 +149,7 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warn("You need to set %s for chain %s to get the AIC" % (missing[:-2], chain.name))
+                self._logger.warning("You need to set %s for chain %s to get the AIC" % (missing[:-2], chain.name))
             else:
                 aics_bool.append(True)
                 c_cor = 1.0 * n_free * (n_free + 1) / (n_data - n_free - 1)
