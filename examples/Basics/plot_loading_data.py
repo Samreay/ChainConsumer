@@ -65,7 +65,7 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 ###############################################################################
 # Or we can pass a filename in containing a text dump of the chain
 
-c = ChainConsumer().add_chain(filename1, parameters=parameters)
+c = ChainConsumer().add_chain(filename1)
 fig = c.plotter.plot(truth=truth)
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
