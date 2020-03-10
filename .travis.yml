@@ -24,7 +24,6 @@ install:
     - conda update -q conda
     - conda install python=$TRAVIS_PYTHON_VERSION pip requests conda-build anaconda-client setuptools
     - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended dvipng
-#    - if [ "$TRAVIS_PYTHON_VERSION" == "2.7" ]; then pip install matplotlib==2.0.0 ; fi
     - hash -r
     - pip install wheel twine
     - pip install .

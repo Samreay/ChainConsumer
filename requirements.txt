@@ -4,7 +4,7 @@ matplotlib
 statsmodels
 pytest
 pytest-cov
-sphinx
+sphinx==2.4.3
 numpydoc
 sphinx_rtd_theme
 codecov
