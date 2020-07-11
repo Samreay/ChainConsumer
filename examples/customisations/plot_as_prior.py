@@ -17,7 +17,7 @@ if __name__ == "__main__":
     cov = random(size=(2, 2)) + np.identity(2)
     data = multivariate_normal(normal(size=2), np.dot(cov, cov.T), size=100000)
 
-    prior = multivariate_normal(0, 1, size=100000)
+    prior = normal(0, 1, size=100000)
 
     fig = ChainConsumer()\
         .add_chain(data, parameters=["x", "y"], name="Normal")\
