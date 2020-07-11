@@ -40,6 +40,7 @@ class Chain(object):
         num_cloud=None,
         plot_contour=True,
         plot_point=False,
+        show_as_1d_prior=False,
         marker_style=None,
         marker_size=None,
         marker_alpha=None,
@@ -112,6 +113,7 @@ class Chain(object):
             num_cloud=num_cloud,
             plot_contour=plot_contour,
             plot_point=plot_point,
+            show_as_1d_prior=show_as_1d_prior,
             marker_style=marker_style,
             marker_size=marker_size,
             marker_alpha=marker_alpha,
@@ -143,6 +145,7 @@ class Chain(object):
         marker_alpha=None,
         plot_contour=True,
         plot_point=False,
+        show_as_1d_prior=False,
         zorder=None,
     ):
 
@@ -176,6 +179,7 @@ class Chain(object):
         self._validate_config("marker_alpha", marker_alpha, int, float)
         self._validate_config("plot_contour", plot_contour, bool)
         self._validate_config("plot_point", plot_point, bool)
+        self._validate_config("show_as_1d_prior", show_as_1d_prior, bool)
         self._validate_config("zorder", zorder, int)
 
     def update_unset_config(self, name, value, override=None):

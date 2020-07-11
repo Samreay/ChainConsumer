@@ -64,6 +64,9 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.31.1
+* Adding ability to display plot as a prior (1D only, no 2D)
+
 ##### 0.31.0
 * Linking colorbar label font size to global label font size option. Thanks Yucheng-Zhang!
 * Allowing chains to be passed in as a pandas DataFrame.

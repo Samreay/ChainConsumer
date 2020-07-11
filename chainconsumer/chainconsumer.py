@@ -20,7 +20,7 @@ class ChainConsumer(object):
 
     """
 
-    __version__ = "0.31.0"
+    __version__ = "0.31.1"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -76,6 +76,7 @@ class ChainConsumer(object):
         marker_alpha=None,
         plot_contour=None,
         plot_point=None,
+        show_as_1d_prior=None,
         statistics=None,
         cloud=None,
         shade_gradient=None,
@@ -154,6 +155,8 @@ class ChainConsumer(object):
             25 concurrent chains.
         plot_point : bool, optional
             Whether to plot a maximum likelihood point. Defaults to true for more then 24 chains.
+        show_as_1d_prior : bool, optional
+            Showing as a 1D prior will show the 1D histograms, but won't plot the 2D contours.
         statistics : string, optional
             Which sort of statistics to use. Defaults to `"max"` for maximum likelihood
             statistics. Other available options are `"mean"`, `"cumulative"`, `"max_symmetric"`,
@@ -301,6 +304,7 @@ class ChainConsumer(object):
             marker_alpha=marker_alpha,
             plot_contour=plot_contour,
             plot_point=plot_point,
+            show_as_1d_prior=show_as_1d_prior,
             statistics=statistics,
             cloud=cloud,
             shade=shade,
@@ -449,6 +453,7 @@ class ChainConsumer(object):
         cmaps=None,
         plot_contour=None,
         plot_point=None,
+        show_as_1d_prior=None,
         global_point=True,
         marker_style=None,
         marker_size=None,
@@ -573,6 +578,8 @@ class ChainConsumer(object):
             25 concurrent chains.
         plot_point : bool|list[bool], optional
             Whether to plot a maximum likelihood point. Defaults to true for more then 24 chains.
+        show_as_1d_prior : bool|list[bool], optional
+            Showing as a 1D prior will show the 1D histograms, but won't plot the 2D contours.
         global_point : bool, optional
             Whether the point which gets plotted is the global posterior maximum, or the marginalised 2D 
             posterior maximum. Note that when you use marginalised 2D maximums for the points, you do not
@@ -810,6 +817,11 @@ class ChainConsumer(object):
         elif isinstance(plot_point, bool):
             plot_point = [plot_point] * num_chains
 
+        if show_as_1d_prior is None:
+            show_as_1d_prior = [not contour_over_points] * num_chains
+        elif isinstance(show_as_1d_prior, bool):
+            show_as_1d_prior = [show_as_1d_prior] * num_chains
+
         if marker_style is None:
             marker_style = ["."] * num_chains
         elif isinstance(marker_style, str):
@@ -913,6 +925,7 @@ class ChainConsumer(object):
                 c.update_unset_config("marker_alpha", marker_alpha[i], override=explicit)
                 c.update_unset_config("plot_contour", plot_contour[i], override=explicit)
                 c.update_unset_config("plot_point", plot_point[i], override=explicit)
+                c.update_unset_config("show_as_1d_prior", show_as_1d_prior[i], override=explicit)
                 c.update_unset_config("zorder", zorder[i], override=explicit)
                 c.config["summary_area"] = summary_area
 
