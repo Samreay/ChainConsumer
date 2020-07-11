@@ -173,7 +173,7 @@ class Plotter(object):
                     for chain in chains:
                         if p1 not in chain.parameters:
                             continue
-                        if not chain.config["plot_contour"] or chain.config["show_as_1d_prior"]:
+                        if not chain.config["plot_contour"]:
                             continue
 
                         param_summary = summary and p1 not in blind
@@ -197,7 +197,7 @@ class Plotter(object):
                     for chain in chains:
                         if p1 not in chain.parameters or p2 not in chain.parameters:
                             continue
-                        if not chain.config["plot_contour"]:
+                        if not chain.config["plot_contour"] or chain.config["show_as_1d_prior"]:
                             continue
                         h = None
                         if p1 in chain.parameters and p2 in chain.parameters:
