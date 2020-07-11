@@ -51,7 +51,6 @@ sphinx_gallery_conf = {
     'filename_pattern': 'plot_',
     'examples_dirs': '../examples',  # path to examples scripts
     'gallery_dirs': 'examples',      # path to gallery generated examples
-    'backreferences_dir': False
 }
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
