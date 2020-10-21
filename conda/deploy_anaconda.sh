@@ -22,5 +22,7 @@ conda build --python 3.3 .
 conda build --python 3.4 .
 conda build --python 3.5 .
 conda build --python 3.6 .
+conda build --python 3.7 .
+conda build --python 3.8 .
 conda convert --platform all $CONDA_BLD_PATH/linux-64/$PKG_NAME-*.tar.bz2 -o $CONDA_BLD_PATH
 anaconda -t $CONDA_UPLOAD_TOKEN upload -u $USER $CONDA_BLD_PATH/**/$PKG_NAME-*.tar.bz2 --force
