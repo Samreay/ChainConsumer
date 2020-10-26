@@ -47,8 +47,6 @@ class ChainConsumer(object):
         self.config_truth = {}
         self._configured = False
         self._configured_truth = False
-        # for c in self.chains:
-        #     c.reset_config()
 
     def get_mcmc_chains(self):
         return [c for c in self.chains if c.mcmc_chain]
