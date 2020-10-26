@@ -325,8 +325,8 @@ class Plotter(object):
             px, py, scale = 0.5, 0.5, 1.0
         else:
             px, py, scale = 0.45, 0.55, 0.8
-        bb0 = TextPath((0, 0), text, size=50, props=fontdict, usetex=usetex).get_extents()
-        bb1 = TextPath((0, 0), text, size=51, props=fontdict, usetex=usetex).get_extents()
+        bb0 = TextPath((0, 0), text, size=50, prop=fontdict, usetex=usetex).get_extents()
+        bb1 = TextPath((0, 0), text, size=51, prop=fontdict, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
         size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
