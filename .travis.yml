@@ -1,9 +1,8 @@
-sudo: required
-
 language: python
 
+os: linux
+
 python:
-#  - "2.7"
   - "3.8"
   - "3.7"
   - "3.6"
@@ -13,6 +12,7 @@ env:
         - GH_REF: github.com/samreay/ChainConsumer.git
 
 dist: xenial
+
 services:
   - xvfb
 
@@ -29,7 +29,6 @@ install:
     - pip install wheel twine
     - pip install .
     - pip install -r requirements.txt
-#    - conda install matplotlib==3.1.3
     - ulimit -s unlimited
 
 script:
@@ -44,16 +43,16 @@ after_success:
 deploy:
   - provider: script
     script: ./conda/deploy_anaconda.sh
-    skip_cleanup: true
+    cleanup: false
     on:
       python: 3.8
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
   - provider: pypi
-    user: "samreay"
+    username: "samreay"
     password:
       secure: "etRu952bkCozacIuC38kgsr5Ul05QG5lY1ESrC50El0fdQjimCeDqislB8buYyD+TeXfPY4jN10ApFfYzTJGfVFsM5NLE/T6+UBfCx3h07jN5ewA9jY5LDKaP5UJ+e33NrC+vkvsxoB5BJzwtbmrj6TDM9/s8RxsIZYFpZ+PoJxO/S7g2d6g1kCkbG2Q/2PpWa4VRacS29CAlBkeDY6z7ZCLEnpK0733ccQPxNfbdmAsXdHnk1cLWA5FNzbp5Vjti/tet6Wv8aVgw1RgSSN3HQ/5hl/uDgmGlloHvXDAK7xdtEo0R5y9mR4cfVJOxARweLBS84bPEysI+N7VoOAQkrBRxL85YHtuFBBiQdGMQazG8M/FhO0aeyMj1KJM1yaLj8lQJN+9qeIrtagV1LkAW9kzWvE4NOCPah4LGy2NvgJ0L7F8Kmgk2ReAZ3FfbfGyoISg/iqGBwDTjYH0GtXc3DYswpKylkpdpkcCh13usyVYxoHUJ+pT594vNJrNk6qQof6PVUiBldXkoWofoJGgASUh6r1gbcK/qlgD+sOCRyQ7zH5N8H/0ecnEC+io178r/5NioVfmsNBS4izJQPVzdUb3bB3jDjMwOU+yO/amD0V9Te9ctqDJL8cWmBwj0UsKunpZ2qbWfPUwtNS9/ehHH8RElJv8IKuj+j/md91KQy0="
-    skip_cleanup: true
+    cleanup: false
     edge:
       branch: v1.8.45
     on:
@@ -61,8 +60,8 @@ deploy:
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
       python: 3.8
   - provider: releases
-    api_key: "${GITHUB_API_KEY2}"
-    skip_cleanup: true
+    token: "${GITHUB_API_KEY2}"
+    cleanup: false
     on:
       tags: true
       condition: $TRAVIS_TAG =~ ^v[0-9,\.]*$
