@@ -445,7 +445,7 @@ class Plotter(object):
                 if i == 0 and plot_posterior:
                     for chain in chains:
                         if chain.posterior is not None:
-                            self._plot_walk(ax, "$\log(P)$", chain.posterior - chain.posterior.max(), convolve=convolve, color=chain.config["color"])
+                            self._plot_walk(ax, r"$\log(P)$", chain.posterior - chain.posterior.max(), convolve=convolve, color=chain.config["color"])
                 else:
                     if log_weight is None:
                         log_weight = np.any([chain.weights.mean() < 0.1 for chain in chains])
@@ -939,9 +939,6 @@ class Plotter(object):
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05 * spacing, hspace=0.05 * spacing)
 
-        formatter = ScalarFormatter(useOffset=False)
-        formatter.set_powerlimits((-3, 4))
-
         extents = self._get_custom_extents(all_parameters, chains, external_extents)
 
         if plot_hists:
@@ -953,6 +950,11 @@ class Plotter(object):
         for i, p1 in enumerate(params1):
             for j, p2 in enumerate(params2):
                 ax = axes[i, j]
+                formatter_x = ScalarFormatter(useOffset=True)
+                formatter_x.set_powerlimits((-3, 4))
+                formatter_y = ScalarFormatter(useOffset=True)
+                formatter_y.set_powerlimits((-3, 4))
+
                 display_x_ticks = False
                 display_y_ticks = False
                 if i < j:
@@ -1001,7 +1003,7 @@ class Plotter(object):
                         _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
                         if not logx:
                             ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-                            ax.xaxis.set_major_formatter(formatter)
+                            ax.xaxis.set_major_formatter(formatter_x)
                         else:
                             ax.xaxis.set_major_locator(LogLocator(numticks=max_ticks))
                     else:
@@ -1012,7 +1014,7 @@ class Plotter(object):
                         _ = [l.set_fontsize(tick_font_size) for l in ax.get_yticklabels()]
                         if not logy:
                             ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-                            ax.yaxis.set_major_formatter(formatter)
+                            ax.yaxis.set_major_formatter(formatter_y)
                         else:
                             ax.yaxis.set_major_locator(LogLocator(numticks=max_ticks))
                     else:

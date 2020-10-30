@@ -64,8 +64,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
-##### 0.31.2, 0.31.3
+##### 0.32.0
+* Fixing matplotlib axis formatter issue.
 
+##### 0.31.2, 0.31.3
 * Conda-forge updates
 
 ##### 0.31.1
