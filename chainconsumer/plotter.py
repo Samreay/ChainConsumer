@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.font_manager import FontProperties
 from matplotlib.ticker import MaxNLocator, ScalarFormatter, LogLocator
 from matplotlib.textpath import TextPath
 from numpy import meshgrid
@@ -315,31 +316,33 @@ class Plotter(object):
         dx, dy = figsize
         dy, dx = dy * dpi, dx * dpi
         rotation = 180 / np.pi * np.arctan2(-dy, dx)
-        fontdict = self.parent.config["watermark_text_kwargs"]
-        if "usetex" in fontdict:
-            usetex = fontdict["usetex"]
-        else:
-            usetex = self.parent.config["usetex"]
-            fontdict["usetex"] = usetex
-        if fontdict["usetex"]:
+        property_dict = self.parent.config["watermark_text_kwargs"]
+
+        keys_in_font_dict = ["family", "style", "variant", "weight", "stretch", "size"]
+        fontdict = {k: property_dict[k] for k in keys_in_font_dict if k in property_dict}
+        font_prop = FontProperties(**fontdict)
+        usetex = property_dict.get("usetex", self.parent.config["usetex"])
+        if usetex:
             px, py, scale = 0.5, 0.5, 1.0
         else:
-            px, py, scale = 0.45, 0.55, 0.8
-        bb0 = TextPath((0, 0), text, size=50, prop=fontdict, usetex=usetex).get_extents()
-        bb1 = TextPath((0, 0), text, size=51, prop=fontdict, usetex=usetex).get_extents()
+            px, py, scale = 0.5, 0.5, 0.8
+
+        bb0 = TextPath((0, 0), text, size=50, prop=font_prop, usetex=usetex).get_extents()
+        bb1 = TextPath((0, 0), text, size=51, prop=font_prop, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
         size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
         if axes is not None:
-            if fontdict["usetex"]:
+            if usetex:
                 size *= 0.7
             else:
-                size *= 0.85
-        fontdict["size"] = int(size)
+                size *= 0.8
+        size = int(size)
+        print(f"Font size is {size}")
         if axes is None:
-            fig.text(px, py, text, fontdict=fontdict, rotation=rotation)
+            fig.text(px, py, text, fontdict=property_dict, rotation=rotation, fontsize=size)
         else:
-            axes.text(px, py, text, transform=axes.transAxes, fontdict=fontdict, rotation=rotation)
+            axes.text(px, py, text, transform=axes.transAxes, fontdict=property_dict, rotation=rotation, fontsize=size)
 
     def plot_walks(
         self,
@@ -1215,11 +1218,10 @@ class Plotter(object):
         kde = chain.config["kde"]
         zorder = chain.config["zorder"]
         title_size = self.parent.config["label_font_size"]
-
         chain_row = chain.get_data(parameter)
         weights = chain.weights
         if smooth or kde:
-            xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain, parameter)
+            xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain, parameter, pad=True)
             if flip:
                 ax.plot(ys, xs, color=colour, ls=linestyle, lw=linewidth, zorder=zorder)
             else:

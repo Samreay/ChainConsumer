@@ -64,6 +64,10 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 
 ### Update History
 
+##### 0.33.0
+* Adding extra padding to bin extents for KDE and smoothing
+* Updating watermarking to work with matplotlib v3.0.0+
+
 ##### 0.32.0
 * Fixing matplotlib axis formatter issue.
 

@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def get_extents(data, weight, plot=False, wide_extents=True, tiny=False):
+def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=False):
     hist, be = np.histogram(data, weights=weight, bins=2000)
     bc = 0.5 * (be[1:] + be[:-1])
     cdf = hist.cumsum()
@@ -17,7 +17,13 @@ def get_extents(data, weight, plot=False, wide_extents=True, tiny=False):
         threshold = 0.3
     i1 = np.where(cdf > threshold)[0][0]
     i2 = np.where(icdf > threshold)[0][0]
-    return bc[i1], bc[-i2]
+    lower = bc[i1]
+    upper = bc[-i2]
+    if pad:
+        width = upper - lower
+        lower -= 0.2 * width
+        upper += 0.2 * width
+    return lower, upper
 
 
 def get_bins(chains):
@@ -25,8 +31,8 @@ def get_bins(chains):
     return proposal
 
 
-def get_smoothed_bins(smooth, bins, data, weight, marginalised=True, plot=False):
-    minv, maxv = get_extents(data, weight, plot=plot)
+def get_smoothed_bins(smooth, bins, data, weight, marginalised=True, plot=False, pad=False):
+    minv, maxv = get_extents(data, weight, plot=plot, pad=pad)
     if smooth is None or not smooth or smooth == 0:
         return np.linspace(minv, maxv, int(bins)), 0
     else:

@@ -314,14 +314,14 @@ class Analysis(object):
         parameters, cov = self.get_covariance(chain=chain, parameters=parameters)
         return self._get_2d_latex_table(parameters, cov, caption, label)
 
-    def _get_smoothed_histogram(self, chain, parameter):
+    def _get_smoothed_histogram(self, chain, parameter, pad=False):
         data = chain.get_data(parameter)
         smooth = chain.config["smooth"]
         if chain.grid:
             bins = get_grid_bins(data)
         else:
             bins = chain.config["bins"]
-            bins, smooth = get_smoothed_bins(smooth, bins, data, chain.weights)
+            bins, smooth = get_smoothed_bins(smooth, bins, data, chain.weights, pad=pad)
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
