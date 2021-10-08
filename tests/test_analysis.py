@@ -106,7 +106,7 @@ class TestChain(object):
         assert np.all(diff < tolerance)
 
     def test_summary_power(self):
-        tolerance = 4e-2
+        tolerance = 5e-2
         consumer = ChainConsumer()
         data = np.random.normal(loc=0, scale=np.sqrt(2), size=1000000)
         consumer.add_chain(data, power=2.0)
