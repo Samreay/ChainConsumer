@@ -22,7 +22,7 @@ install:
     - export PATH=$HOME/miniconda/bin:$PATH
     - conda config --set always_yes yes --set changeps1 no --set anaconda_upload no
     - conda update -q conda
-    - conda install python=$TRAVIS_PYTHON_VERSION pip requests setuptools
+    - conda install python=$TRAVIS_PYTHON_VERSION pip setuptools
     - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended dvipng cm-super
     - hash -r
     - pip install wheel twine
