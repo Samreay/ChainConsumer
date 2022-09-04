@@ -25,10 +25,6 @@ Install via `pip`:
     
     pip install chainconsumer
 
-Install via `conda`:
-
-    conda install -c samreay chainconsumer 
-
 ### Python Versions
 
 Due to dependencies dropping support for Python 2.7, from 0.31.0 and onwards, only Python 3 will be supported.
@@ -65,6 +61,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+
+##### 0.34.0
+* Making `usetex=False` and `serif=False` the defaults to reduce LaTeX errors.
 ##### 0.33.0
 * Adding extra padding to bin extents for KDE and smoothing
 * Updating watermarking to work with matplotlib v3.0.0+

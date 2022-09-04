@@ -96,3 +96,4 @@ ENV/
 doc/examples/*
 doc/modules/*
 doc/out/
+.vscode

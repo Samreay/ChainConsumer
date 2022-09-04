@@ -20,7 +20,7 @@ class ChainConsumer(object):
 
     """
 
-    __version__ = "0.33.0"
+    __version__ = "0.34.0"
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -348,7 +348,9 @@ class ChainConsumer(object):
         self.chains[-1].mcmc_chain = False  # So we dont plot this when looking at walks, etc
         return self
 
-    def add_marker(self, location, parameters=None, name=None, color=None, marker_size=None, marker_style=None, marker_alpha=None):
+    def add_marker(
+        self, location, parameters=None, name=None, color=None, marker_size=None, marker_style=None, marker_alpha=None,
+    ):
         r""" Add a marker to the plot at the given location.
 
         Parameters
@@ -429,7 +431,7 @@ class ChainConsumer(object):
         max_ticks=5,
         plot_hists=True,
         flip=True,
-        serif=True,
+        serif=False,
         sigma2d=False,
         sigmas=None,
         summary=None,
@@ -456,7 +458,7 @@ class ChainConsumer(object):
         marker_style=None,
         marker_size=None,
         marker_alpha=None,
-        usetex=True,
+        usetex=False,
         diagonal_tick_labels=True,
         label_font_size=12,
         tick_font_size=10,
@@ -652,7 +654,7 @@ class ChainConsumer(object):
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
         if isinstance(statistics, str):
-            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
+            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries,)
             statistics = [statistics.lower()] * len(self.chains)
         elif isinstance(statistics, list):
             for i, l in enumerate(statistics):
@@ -801,7 +803,7 @@ class ChainConsumer(object):
         if isinstance(shade_gradient, float):
             shade_gradient = [shade_gradient] * num_chains
         elif isinstance(shade_gradient, list):
-            assert len(shade_gradient) == num_chains, "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains)
+            assert len(shade_gradient) == num_chains, "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains,)
 
         contour_over_points = num_chains < 20
 
@@ -861,7 +863,7 @@ class ChainConsumer(object):
         if contour_labels is not None:
             assert isinstance(contour_labels, str), "contour_labels parameter should be a string"
             contour_labels = contour_labels.lower()
-            assert contour_labels in ["sigma", "confidence"], "contour_labels should be either sigma or confidence"
+            assert contour_labels in ["sigma", "confidence",], "contour_labels should be either sigma or confidence"
         assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float), "contour_label_font_size needs to be numeric"
 
         if legend_artists is None:
@@ -889,7 +891,12 @@ class ChainConsumer(object):
         }
         legend_kwargs_default.update(legend_kwargs)
 
-        watermark_text_kwargs_default = {"color": "#333333", "alpha": 0.7, "verticalalignment": "center", "horizontalalignment": "center"}
+        watermark_text_kwargs_default = {
+            "color": "#333333",
+            "alpha": 0.7,
+            "verticalalignment": "center",
+            "horizontalalignment": "center",
+        }
         if watermark_text_kwargs is None:
             watermark_text_kwargs = {}
         watermark_text_kwargs_default.update(watermark_text_kwargs)
