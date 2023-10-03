@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
-import numpy as np
 import logging
+
+import numpy as np
 from scipy.stats import normaltest
 
 
-class Diagnostic(object):
+class Diagnostic:
     def __init__(self, parent):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
 
     def gelman_rubin(self, chain=None, threshold=0.05):
-        r""" Runs the Gelman Rubin diagnostic on the supplied chains.
+        r"""Runs the Gelman Rubin diagnostic on the supplied chains.
 
         Parameters
         ----------
@@ -73,11 +73,11 @@ class Diagnostic(object):
         print("Gelman-Rubin Statistic values for chain %s" % name)
         for p, v, pas in zip(parameters, R, passed):
             param = "Param %d" % p if isinstance(p, int) else p
-            print("%s: %7.5f (%s)" % (param, v, "Passed" if pas else "Failed"))
+            print("{}: {:7.5f} ({})".format(param, v, "Passed" if pas else "Failed"))
         return np.all(passed)
 
     def geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
-        """ Runs the Geweke diagnostic on the supplied chains.
+        """Runs the Geweke diagnostic on the supplied chains.
 
         Parameters
         ----------
@@ -107,7 +107,9 @@ class Diagnostic(object):
         chain = self.parent.chains[index[0]]
 
         num_walkers = chain.walkers
-        assert num_walkers is not None and num_walkers > 0, "You need to specify the number of walkers to use the Geweke diagnostic."
+        assert (
+            num_walkers is not None and num_walkers > 0
+        ), "You need to specify the number of walkers to use the Geweke diagnostic."
         name = chain.name
         data = chain.chain
         chains = np.split(data, num_walkers)
@@ -115,12 +117,14 @@ class Diagnostic(object):
         n_start = int(np.floor(first * n))
         n_end = int(np.floor((1 - last) * n))
         mean_start = np.array([np.mean(c[:n_start, i]) for c in chains for i in range(c.shape[1])])
-        var_start = np.array([self._spec(c[:n_start, i]) / c[:n_start, i].size for c in chains for i in range(c.shape[1])])
+        var_start = np.array(
+            [self._spec(c[:n_start, i]) / c[:n_start, i].size for c in chains for i in range(c.shape[1])]
+        )
         mean_end = np.array([np.mean(c[n_end:, i]) for c in chains for i in range(c.shape[1])])
         var_end = np.array([self._spec(c[n_end:, i]) / c[n_end:, i].size for c in chains for i in range(c.shape[1])])
         zs = (mean_start - mean_end) / (np.sqrt(var_start + var_end))
         _, pvalue = normaltest(zs)
-        print("Gweke Statistic for chain %s has p-value %e" % (name, pvalue))
+        print(f"Gweke Statistic for chain {name} has p-value {pvalue:e}")
         return pvalue > threshold
 
     # Method of estimating spectral density following PyMC.
@@ -129,4 +133,4 @@ class Diagnostic(object):
         from statsmodels.regression.linear_model import yule_walker
 
         beta, sigma = yule_walker(x, order)
-        return sigma ** 2 / (1.0 - np.sum(beta)) ** 2
+        return sigma**2 / (1.0 - np.sum(beta)) ** 2

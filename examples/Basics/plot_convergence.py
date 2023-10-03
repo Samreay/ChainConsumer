@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =======================
 Convergence Diagnostics
@@ -15,6 +14,7 @@ How to use the built in convergence diagnostic tests!
 
 import numpy as np
 from numpy.random import normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

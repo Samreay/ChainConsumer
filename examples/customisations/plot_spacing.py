@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===============
 Subplot Spacing
@@ -9,9 +8,9 @@ a certain dimensionality, but you can also customise this yourself.
 """
 
 import numpy as np
-from numpy.random import normal, random, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal, random
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = random(size=(3, 3))

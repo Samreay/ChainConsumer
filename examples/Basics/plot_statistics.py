@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==========
 Statistics
@@ -16,6 +15,7 @@ Demonstrates the different statistics you can use with ChainConsumer.
 
 import numpy as np
 from scipy.stats import skewnorm
+
 from chainconsumer import ChainConsumer
 
 # Lets create some data here to set things up

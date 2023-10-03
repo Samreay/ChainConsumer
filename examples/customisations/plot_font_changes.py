@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===================
 Change Font Options
@@ -12,8 +11,8 @@ more ticks added, and label size increased!
 
 import numpy as np
 from numpy.random import multivariate_normal
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 data = multivariate_normal([0, 1, 2], np.eye(3) + 0.2, size=100000)

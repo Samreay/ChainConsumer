@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =============
 No Histograms
@@ -9,8 +8,9 @@ Sometimes marginalised histograms are not needed.
 """
 
 
-from numpy.random import multivariate_normal, normal, seed
 import numpy as np
+from numpy.random import multivariate_normal, normal, seed
+
 from chainconsumer import ChainConsumer
 
 seed(0)
@@ -22,4 +22,3 @@ c.configure(plot_hists=False)
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
-

@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 import logging
+
 import numpy as np
 from scipy.integrate import simps
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 
-from .helpers import get_smoothed_bins, get_grid_bins, get_latex_table_frame
+from .helpers import get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
 
 
-class Analysis(object):
-
+class Analysis:
     summaries = ["max", "mean", "cumulative", "max_symmetric", "max_shortest", "max_central"]
 
     def __init__(self, parent):
@@ -27,9 +26,16 @@ class Analysis(object):
         }
 
     def get_latex_table(
-        self, parameters=None, transpose=False, caption=None, label="tab:model_params", hlines=True, blank_fill="--", filename=None
+        self,
+        parameters=None,
+        transpose=False,
+        caption=None,
+        label="tab:model_params",
+        hlines=True,
+        blank_fill="--",
+        filename=None,
     ):  # pragma: no cover
-        """ Generates a LaTeX table from parameter summaries.
+        """Generates a LaTeX table from parameter summaries.
 
         Parameters
         ----------
@@ -74,10 +80,7 @@ class Analysis(object):
             caption = ""
 
         end_text = " \\\\ \n"
-        if transpose:
-            column_text = "c" * (num_chains + 1)
-        else:
-            column_text = "c" * (num_parameters + 1)
+        column_text = "c" * (num_chains + 1) if transpose else "c" * (num_parameters + 1)
 
         center_text = ""
         hline_text = "\\hline\n"
@@ -96,7 +99,7 @@ class Analysis(object):
                         arr.append(blank_fill)
                 center_text += " & ".join(arr) + end_text
         else:
-            center_text += " & ".join(["Model"] + parameters) + end_text
+            center_text += " & ".join(["Model", *parameters]) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
             for name, chain_res in zip([c.name for c in chains], fit_values):
@@ -118,7 +121,7 @@ class Analysis(object):
         return final_text
 
     def get_summary(self, squeeze=True, parameters=None, chains=None):
-        """  Gets a summary of the marginalised parameter distributions.
+        """Gets a summary of the marginalised parameter distributions.
 
         Parameters
         ----------
@@ -140,9 +143,9 @@ class Analysis(object):
         if chains is None:
             chains = self.parent.get_mcmc_chains()
         else:
-            if isinstance(chains, (int, str)):
+            if isinstance(chains, int | str):
                 chains = [chains]
-            if isinstance(chains[0], (int, str)):
+            if isinstance(chains[0], int | str):
                 chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
 
         for chain in chains:
@@ -159,8 +162,8 @@ class Analysis(object):
         return results
 
     def get_max_posteriors(self, parameters=None, squeeze=True, chains=None):
-        """  Gets the maximum posterior point in parameter space from the passed parameters.
-        
+        """Gets the maximum posterior point in parameter space from the passed parameters.
+
         Requires the chains to have set `posterior` values.
 
         Parameters
@@ -184,7 +187,7 @@ class Analysis(object):
         if chains is None:
             chains = self.parent.chains
         else:
-            if isinstance(chains, (int, str)):
+            if isinstance(chains, int | str):
                 chains = [chains]
             chains = [self.parent.chains[i] for c in chains for i in self.parent._get_chain(c)]
 
@@ -266,7 +269,9 @@ class Analysis(object):
 
         return parameters, cov
 
-    def get_correlation_table(self, chain=0, parameters=None, caption="Parameter Correlations", label="tab:parameter_correlations"):
+    def get_correlation_table(
+        self, chain=0, parameters=None, caption="Parameter Correlations", label="tab:parameter_correlations"
+    ):
         """
         Gets a LaTeX table of parameter correlations.
 
@@ -290,7 +295,9 @@ class Analysis(object):
         parameters, cor = self.get_correlations(chain=chain, parameters=parameters)
         return self._get_2d_latex_table(parameters, cor, caption, label)
 
-    def get_covariance_table(self, chain=0, parameters=None, caption="Parameter Covariance", label="tab:parameter_covariance"):
+    def get_covariance_table(
+        self, chain=0, parameters=None, caption="Parameter Covariance", label="tab:parameter_covariance"
+    ):
         """
         Gets a LaTeX table of parameter covariance.
 
@@ -325,7 +332,7 @@ class Analysis(object):
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
-            hist = hist ** chain.power
+            hist = hist**chain.power
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
 
@@ -350,7 +357,7 @@ class Analysis(object):
         hline_text = "        \\hline\n"
 
         table = ""
-        table += " & ".join([""] + parameters) + "\\\\ \n"
+        table += " & ".join(["", *parameters]) + "\\\\ \n"
         table += hline_text
         max_len = max([len(s) for s in parameters])
         format_string = "        %%%ds" % max_len
@@ -363,7 +370,7 @@ class Analysis(object):
         return latex_table % (column_def, table)
 
     def get_parameter_text(self, lower, maximum, upper, wrap=False):
-        """ Generates LaTeX appropriate text from marginalised parameter bounds.
+        """Generates LaTeX appropriate text from marginalised parameter bounds.
 
         Parameters
         ----------
@@ -410,26 +417,26 @@ class Analysis(object):
         elif resolution == -2:
             fmt = "%0.3f"
             r = 3
-        upper_error *= 10 ** factor
-        lower_error *= 10 ** factor
-        maximum *= 10 ** factor
+        upper_error *= 10**factor
+        lower_error *= 10**factor
+        maximum *= 10**factor
         upper_error = round(upper_error, r)
         lower_error = round(lower_error, r)
         maximum = round(maximum, r)
         if maximum == -0.0:
             maximum = 0.0
         if resolution == 2:
-            upper_error *= 10 ** -factor
-            lower_error *= 10 ** -factor
-            maximum *= 10 ** -factor
+            upper_error *= 10**-factor
+            lower_error *= 10**-factor
+            maximum *= 10**-factor
             factor = 0
             fmt = "%0.0f"
         upper_error_text = fmt % upper_error
         lower_error_text = fmt % lower_error
         if upper_error_text == lower_error_text:
-            text = r"%s\pm %s" % (fmt, "%s") % (maximum, lower_error_text)
+            text = r"{}\pm {}".format(fmt, "%s") % (maximum, lower_error_text)
         else:
-            text = r"%s^{+%s}_{-%s}" % (fmt, "%s", "%s") % (maximum, upper_error_text, lower_error_text)
+            text = r"{}^{{+{}}}_{{-{}}}".format(fmt, "%s", "%s") % (maximum, upper_error_text, lower_error_text)
         if factor != 0:
             text = r"\left( %s \right) \times 10^{%d}" % (text, -factor)
         if wrap:
@@ -488,7 +495,7 @@ class Analysis(object):
                 elif area > desired_area:
                     minVal = mid
             except ValueError:
-                self._logger.warning("Parameter %s in chain %s is not constrained" % (parameter, chain.name))
+                self._logger.warning(f"Parameter {parameter} in chain {chain.name} is not constrained")
                 return [None, xs[startIndex], None]
 
         return [x1, xs[startIndex], x2]

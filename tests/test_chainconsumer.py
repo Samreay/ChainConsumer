@@ -5,7 +5,7 @@ from scipy.stats import skewnorm
 from chainconsumer import ChainConsumer
 
 
-class TestChainConsumer(object):
+class TestChainConsumer:
     np.random.seed(1)
     n = 2000000
     data = np.random.normal(loc=5.0, scale=1.5, size=n)
@@ -62,7 +62,7 @@ class TestChainConsumer(object):
         consumer.configure()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -76,7 +76,7 @@ class TestChainConsumer(object):
         consumer.configure()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -90,7 +90,7 @@ class TestChainConsumer(object):
         consumer.configure()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -106,7 +106,7 @@ class TestChainConsumer(object):
         assert isinstance(summary, dict)
         assert "p2" in summary
         assert "p1" not in summary
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -124,7 +124,7 @@ class TestChainConsumer(object):
         assert "p2" in summary
         assert "p1" not in summary
         assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -142,7 +142,7 @@ class TestChainConsumer(object):
         assert "p2" in summary
         assert "p1" not in summary
         assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
@@ -160,14 +160,14 @@ class TestChainConsumer(object):
         assert "p2" in summary
         assert "p1" not in summary
         assert "p3" not in summary
-        actual = np.array(list(summary.values())[0])
+        actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
         diff = np.abs(expected - actual)
         assert np.all(diff < tolerance)
 
     def test_remove_multiple_chains_fails(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).remove_chain(chain=[0,0])
+            ChainConsumer().add_chain(self.data).remove_chain(chain=[0, 0])
 
     def test_shade_alpha_algorithm1(self):
         consumer = ChainConsumer()

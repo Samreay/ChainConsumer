@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==================
 Plot Distributions
@@ -12,7 +11,8 @@ simply plot all of the marginalised distributions using this method.
 """
 
 import numpy as np
-from numpy.random import random, multivariate_normal
+from numpy.random import multivariate_normal, random
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

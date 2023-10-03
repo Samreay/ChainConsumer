@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 import logging
+
 import numpy as np
 
-from .colors import Colors
 from .analysis import Analysis
+from .colors import Colors
 
 
-class Chain(object):
-
+class Chain:
     colors = Colors()  # Static colors object to do color mapping
 
     def __init__(
@@ -67,7 +66,7 @@ class Chain(object):
 
         self.shift_params = shift_params
         if shift_params is not None:
-            for key in shift_params.keys():
+            for key in shift_params:
                 try:
                     index = self.parameters.index(key)
                     avg = np.average(chain[:, index], weights=weights)
@@ -148,10 +147,12 @@ class Chain(object):
         show_as_1d_prior=False,
         zorder=None,
     ):
-
         if statistics is not None:
             assert isinstance(statistics, str), "statistics should be a string"
-            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries)
+            assert statistics in list(Analysis.summaries), "statistics {} not recognised. Should be in {}".format(
+                statistics,
+                Analysis.summaries,
+            )
             self.config["statistics"] = statistics
 
         if color is not None:
@@ -188,7 +189,11 @@ class Chain(object):
 
     def _validate_config(self, name, value, *types):
         if value is not None:
-            assert isinstance(value, tuple(types)), "%s, which is %s, should be type of: %s" % (name, value, " or ".join([t.__name__ for t in types]))
+            assert isinstance(value, tuple(types)), "{}, which is {}, should be type of: {}".format(
+                name,
+                value,
+                " or ".join([t.__name__ for t in types]),
+            )
             self.config[name] = value
 
     def validate_chain(self):
@@ -199,17 +204,23 @@ class Chain(object):
         assert isinstance(self.name, str), "Chain name needs to be a string. It is %s" % type(self.name)
         assert np.all(np.isfinite(self.weights)), "Chain %s has weights which are NaN or inf!" % self.name
         assert len(self.weights.shape) == 1, "Weights should be a 1D array, have instead %s" % str(self.weights.shape)
-        assert self.weights.size == self.chain.shape[0], "Chain %s has %d steps but %d weights" % (self.name, self.weights.size, self.chain.shape[0])
+        assert self.weights.size == self.chain.shape[0], "Chain %s has %d steps but %d weights" % (
+            self.name,
+            self.weights.size,
+            self.chain.shape[0],
+        )
         assert self.chain.shape[0] > 0, "Chain has shape %s, which means it has 0 steps!" % str(self.chain.shape)
         assert np.sum(self.weights) > 0, "Chain weights sum to zero, this is not good"
         if self.walkers is not None:
             assert int(self.walkers) == self.walkers, "Walkers should be an integer!"
-            assert self.chain.shape[0] % self.walkers == 0, "Chain %s has %d walkers and %d steps... which aren't divisible. They need to be!" % (
+            assert (
+                self.chain.shape[0] % self.walkers == 0
+            ), "Chain %s has %d walkers and %d steps... which aren't divisible. They need to be!" % (
                 self.name,
                 self.walkers,
                 self.chain.shape[0],
             )
-        assert isinstance(self.grid, bool), "Chain %s has %s for grid, should be a bool" % (self.name, type(self.grid))
+        assert isinstance(self.grid, bool), f"Chain {self.name} has {type(self.grid)} for grid, should be a bool"
         assert self.parameters is not None, "Chain %s has parameter list of None. Please give names" % self.name
         assert len(self.parameters) == self.chain.shape[1], "Chain %s has %d parameters but data has %d columns" % (
             self.name,
@@ -219,7 +230,9 @@ class Chain(object):
         for i, p in enumerate(self.parameters):
             assert isinstance(p, str), "Param index %d, which is %s, needs to be a string!" % (i, p)
         if self.posterior is not None:
-            assert len(self.posterior.shape) == 1, "posterior should be a 1D array, have instead %s" % str(self.posterior.shape)
+            assert len(self.posterior.shape) == 1, "posterior should be a 1D array, have instead %s" % str(
+                self.posterior.shape
+            )
             assert self.posterior.size == self.chain.shape[0], "Chain %s has %d steps but %d log-posterior values" % (
                 self.name,
                 self.chain.shape[0],
@@ -227,14 +240,15 @@ class Chain(object):
             )
             assert np.all(np.isfinite(self.posterior)), "Chain %s has NaN or inf in the log-posterior" % self.name
         if self.num_free_params is not None:
-            assert isinstance(self.num_free_params, (int, float)), "Chain %s has num_free_params which is not an integer, its %s" % (
-                self.name,
-                type(self.num_free_params),
-            )
+            assert isinstance(
+                self.num_free_params, int | float
+            ), f"Chain {self.name} has num_free_params which is not an integer, its {type(self.num_free_params)}"
             assert np.isfinite(self.num_free_params), "num_free_params is either infinite or NaN"
             assert self.num_free_params > 0, "num_free_params must be positive"
         if self.num_eff_data_points is not None:
-            assert isinstance(self.num_eff_data_points, (int, float)), "Chain %s has num_eff_data_points which is not an a number, its %s" % (
+            assert isinstance(
+                self.num_eff_data_points, int | float
+            ), "Chain {} has num_eff_data_points which is not an a number, its {}".format(
                 self.name,
                 type(self.num_eff_data_points),
             )
@@ -247,11 +261,11 @@ class Chain(object):
     #     self.validated_params = set()
 
     def get_summary(self, param, callback):
-        stat = "%s %s" % (self.config["statistics"], self.config["summary_area"])
-        if stat in self.summaries.keys() and param in self.summaries[stat]:
+        stat = "{} {}".format(self.config["statistics"], self.config["summary_area"])
+        if stat in self.summaries and param in self.summaries[stat]:
             return self.summaries[stat][param]
         result = callback(self, param)
-        if stat not in self.summaries.keys():
+        if stat not in self.summaries:
             self.summaries[stat] = {}
         self.summaries[stat][param] = result
         return result

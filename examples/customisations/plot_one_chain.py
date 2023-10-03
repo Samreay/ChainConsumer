@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =========
 One Chain
@@ -12,9 +11,9 @@ default.
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = 1e2 * normal(size=(3, 3))

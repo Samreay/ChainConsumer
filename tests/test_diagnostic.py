@@ -5,16 +5,14 @@ from chainconsumer import ChainConsumer
 
 
 def test_gelman_rubin_index():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4)
     assert consumer.diagnostic.gelman_rubin(chain=0)
 
 
 def test_gelman_rubin_index_not_converged():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     data[80000:, :] *= 2
     data[80000:, :] += 1
     consumer = ChainConsumer()
@@ -24,8 +22,7 @@ def test_gelman_rubin_index_not_converged():
 
 
 def test_gelman_rubin_index_not_converged():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     data[:, 0] += np.linspace(0, 10, 100000)
     consumer = ChainConsumer()
 
@@ -34,8 +31,7 @@ def test_gelman_rubin_index_not_converged():
 
 
 def test_gelman_rubin_index_fails():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4)
     with pytest.raises(AssertionError):
@@ -43,16 +39,14 @@ def test_gelman_rubin_index_fails():
 
 
 def test_gelman_rubin_name():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4, name="testchain")
     assert consumer.diagnostic.gelman_rubin(chain="testchain")
 
 
 def test_gelman_rubin_name_fails():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4, name="testchain")
     with pytest.raises(AssertionError):
@@ -60,8 +54,7 @@ def test_gelman_rubin_name_fails():
 
 
 def test_gelman_rubin_unknown_fails():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4, name="testchain")
     with pytest.raises(ValueError):
@@ -69,8 +62,7 @@ def test_gelman_rubin_unknown_fails():
 
 
 def test_gelman_rubin_default():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4, name="c1")
     consumer.add_chain(data, walkers=4, name="c2")
@@ -79,8 +71,7 @@ def test_gelman_rubin_default():
 
 
 def test_gelman_rubin_default_not_converge():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=4, name="c1")
     consumer.add_chain(data, walkers=4, name="c2")
@@ -91,16 +82,14 @@ def test_gelman_rubin_default_not_converge():
 
 
 def test_geweke_index():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=20, name="c1")
     assert consumer.diagnostic.geweke(chain=0)
 
 
 def test_geweke_index_failed():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     data[98000:, :] += 0.5
     consumer.add_chain(data, walkers=20, name="c1")
@@ -109,8 +98,7 @@ def test_geweke_index_failed():
 
 def test_geweke_default():
     np.random.seed(0)
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=20, name="c1")
     consumer.add_chain(data, walkers=20, name="c2")
@@ -118,8 +106,7 @@ def test_geweke_default():
 
 
 def test_geweke_default_failed():
-    data = np.vstack((np.random.normal(loc=0.0, size=100000),
-                      np.random.normal(loc=1.0, size=100000))).T
+    data = np.vstack((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000))).T
     consumer = ChainConsumer()
     consumer.add_chain(data, walkers=20, name="c1")
     data2 = data.copy()

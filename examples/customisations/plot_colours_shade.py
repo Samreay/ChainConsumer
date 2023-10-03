@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===================
 Colours and Shading
@@ -17,7 +16,8 @@ Colours should be given as hex colours.
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal, normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(2)
@@ -33,5 +33,3 @@ c.configure(colors=["#B32222", "#D1D10D", "#455A64"], shade=True, shade_alpha=0.
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
-
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==================
 Hundreds of Chains
@@ -22,21 +21,21 @@ by giving the chains the same name. It is also good practise to set the same col
 """
 # sphinx_gallery_thumbnail_number = 2
 
-from scipy.stats import multivariate_normal
 import numpy as np
-from chainconsumer import ChainConsumer
+from scipy.stats import multivariate_normal
 
+from chainconsumer import ChainConsumer
 
 c = ChainConsumer()
 for i in range(1000):
-   # Generate some data centered at a random location with uncertainty
-   # equal to the scatter
-   mean = [3, 8]
-   cov = [[1.0, 0.5], [0.5, 2.0]]
-   mean_scattered = multivariate_normal.rvs(mean=mean, cov=cov)
-   data = multivariate_normal.rvs(mean=mean_scattered, cov=cov, size=1000)
-   posterior = multivariate_normal.logpdf(data, mean=mean_scattered, cov=cov)
-   c.add_chain(data, posterior=posterior, parameters=["$x$", "$y$"], color='r', name="Simulation validation")
+    # Generate some data centered at a random location with uncertainty
+    # equal to the scatter
+    mean = [3, 8]
+    cov = [[1.0, 0.5], [0.5, 2.0]]
+    mean_scattered = multivariate_normal.rvs(mean=mean, cov=cov)
+    data = multivariate_normal.rvs(mean=mean_scattered, cov=cov, size=1000)
+    posterior = multivariate_normal.logpdf(data, mean=mean_scattered, cov=cov)
+    c.add_chain(data, posterior=posterior, parameters=["$x$", "$y$"], color="r", name="Simulation validation")
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -59,14 +58,35 @@ for i in range(200):
     posterior = multivariate_normal.logpdf(data, mean=mean_scattered, cov=cov)
     plot_contour = i == 0
 
-    c.add_chain(data, posterior=posterior, parameters=p, color='p', name="Sim1")
+    c.add_chain(data, posterior=posterior, parameters=p, color="p", name="Sim1")
 
-    c.add_chain(data2, posterior=posterior, parameters=p, color='k',
-                marker_style="+", marker_size=20, name="Sim2", marker_alpha=0.5)
+    c.add_chain(
+        data2,
+        posterior=posterior,
+        parameters=p,
+        color="k",
+        marker_style="+",
+        marker_size=20,
+        name="Sim2",
+        marker_alpha=0.5,
+    )
 
-c.add_chain(data + np.array([4, -4, 3]), parameters=p, posterior=posterior, name="Contour Too",
-            plot_contour=True, plot_point=True, marker_style="*", marker_size=40,
-            color="a", shade=True, shade_alpha=0.3, kde=True, linestyle="--", bar_shade=True)
+c.add_chain(
+    data + np.array([4, -4, 3]),
+    parameters=p,
+    posterior=posterior,
+    name="Contour Too",
+    plot_contour=True,
+    plot_point=True,
+    marker_style="*",
+    marker_size=40,
+    color="a",
+    shade=True,
+    shade_alpha=0.3,
+    kde=True,
+    linestyle="--",
+    bar_shade=True,
+)
 
 c.configure(legend_artists=True)
 

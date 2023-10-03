@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ========
 Logscale
@@ -12,9 +11,9 @@ it a crack.
 
 """
 
-import numpy as np
-from chainconsumer import ChainConsumer
 from scipy.stats import lognorm
+
+from chainconsumer import ChainConsumer
 
 data = lognorm.rvs(0.95, loc=0, size=(100000, 2))
 
@@ -34,4 +33,3 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 
 fig = c.plotter.plot_distributions(log_scales=[True, False])  # list[bool] example
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =============
 External axes
@@ -12,9 +11,10 @@ do auto-extents, labels, ticks, truth values, etc. But it will make contours for
 
 """
 
-from chainconsumer import ChainConsumer
-from scipy.stats import multivariate_normal as mv
 import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal as mv
+
+from chainconsumer import ChainConsumer
 
 data = mv.rvs(mean=[5, 6], cov=[[1, 0.9], [0.9, 1]], size=10000)
 

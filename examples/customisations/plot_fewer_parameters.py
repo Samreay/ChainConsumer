@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ====================
 Truncated Parameters
@@ -14,9 +13,9 @@ the shading is all computed from the colour hex code.
 """
 
 import numpy as np
-from numpy.random import normal, random, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal, random
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = random(size=(6, 6))

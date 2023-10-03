@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =====================
 Flips, Ticks and Size
@@ -14,6 +13,7 @@ ticks to the axis in this example. Also, I change the colour to red, just for fu
 """
 
 import numpy as np
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

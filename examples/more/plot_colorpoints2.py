@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ========================
 Multiple Colour Scatter!
@@ -16,14 +15,15 @@ by adding alternative linestyles, as shown below.
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal, normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(1)
 cov = normal(size=(4, 4))
 data = multivariate_normal(normal(size=4), np.dot(cov, cov.T), size=100000)
 cov = 1 + 0.5 * normal(size=(4, 4))
-data2 = multivariate_normal(4+normal(size=4), np.dot(cov, cov.T), size=100000)
+data2 = multivariate_normal(4 + normal(size=4), np.dot(cov, cov.T), size=100000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$", "$g$"], name="a")
 c.add_chain(data2, parameters=["$x$", "$y$", "$z$", "$t$"], name="b")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ============
 Plot Summary
@@ -13,6 +12,7 @@ Have a bunch of models and want to compare summaries, but in a plot instead of L
 # Lets add a bunch of chains represnting all these different models of ours.
 
 import numpy as np
+
 from chainconsumer import ChainConsumer
 
 
@@ -27,6 +27,7 @@ def get_instance():
         data = np.random.multivariate_normal(mean=mean, cov=np.diag(sigma**2), size=100000)
         c.add_chain(data, parameters=parameters, name=name)
     return c
+
 
 ###############################################################################
 # If we want the full shape of the distributions, well, thats the default

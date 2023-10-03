@@ -7,14 +7,15 @@ You can specify display options when adding chains.
 
 This is useful for when you are playing around with code, adding and removing chains
 as you tweak the plot. Normally, this would involve modifying the lists passed into `configure`
-if you wanted to keep a specific chain with a specific style. To make it easier, 
-you can specify chain properties when addng them via `add_chain`. If set, these values override 
+if you wanted to keep a specific chain with a specific style. To make it easier,
+you can specify chain properties when addng them via `add_chain`. If set, these values override
 anything specified in configure (and # -*- coding: utf-8 -*-
 thus override the default configure behaviour).
 
 """
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

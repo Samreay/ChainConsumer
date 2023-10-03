@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =============
 Colour Points
@@ -16,7 +15,8 @@ We can *also* display this as a posterior surface by setting
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal, normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(1)
@@ -32,7 +32,7 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 ###############################################################################
 # You can also plot the weights or posterior if they are specified. Showing weights here.
 
-weights = 1 / (1 + data[:, 0]**2 + data[:, 1]**2)
+weights = 1 / (1 + data[:, 0] ** 2 + data[:, 1] ** 2)
 c = ChainConsumer().add_chain(data[:, :2], parameters=["$x$", "$y$"], weights=weights)
 c.configure(color_params="weights")
 fig = c.plotter.plot(figsize=3.0)
@@ -42,7 +42,7 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 ###############################################################################
 # And showing the posterior color parameter here
 
-weights = 1 / (1 + data[:, 0]**2 + data[:, 1]**2)
+weights = 1 / (1 + data[:, 0] ** 2 + data[:, 1] ** 2)
 posterior = np.log(weights)
 c = ChainConsumer().add_chain(data[:, :2], parameters=["$x$", "$y$"], weights=weights, posterior=posterior)
 c.configure(color_params="posterior")

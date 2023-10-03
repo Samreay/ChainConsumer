@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================
 Excluding Chains
@@ -14,6 +13,7 @@ do this using either the chain index or using the chain names. Like so:
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

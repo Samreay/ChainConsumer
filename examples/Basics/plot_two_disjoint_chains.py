@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===================
 Two Disjoint Chains
@@ -9,9 +8,9 @@ You can plot multiple chains. They can even have different parameters!
 
 """
 import numpy as np
-from numpy.random import normal, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = normal(size=(3, 3))

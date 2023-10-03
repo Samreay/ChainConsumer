@@ -1,21 +1,21 @@
-# -*- coding: utf-8 -*-
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
+
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.font_manager import FontProperties
-from matplotlib.ticker import MaxNLocator, ScalarFormatter, LogLocator
 from matplotlib.textpath import TextPath
+from matplotlib.ticker import LogLocator, MaxNLocator, ScalarFormatter
 from numpy import meshgrid
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 from scipy.stats import norm
 
-from .helpers import get_extents, get_smoothed_bins, get_grid_bins
+from .helpers import get_extents, get_grid_bins, get_smoothed_bins
 from .kde import MegKDE
 
 
-class Plotter(object):
+class Plotter:
     def __init__(self, parent):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
@@ -37,7 +37,7 @@ class Plotter(object):
         watermark=None,
         log_scales=None,
     ):  # pragma: no cover
-        """ Plot the chain!
+        """Plot the chain!
 
         Parameters
         ----------
@@ -98,7 +98,9 @@ class Plotter(object):
         legend = legend and len([n for n in names if n]) > 0
 
         # Calculate cmap extents
-        unique_color_params = list(set([c.config["color_params"] for c in chains if c.config["color_params"] is not None]))
+        unique_color_params = list(
+            set([c.config["color_params"] for c in chains if c.config["color_params"] is not None])
+        )
         num_cax = len(unique_color_params)
         color_param_extents = {}
         for u in unique_color_params:
@@ -132,7 +134,13 @@ class Plotter(object):
         flip = len(parameters) == 2 and plot_hists and self.parent.config["flip"]
 
         fig, axes, params1, params2, extents = self._get_figure(
-            parameters, chains=chains, figsize=figsize, flip=flip, external_extents=extents, blind=blind, log_scales=log_scales
+            parameters,
+            chains=chains,
+            figsize=figsize,
+            flip=flip,
+            external_extents=extents,
+            blind=blind,
+            log_scales=log_scales,
         )
         label_font_size = self.parent.config["label_font_size"]
 
@@ -142,7 +150,7 @@ class Plotter(object):
         if summary is None:
             summary = len(parameters) < 5 and len(self.parent.chains) == 1
         if len(chains) == 1:
-            self._logger.debug("Plotting surfaces for chain of dimension %s" % (chains[0].chain.shape,))
+            self._logger.debug(f"Plotting surfaces for chain of dimension {chains[0].chain.shape}")
         else:
             self._logger.debug("Plotting surfaces for %d chains" % len(chains))
         cbar_done = []
@@ -237,10 +245,7 @@ class Plotter(object):
         legend_location = self.parent.config["legend_location"]
 
         if legend_location is None:
-            if not flip or len(parameters) > 2:
-                legend_location = (0, -1)
-            else:
-                legend_location = (-1, 0)
+            legend_location = (0, -1) if not flip or len(parameters) > 2 else (-1, 0)
         outside = legend_location[0] >= legend_location[1]
         if names is not None and legend:
             ax = axes[legend_location[0], legend_location[1]]
@@ -283,19 +288,16 @@ class Plotter(object):
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
-            ax.set_xlabel("{0} {1}".format(ax.get_xlabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
+            ax.set_xlabel("{} {}".format(ax.get_xlabel(), f"[{offset.get_text()}]" if offset.get_text() else ""))
             offset.set_visible(False)
         for ax in axes[:, 0]:
             offset = ax.get_yaxis().get_offset_text()
-            ax.set_ylabel("{0} {1}".format(ax.get_ylabel(), "[{0}]".format(offset.get_text()) if offset.get_text() else ""))
+            ax.set_ylabel("{} {}".format(ax.get_ylabel(), f"[{offset.get_text()}]" if offset.get_text() else ""))
             offset.set_visible(False)
 
         dpi = 300
         if watermark:
-            if flip and len(parameters) == 2:
-                ax = axes[-1, 0]
-            else:
-                ax = None
+            ax = axes[-1, 0] if flip and len(parameters) == 2 else None
             self._add_watermark(fig, ax, figsize, watermark, dpi=dpi)
 
         if filename is not None:
@@ -331,7 +333,7 @@ class Plotter(object):
         bb1 = TextPath((0, 0), text, size=51, prop=font_prop, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
-        size = np.sqrt(dy ** 2 + dx ** 2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
+        size = np.sqrt(dy**2 + dx**2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
         if axes is not None:
             if usetex:
                 size *= 0.7
@@ -359,7 +361,7 @@ class Plotter(object):
         log_weight=None,
         log_scales=None,
     ):  # pragma: no cover
-        """ Plots the chain walk; the parameter values as a function of step index.
+        """Plots the chain walk; the parameter values as a function of step index.
 
         This plot is more for a sanity or consistency check than for use with final results.
         Plotting this before plotting with :func:`plot` allows you to quickly see if the
@@ -413,7 +415,9 @@ class Plotter(object):
 
         """
 
-        chains, parameters, truth, extents, _, log_scales = self._sanitise(chains, parameters, truth, extents, log_scales=log_scales)
+        chains, parameters, truth, extents, _, log_scales = self._sanitise(
+            chains, parameters, truth, extents, log_scales=log_scales
+        )
 
         chains = [c for c in chains if c.mcmc_chain]
         n = len(parameters)
@@ -441,20 +445,40 @@ class Plotter(object):
                     if p in chain.parameters:
                         chain_row = chain.get_data(p)
                         log = log_scales.get(p, False)
-                        self._plot_walk(ax, p, chain_row, extents=extents.get(p), convolve=convolve, color=chain.config["color"], log_scale=log)
+                        self._plot_walk(
+                            ax,
+                            p,
+                            chain_row,
+                            extents=extents.get(p),
+                            convolve=convolve,
+                            color=chain.config["color"],
+                            log_scale=log,
+                        )
                 if truth.get(p) is not None:
                     self._plot_walk_truth(ax, truth.get(p))
             else:
                 if i == 0 and plot_posterior:
                     for chain in chains:
                         if chain.posterior is not None:
-                            self._plot_walk(ax, r"$\log(P)$", chain.posterior - chain.posterior.max(), convolve=convolve, color=chain.config["color"])
+                            self._plot_walk(
+                                ax,
+                                r"$\log(P)$",
+                                chain.posterior - chain.posterior.max(),
+                                convolve=convolve,
+                                color=chain.config["color"],
+                            )
                 else:
                     if log_weight is None:
                         log_weight = np.any([chain.weights.mean() < 0.1 for chain in chains])
                     if log_weight:
                         for chain in chains:
-                            self._plot_walk(ax, r"$\log_{10}(w)$", np.log10(chain.weights), convolve=convolve, color=chain.config["color"])
+                            self._plot_walk(
+                                ax,
+                                r"$\log_{10}(w)$",
+                                np.log10(chain.weights),
+                                convolve=convolve,
+                                color=chain.config["color"],
+                            )
                     else:
                         for chain in chains:
                             self._plot_walk(ax, "$w$", chain.weights, convolve=convolve, color=chain.config["color"])
@@ -470,9 +494,19 @@ class Plotter(object):
         return fig
 
     def plot_distributions(
-        self, parameters=None, truth=None, extents=None, display=False, filename=None, chains=None, col_wrap=4, figsize=None, blind=None, log_scales=None
+        self,
+        parameters=None,
+        truth=None,
+        extents=None,
+        display=False,
+        filename=None,
+        chains=None,
+        col_wrap=4,
+        figsize=None,
+        blind=None,
+        log_scales=None,
     ):  # pragma: no cover
-        """ Plots the 1D parameter distributions for verification purposes.
+        """Plots the 1D parameter distributions for verification purposes.
 
         This plot is more for a sanity or consistency check than for use with final results.
         Plotting this before plotting with :func:`plot` allows you to quickly see if the
@@ -517,7 +551,9 @@ class Plotter(object):
             the matplotlib figure created
 
         """
-        chains, parameters, truth, extents, blind, log_scales = self._sanitise(chains, parameters, truth, extents, blind=blind, log_scales=log_scales)
+        chains, parameters, truth, extents, blind, log_scales = self._sanitise(
+            chains, parameters, truth, extents, blind=blind, log_scales=log_scales
+        )
 
         n = len(parameters)
         num_cols = min(n, col_wrap)
@@ -612,7 +648,7 @@ class Plotter(object):
         show_names=True,
         log_scales=None,
     ):  # pragma: no cover
-        """ Plots parameter summaries
+        """Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
         Plotting this before plotting with :func:`plot` allows you to quickly see if the
@@ -680,7 +716,7 @@ class Plotter(object):
 
         # Check if we're using a chain for truth values
         if isinstance(truth, str):
-            assert truth in all_names, "Truth chain %s is not in the list of added chains %s" % (truth, all_names)
+            assert truth in all_names, f"Truth chain {truth} is not in the list of added chains {all_names}"
             if not include_truth_chain:
                 chains = [c for c in chains if c.name != truth]
             truth = self.parent.analysis.get_summary(chains=truth, parameters=parameters)
@@ -692,7 +728,10 @@ class Plotter(object):
         if show_names:
             max_model_name = self._get_size_of_texts([chain.name for chain in chains])
             model_width = 0.25 + (max_model_name / fid_dpi)
-            gridspec_kw = {"width_ratios": [model_width] + [param_width] * len(parameters), "height_ratios": [1] * len(chains)}
+            gridspec_kw = {
+                "width_ratios": [model_width] + [param_width] * len(parameters),
+                "height_ratios": [1] * len(chains),
+            }
             ncols = 1 + len(parameters)
         else:
             model_width = 0
@@ -708,7 +747,9 @@ class Plotter(object):
         bottom_ratio = bottom_spacing / height
 
         figsize = (width * figsize, height * figsize)
-        fig, axes = plt.subplots(nrows=len(chains), ncols=ncols, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
+        fig, axes = plt.subplots(
+            nrows=len(chains), ncols=ncols, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw
+        )
         fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
         label_font_size = self.parent.config["label_font_size"]
         legend_color_text = self.parent.config["legend_color_text"]
@@ -717,7 +758,15 @@ class Plotter(object):
         for i, row in enumerate(axes):
             chain = chains[i]
 
-            cs, ws, ps, = chain.chain, chain.weights, chain.parameters
+            (
+                cs,
+                ws,
+                ps,
+            ) = (
+                chain.chain,
+                chain.weights,
+                chain.parameters,
+            )
             gs, ns = chain.grid, chain.name
 
             colour = chain.config["color"]
@@ -728,7 +777,14 @@ class Plotter(object):
                 ax_first.set_axis_off()
                 text_colour = "k" if not legend_color_text else colour
                 ax_first.text(
-                    0, 0.5, ns, transform=ax_first.transAxes, fontsize=label_font_size, verticalalignment="center", color=text_colour, weight="medium"
+                    0,
+                    0.5,
+                    ns,
+                    transform=ax_first.transAxes,
+                    fontsize=label_font_size,
+                    verticalalignment="center",
+                    color=text_colour,
+                    weight="medium",
                 )
                 cols = row[1:]
             else:
@@ -754,7 +810,7 @@ class Plotter(object):
                 # Add truth values
                 truth_value = truth.get(p)
                 if truth_value is not None:
-                    if isinstance(truth_value, float) or isinstance(truth_value, int):
+                    if isinstance(truth_value, float | int):
                         truth_mean = truth_value
                         truth_min, truth_max = None, None
                     else:
@@ -812,8 +868,9 @@ class Plotter(object):
         widths = [TextPath((0, 0), text, usetex=usetex, size=size).get_extents().width for text in texts]
         return max(widths)
 
-    def _sanitise(self, chains, parameters, truth, extents, color_p=False, blind=None, wide_extents=True, log_scales=None):  # pragma: no cover
-
+    def _sanitise(
+        self, chains, parameters, truth, extents, color_p=False, blind=None, wide_extents=True, log_scales=None
+    ):  # pragma: no cover
         chains = self._sanitise_chains(chains)
 
         if color_p:
@@ -896,7 +953,7 @@ class Plotter(object):
             plt.rc("font", family="sans-serif")
 
     def restore_rc_params(self):
-        """ Restores the matplotlib rc parameters modified by usetex and serif.
+        """Restores the matplotlib rc parameters modified by usetex and serif.
 
         Unfortunately this cannot be automated because you cannot invoke it whilst you have
         an active figure object or matplotlib will destroy you. So do all your plotting, close
@@ -914,7 +971,9 @@ class Plotter(object):
                 extents[p] = self._get_parameter_extents(p, chains, wide_extents=wide_extents)
         return extents
 
-    def _get_figure(self, all_parameters, flip, figsize=(5, 5), external_extents=None, chains=None, blind=None, log_scales=None):  # pragma: no cover
+    def _get_figure(
+        self, all_parameters, flip, figsize=(5, 5), external_extents=None, chains=None, blind=None, log_scales=None
+    ):  # pragma: no cover
         n = len(all_parameters)
         max_ticks = self.parent.config["max_ticks"]
         spacing = self.parent.config["spacing"]
@@ -934,10 +993,7 @@ class Plotter(object):
         if spacing is None:
             spacing = 1.0 if n < 6 else 0.0
 
-        if n == 2 and plot_hists and flip:
-            gridspec_kw = {"width_ratios": [3, 1], "height_ratios": [1, 3]}
-        else:
-            gridspec_kw = {}
+        gridspec_kw = {"width_ratios": [3, 1], "height_ratios": [1, 3]} if n == 2 and plot_hists and flip else {}
 
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05 * spacing, hspace=0.05 * spacing)
@@ -1097,7 +1153,6 @@ class Plotter(object):
         return h
 
     def _sanitise_chains(self, chains):
-
         if not self.parent._configured:
             self.parent.configure()
         if not self.parent._configured_truth:
@@ -1106,7 +1161,7 @@ class Plotter(object):
         if chains is None:
             chains = list(range(len(self.parent.chains)))
         else:
-            if isinstance(chains, str) or isinstance(chains, int):
+            if isinstance(chains, int | str):
                 chains = [chains]
             chains = [i for c in chains for i in self.parent._get_chain(c)]
 
@@ -1114,7 +1169,7 @@ class Plotter(object):
         return chains
 
     def plot_contour(self, ax, parameter_x, parameter_y, chains=None):
-        """ A lightweight method to plot contours in an external axis given two specified parameters
+        """A lightweight method to plot contours in an external axis given two specified parameters
 
         Parameters
         ==========
@@ -1133,7 +1188,6 @@ class Plotter(object):
             self._plot_contour(ax, chain, parameter_y, parameter_x)
 
     def _plot_contour(self, ax, chain, px, py, color_extents=None):  # pragma: no cover
-
         levels = self._get_levels()
         cloud = chain.config["cloud"]
         colour = chain.config["color"]
@@ -1183,7 +1237,16 @@ class Plotter(object):
 
         if shade and shade_alpha > 0:
             ax.contourf(x_centers, y_centers, vals, levels=levels, colors=colours, alpha=shade_alpha, zorder=zorder)
-        con = ax.contour(x_centers, y_centers, vals, levels=levels, colors=colours2, linestyles=linestyle, linewidths=linewidth, zorder=zorder)
+        con = ax.contour(
+            x_centers,
+            y_centers,
+            vals,
+            levels=levels,
+            colors=colours2,
+            linestyles=linestyle,
+            linewidths=linewidth,
+            zorder=zorder,
+        )
 
         if contour_labels is not None:
             lvls = [l for l in con.levels if l != 0.0]
@@ -1207,7 +1270,6 @@ class Plotter(object):
                     ax.axvline(truth_value, **self.parent.config_truth)
 
     def _plot_bars(self, ax, parameter, chain, flip=False, summary=False):  # pragma: no cover
-
         # Get values from config
         colour = chain.config["color"]
         linestyle = chain.config["linestyle"]
@@ -1227,20 +1289,27 @@ class Plotter(object):
             else:
                 ax.plot(xs, ys, color=colour, ls=linestyle, lw=linewidth, zorder=zorder)
         else:
-            if flip:
-                orientation = "horizontal"
-            else:
-                orientation = "vertical"
+            orientation = "horizontal" if flip else "vertical"
             if chain.grid:
                 bins = get_grid_bins(chain_row)
             else:
                 bins, smooth = get_smoothed_bins(smooth, bins, chain_row, weights)
             hist, edges = np.histogram(chain_row, bins=bins, density=True, weights=weights)
             if chain.power is not None:
-                hist = hist ** chain.power
+                hist = hist**chain.power
             edge_center = 0.5 * (edges[:-1] + edges[1:])
             xs, ys = edge_center, hist
-            ax.hist(xs, weights=ys, bins=bins, histtype="step", color=colour, orientation=orientation, ls=linestyle, lw=linewidth, zorder=zorder)
+            ax.hist(
+                xs,
+                weights=ys,
+                bins=bins,
+                histtype="step",
+                color=colour,
+                orientation=orientation,
+                ls=linestyle,
+                lw=linewidth,
+                zorder=zorder,
+            )
         interp_type = "linear" if smooth else "nearest"
         interpolator = interp1d(xs, ys, kind=interp_type)
 
@@ -1262,7 +1331,7 @@ class Plotter(object):
                     if summary:
                         t = self.parent.analysis.get_parameter_text(*fit_values)
                         if isinstance(parameter, str):
-                            ax.set_title(r"$%s = %s$" % (parameter.strip("$"), t), fontsize=title_size)
+                            ax.set_title(r"${} = {}$".format(parameter.strip("$"), t), fontsize=title_size)
                         else:
                             ax.set_title(r"$%s$" % t, fontsize=title_size)
         return ys.max()
@@ -1279,17 +1348,16 @@ class Plotter(object):
             hist, bin_edges = np.histogram(xs, bins=num_bins, density=True)
             if hist.max() > max_val:
                 max_val = hist.max()
-            if flip:
-                orientation = "horizontal"
-            else:
-                orientation = "vertical"
+            orientation = "horizontal" if flip else "vertical"
 
             bin_center = 0.5 * (bin_edges[:-1] + bin_edges[1:])
             xs, ys = bin_center, hist
             ax.hist(xs, weights=ys, bins=bin_edges, histtype="step", color=colour, orientation=orientation)
         return max_val
 
-    def _plot_walk(self, ax, parameter, data, truth=None, extents=None, convolve=None, color=None, log_scale=False):  # pragma: no cover
+    def _plot_walk(
+        self, ax, parameter, data, truth=None, extents=None, convolve=None, color=None, log_scale=False
+    ):  # pragma: no cover
         if extents is not None:
             ax.set_ylim(extents)
         assert convolve is None or isinstance(convolve, int), "Convolve must be an integer pixel window width"
@@ -1354,7 +1422,7 @@ class Plotter(object):
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         if chain.power is not None:
-            hist = hist ** chain.power
+            hist = hist**chain.power
 
         x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
         y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
@@ -1368,7 +1436,7 @@ class Plotter(object):
             data = np.vstack((x, y)).T
             hist = MegKDE(data, w, kde).evaluate(coords).reshape((nn, nn))
             if chain.power is not None:
-                hist = hist ** chain.power
+                hist = hist**chain.power
         elif smooth:
             hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
 

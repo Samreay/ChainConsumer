@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ============
 No Smoothing
@@ -15,6 +14,7 @@ Fun colour change! And thicker lines!
 """
 
 import numpy as np
+
 from chainconsumer import ChainConsumer
 
 data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=100000)

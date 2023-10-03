@@ -53,9 +53,9 @@ def test_megkde_1d_changing_weights():
 def test_megkde_2d_basic():
     # Draw from normal, fit KDE, see if sampling from kde's pdf recovers norm
     np.random.seed(1)
-    data = np.random.multivariate_normal([0, 1], [[1.0, 0.], [0., 0.75 ** 2]], size=10000)
+    data = np.random.multivariate_normal([0, 1], [[1.0, 0.0], [0.0, 0.75**2]], size=10000)
     xs, ys = np.linspace(-4, 4, 50), np.linspace(-4, 4, 50)
-    xx, yy = np.meshgrid(xs, ys, indexing='ij')
+    xx, yy = np.meshgrid(xs, ys, indexing="ij")
     samps = np.vstack((xx.flatten(), yy.flatten())).T
     zs = MegKDE(data).evaluate(samps).reshape(xx.shape)
     zs_x = zs.sum(axis=1)

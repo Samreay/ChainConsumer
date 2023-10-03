@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =======================
 Cmap and Custom Bins
@@ -19,9 +18,9 @@ your plots and summaries would be calculated with 30 bins.
 
 """
 import numpy as np
-from numpy.random import normal, random, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal, random
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 cov = 0.3 * random(size=(3, 3)) + np.identity(3)

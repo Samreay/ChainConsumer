@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==================
 Using List Options
@@ -12,7 +11,8 @@ that you can pass to the configuration methods accept lists.
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal, normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(2)
@@ -28,10 +28,16 @@ c.add_chain(d1, parameters=["$x$", "$y$"])
 c.add_chain(d2)
 c.add_chain(d3)
 
-c.configure(linestyles=["-", "--", "-"], linewidths=[1.0, 3.0, 1.0],
-            bins=[3.0, 1.0, 1.0], colors=["#1E88E5", "#D32F2F", "#111111"],
-            smooth=[0, 1, 2], shade=[True, True, False],
-            shade_alpha=[0.2, 0.1, 0.0], bar_shade=[True, False, False])
+c.configure(
+    linestyles=["-", "--", "-"],
+    linewidths=[1.0, 3.0, 1.0],
+    bins=[3.0, 1.0, 1.0],
+    colors=["#1E88E5", "#D32F2F", "#111111"],
+    smooth=[0, 1, 2],
+    shade=[True, True, False],
+    shade_alpha=[0.2, 0.1, 0.0],
+    bar_shade=[True, False, False],
+)
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

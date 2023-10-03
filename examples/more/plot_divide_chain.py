@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================
 Dividing a chain
@@ -20,8 +19,8 @@ I introduce some fake shift in the data to badly emulate walker drift.
 
 import numpy as np
 from numpy.random import multivariate_normal
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 np.random.seed(0)
 data = multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)

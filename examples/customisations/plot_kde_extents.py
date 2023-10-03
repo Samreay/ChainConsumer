@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ========================
 Gaussian KDE and Extents
@@ -16,6 +15,7 @@ low number of samples in your chains!
 """
 
 import numpy as np
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

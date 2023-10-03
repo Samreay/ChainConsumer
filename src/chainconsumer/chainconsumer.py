@@ -1,26 +1,22 @@
-# -*- coding: utf-8 -*-
-import numpy as np
-import pandas as pd
 import logging
 
+import numpy as np
+import pandas as pd
+
+from .analysis import Analysis
+from .chain import Chain
+from .colors import Colors
 from .comparisons import Comparison
 from .diagnostic import Diagnostic
-from .plotter import Plotter
 from .helpers import get_bins
-from .analysis import Analysis
-from .colors import Colors
-from .chain import Chain
+from .plotter import Plotter
 
 __all__ = ["ChainConsumer"]
 
 
-class ChainConsumer(object):
-    """ A class for consuming chains produced by an MCMC walk. Or grid searches. To make plots, 
-    figures, tables, diagnostics, you name it.
-
-    """
-
-    __version__ = "0.34.0"
+class ChainConsumer:
+    """A class for consuming chains produced by an MCMC walk. Or grid searches. To make plots,
+    figures, tables, diagnostics, you name it."""
 
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
@@ -88,7 +84,7 @@ class ChainConsumer(object):
         zorder=None,
         shift_params=None,
     ):
-        r""" Add a chain to the consumer.
+        r"""Add a chain to the consumer.
 
         Parameters
         ----------
@@ -126,7 +122,7 @@ class ChainConsumer(object):
             for plotting, but required if loading in multiple chains to perform model comparison.
         num_free_params : int, optional
             The number of degrees of freedom in your model. Not required for plotting, but required if
-            loading in multiple chains to perform model comparison.    
+            loading in multiple chains to perform model comparison.
         color : str(hex), optional
             Provide a colour for the chain. Can be used instead of calling `configure` for convenience.
         linewidth : float, optional
@@ -173,10 +169,10 @@ class ChainConsumer(object):
             of bins to the given value. Giving a float will scale the number of bins, such
             that giving ``bins=1.5`` will result in using :math:`\frac{1.5\sqrt{n}}{10}` bins.
             Note this parameter is most useful if `kde=False` is also passed, so you
-            can actually see the bins and not a KDE.        smooth : 
+            can actually see the bins and not a KDE.        smooth :
         color_params : str, optional
             The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set
-            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain, 
+            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain,
             it will respectively  use the weights, log weights, or posterior, to colour the points.
         plot_color_params : bool, optional
             Whether or not the colour parameter should also be plotted as a posterior surface.
@@ -200,10 +196,7 @@ class ChainConsumer(object):
         is_dict = False
         assert chain is not None, "You cannot have a chain of None"
         if isinstance(chain, str):
-            if chain.lower().endswith(".npy"):
-                chain = np.load(chain)
-            else:
-                chain = pd.read_csv(chain)
+            chain = np.load(chain) if chain.lower().endswith(".npy") else pd.read_csv(chain)
         elif isinstance(chain, dict):
             assert parameters is None, "You cannot pass a dictionary and specify parameter names"
             is_dict = True
@@ -213,7 +206,9 @@ class ChainConsumer(object):
             chain = np.array(chain).T
 
         if isinstance(chain, pd.DataFrame):
-            assert parameters is None, "You cannot pass a DataFrame and use parameter names, we're using the columns names"
+            assert (
+                parameters is None
+            ), "You cannot pass a DataFrame and use parameter names, we're using the columns names"
             parameters = list(chain.columns)
             if "weight" in parameters:
                 weights = chain["weight"]
@@ -227,13 +222,16 @@ class ChainConsumer(object):
             assert weights is not None, "If grid is set, you need to supply weights"
             if len(weights.shape) > 1:
                 assert not is_dict, (
-                    "We cannot construct a meshgrid from a dictionary, as the parameters" "are no longer ordered. Please pass in a flattened array instead."
+                    "We cannot construct a meshgrid from a dictionary, as the parameters"
+                    "are no longer ordered. Please pass in a flattened array instead."
                 )
                 self._logger.info("Constructing meshgrid for grid results")
                 meshes = np.meshgrid(*[u for u in chain.T], indexing="ij")
                 chain = np.vstack([m.flatten() for m in meshes]).T
                 weights = weights.flatten()
-                assert weights.size == chain[:, 0].size, "Error, given weight array size disagrees with parameter sampling"
+                assert (
+                    weights.size == chain[:, 0].size
+                ), "Error, given weight array size disagrees with parameter sampling"
 
         if len(chain.shape) == 1:
             chain = chain[None].T
@@ -242,14 +240,16 @@ class ChainConsumer(object):
             name = "Chain %d" % len(self.chains)
 
         if power is not None:
-            assert isinstance(power, int) or isinstance(power, float), "Power should be numeric, but is %s" % type(power)
+            assert isinstance(power, float | int), "Power should be numeric, but is %s" % type(power)
 
         if self._default_parameters is None and parameters is not None:
             self._default_parameters = parameters
 
         if parameters is None:
             if self._default_parameters is not None:
-                assert chain.shape[1] == len(self._default_parameters), "Chain has %d dimensions, but default parameters have %d dimensions" % (
+                assert chain.shape[1] == len(
+                    self._default_parameters
+                ), "Chain has %d dimensions, but default parameters have %d dimensions" % (
                     chain.shape[1],
                     len(self._default_parameters),
                 )
@@ -260,9 +260,13 @@ class ChainConsumer(object):
                 parameters = ["%d" % x for x in range(chain.shape[1])]
         else:
             self._logger.debug("Adding chain with defined parameters")
-            assert len(parameters) <= chain.shape[1], "Have only %d columns in chain, but have been given %d parameters names! " "Please double check this." % (
-                chain.shape[1],
-                len(parameters),
+            assert len(parameters) <= chain.shape[1], (
+                "Have only %d columns in chain, but have been given %d parameters names! "
+                "Please double check this."
+                % (
+                    chain.shape[1],
+                    len(parameters),
+                )
             )
         for p in parameters:
             if p not in self._all_parameters:
@@ -271,9 +275,9 @@ class ChainConsumer(object):
         if shift_params is not None:
             if isinstance(shift_params, list):
                 shift_params = dict([(p, s) for p, s in zip(parameters, shift_params)])
-            for key in shift_params.keys():
+            for key in shift_params:
                 if key not in parameters:
-                    self._logger.warning("Warning, shift parameter %s is not in list of parameters %s" % (key, parameters))
+                    self._logger.warning(f"Warning, shift parameter {key} is not in list of parameters {parameters}")
 
         # Sorry, no KDE for you on a grid.
         if grid:
@@ -322,7 +326,7 @@ class ChainConsumer(object):
         return self
 
     def add_covariance(self, mean, covariance, parameters=None, name=None, **kwargs):
-        r""" Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
+        r"""Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
 
         Parameters
         ----------
@@ -349,9 +353,16 @@ class ChainConsumer(object):
         return self
 
     def add_marker(
-        self, location, parameters=None, name=None, color=None, marker_size=None, marker_style=None, marker_alpha=None,
+        self,
+        location,
+        parameters=None,
+        name=None,
+        color=None,
+        marker_size=None,
+        marker_style=None,
+        marker_alpha=None,
     ):
-        r""" Add a marker to the plot at the given location.
+        r"""Add a marker to the plot at the given location.
 
         Parameters
         ----------
@@ -393,7 +404,7 @@ class ChainConsumer(object):
         return self
 
     def remove_chain(self, chain=-1):
-        r""" Removes a chain from ChainConsumer.
+        r"""Removes a chain from ChainConsumer.
 
         Calling this will require any configurations set to be redone!
 
@@ -408,7 +419,7 @@ class ChainConsumer(object):
         ChainConsumer
             Itself, to allow chaining calls.
         """
-        if isinstance(chain, str) or isinstance(chain, int):
+        if isinstance(chain, int | str):
             chain = [chain]
 
         chain = sorted([i for c in chain for i in self._get_chain(c)])[::-1]
@@ -474,7 +485,7 @@ class ChainConsumer(object):
         zorder=None,
         stack=False,
     ):  # pragma: no cover
-        r""" Configure the general plotting parameters common across the bar
+        r"""Configure the general plotting parameters common across the bar
         and contour plots.
 
         If you do not call this explicitly, the :func:`plot`
@@ -565,7 +576,7 @@ class ChainConsumer(object):
             to colour scatter. Defaults to 15k per chain.
         color_params : str|list[str], optional
             The name of the parameter to use for the colour scatter. Defaults to none, for no colour. If set
-            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain, 
+            to 'weights', 'log_weights', or 'posterior' (without the quotes), and that is not a parameter in the chain,
             it will respectively  use the weights, log weights, or posterior, to colour the points.
         plot_color_params : bool|list[bool], optional
             Whether or not the colour parameter should also be plotted as a posterior surface.
@@ -581,7 +592,7 @@ class ChainConsumer(object):
         show_as_1d_prior : bool|list[bool], optional
             Showing as a 1D prior will show the 1D histograms, but won't plot the 2D contours.
         global_point : bool, optional
-            Whether the point which gets plotted is the global posterior maximum, or the marginalised 2D 
+            Whether the point which gets plotted is the global posterior maximum, or the marginalised 2D
             posterior maximum. Note that when you use marginalised 2D maximums for the points, you do not
              get the 1D histograms. Defaults to `True`, for a global maximum value.
         marker_style : str|list[str], optional
@@ -634,13 +645,15 @@ class ChainConsumer(object):
         # Warn the user if configure has been invoked multiple times
         self._num_configure_calls += 1
         if self._num_configure_calls > 1:
-            self._logger.warning("Configure has been called %d times - this is not good - it should be once!" % self._num_configure_calls)
+            self._logger.warning(
+                "Configure has been called %d times - this is not good - it should be once!" % self._num_configure_calls
+            )
             self._logger.warning("To avoid this, load your chains in first, then call analysis/plotting methods")
 
         # Dirty way of ensuring overrides happen when requested
         l = locals()
         explicit = []
-        for k in l.keys():
+        for k in l:
             if l[k] is not None:
                 explicit.append(k)
                 if k.endswith("s"):
@@ -654,7 +667,10 @@ class ChainConsumer(object):
         # Determine statistics
         assert statistics is not None, "statistics should be a string or list of strings!"
         if isinstance(statistics, str):
-            assert statistics in list(Analysis.summaries), "statistics %s not recognised. Should be in %s" % (statistics, Analysis.summaries,)
+            assert statistics in list(Analysis.summaries), "statistics {} not recognised. Should be in {}".format(
+                statistics,
+                Analysis.summaries,
+            )
             statistics = [statistics.lower()] * len(self.chains)
         elif isinstance(statistics, list):
             for i, l in enumerate(statistics):
@@ -663,7 +679,7 @@ class ChainConsumer(object):
             raise ValueError("statistics is not a string or a list!")
 
         # Determine KDEs
-        if isinstance(kde, bool) or isinstance(kde, float):
+        if isinstance(kde, bool | float):
             kde = [False if c.grid else kde for c in self.chains]
 
         kde_override = [c.kde for c in self.chains]
@@ -697,13 +713,19 @@ class ChainConsumer(object):
             color_params = [None] * num_chains
         else:
             if isinstance(color_params, str):
-                color_params = [color_params if color_params in cs.parameters + ["log_weights", "weights", "posterior"] else None for cs in self.chains]
-                color_params = [None if c == "posterior" and self.chains[i].posterior is None else c for i, c in enumerate(color_params)]
-            elif isinstance(color_params, list) or isinstance(color_params, tuple):
+                color_params = [
+                    color_params if color_params in [*cs.parameters, "log_weights", "weights", "posterior"] else None
+                    for cs in self.chains
+                ]
+                color_params = [
+                    None if c == "posterior" and self.chains[i].posterior is None else c
+                    for i, c in enumerate(color_params)
+                ]
+            elif isinstance(color_params, list | tuple):
                 for c, chain in zip(color_params, self.chains):
                     p = chain.parameters
                     if c is not None:
-                        assert c in p, "Color parameter %s not in parameters %s" % (c, p)
+                        assert c in p, f"Color parameter {c} not in parameters {p}"
         # Determine if we should plot color parameters
         if isinstance(plot_color_params, bool):
             plot_color_params = [plot_color_params] * len(color_params)
@@ -761,7 +783,7 @@ class ChainConsumer(object):
         # Determine linewidths
         if linewidths is None:
             linewidths = [1.0] * len(self.chains)
-        elif isinstance(linewidths, float) or isinstance(linewidths, int):
+        elif isinstance(linewidths, float | int):
             linewidths = [linewidths] * len(self.chains)
 
         # Determine clouds
@@ -772,15 +794,12 @@ class ChainConsumer(object):
         # Determine cloud points
         if num_cloud is None:
             num_cloud = 30000
-        if isinstance(num_cloud, int) or isinstance(num_cloud, float):
+        if isinstance(num_cloud, float | int):
             num_cloud = [int(num_cloud)] * num_chains
 
         # Should we shade the contours
         if shade is None:
-            if shade_alpha is None:
-                shade = num_chains <= 3
-            else:
-                shade = True
+            shade = num_chains <= 3 if shade_alpha is None else True
         if isinstance(shade, bool):
             # If not overridden, do not shade chains with colour scatter points
             shade = [shade and c is None for c in color_params]
@@ -788,14 +807,11 @@ class ChainConsumer(object):
         # Modify shade alpha based on how many chains we have
         if shade_alpha is None:
             if num_chains == 1:
-                if contour_labels is not None:
-                    shade_alpha = 0.75
-                else:
-                    shade_alpha = 1.0
+                shade_alpha = 0.75 if contour_labels is not None else 1.0
             else:
                 shade_alpha = 1.0 / np.sqrt(num_chains)
         # Decrease the shading amount if there are colour scatter points
-        if isinstance(shade_alpha, float) or isinstance(shade_alpha, int):
+        if isinstance(shade_alpha, float | int):
             shade_alpha = [shade_alpha if c is None else 0.25 * shade_alpha for c in color_params]
 
         if shade_gradient is None:
@@ -803,7 +819,10 @@ class ChainConsumer(object):
         if isinstance(shade_gradient, float):
             shade_gradient = [shade_gradient] * num_chains
         elif isinstance(shade_gradient, list):
-            assert len(shade_gradient) == num_chains, "Have %d shade_gradient but % chains" % (len(shade_gradient), num_chains,)
+            assert len(shade_gradient) == num_chains, "Have %d shade_gradient but % chains" % (
+                len(shade_gradient),
+                num_chains,
+            )
 
         contour_over_points = num_chains < 20
 
@@ -829,12 +848,12 @@ class ChainConsumer(object):
 
         if marker_size is None:
             marker_size = [20] * num_chains
-        elif isinstance(marker_style, (int, float)):
+        elif isinstance(marker_style, int | float):
             marker_size = [marker_size] * num_chains
 
         if marker_alpha is None:
             marker_alpha = [1.0] * num_chains
-        elif isinstance(marker_alpha, (int, float)):
+        elif isinstance(marker_alpha, int | float):
             marker_alpha = [marker_alpha] * num_chains
 
         # Figure out if we should display parameter summaries
@@ -852,10 +871,7 @@ class ChainConsumer(object):
 
         # Figure out how many sigmas to plot
         if sigmas is None:
-            if num_chains == 1:
-                sigmas = np.array([0, 1, 2])
-            else:
-                sigmas = np.array([0, 1, 2])
+            sigmas = np.array([0, 1, 2]) if num_chains == 1 else np.array([0, 1, 2])
         if sigmas[0] != 0:
             sigmas = np.concatenate(([0], sigmas))
         sigmas = np.sort(sigmas)
@@ -863,8 +879,11 @@ class ChainConsumer(object):
         if contour_labels is not None:
             assert isinstance(contour_labels, str), "contour_labels parameter should be a string"
             contour_labels = contour_labels.lower()
-            assert contour_labels in ["sigma", "confidence",], "contour_labels should be either sigma or confidence"
-        assert isinstance(contour_label_font_size, int) or isinstance(contour_label_font_size, float), "contour_label_font_size needs to be numeric"
+            assert contour_labels in [
+                "sigma",
+                "confidence",
+            ], "contour_labels should be either sigma or confidence"
+        assert isinstance(contour_label_font_size, float | int), "contour_label_font_size needs to be numeric"
 
         if legend_artists is None:
             legend_artists = len(set(linestyles)) > 1 or len(set(linewidths)) > 1
@@ -934,13 +953,13 @@ class ChainConsumer(object):
                 c.update_unset_config("zorder", zorder[i], override=explicit)
                 c.config["summary_area"] = summary_area
 
-            except IndentationError as e:
+            except IndentationError:
                 print(
                     "Index error when assigning chain properties, make sure you "
                     "have enough properties set for the number of chains you have loaded! "
                     "See the stack trace for which config item has the wrong number of entries."
                 )
-                raise e
+                raise
 
         # Non list options
         self.config["sigma2d"] = sigma2d
@@ -968,7 +987,7 @@ class ChainConsumer(object):
         return self
 
     def configure_truth(self, **kwargs):  # pragma: no cover
-        r""" Configure the arguments passed to the ``axvline`` and ``axhline``
+        r"""Configure the arguments passed to the ``axvline`` and ``axhline``
         methods when plotting truth values.
 
         If you do not call this explicitly, the :func:`plot` method will

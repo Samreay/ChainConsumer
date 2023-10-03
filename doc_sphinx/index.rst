@@ -70,9 +70,9 @@ Users on some Linux platforms have reported issues rendering plots using ChainCo
 The common error states that `dvipng: not found`, and as per `StackOverflow <http://stackoverflow.com/a/32915992/3339667>`_
 post, it can be solved by explicitly install the `matplotlib` dependency `dvipng` via `sudo apt-get install dvipng`.
 
-If you are running on HPC or clusters where you can't install things yourself, 
-users may run into issues where LaTeX or other optional dependencies aren't installed. 
-In this case, ensure `usetex=False` in `configure` to request matplotlib not try to use TeX. 
+If you are running on HPC or clusters where you can't install things yourself,
+users may run into issues where LaTeX or other optional dependencies aren't installed.
+In this case, ensure `usetex=False` in `configure` to request matplotlib not try to use TeX.
 If this does not work, also set `serif=False`, which has helped some uses.
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================
 Changing Z-Order
@@ -13,6 +12,7 @@ Here is a bad plot because it's hiding what we want.
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)
@@ -34,4 +34,3 @@ c.add_chain(data1, parameters=["$x$", "$y$"], color="k", shade_alpha=0.7, zorder
 c.add_chain(data2, color="o", shade_alpha=0.7, zorder=1)
 c.configure(spacing=0)
 c.plotter.plot(display=True, figsize=2.0)
-

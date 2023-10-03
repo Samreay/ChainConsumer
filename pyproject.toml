@@ -1,0 +1,70 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.poetry]
+authors = ["Samuel Hinton <sh@arenko.group>"]
+description = "ChainConsumer: Consumer your MCMC chains"
+name = "ChainConsumer"
+packages = [{include = "chainconsumer", from = "src"}]
+readme = "README.md"
+version = "0.35.0"
+
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+numpy = "^1.26.0"
+scipy = "^1.11.3"
+matplotlib = "^3.8.0"
+statsmodels = "^0.14.0"
+pandas = "^2.1.1"
+pillow = "^10.0.1"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
+[tool.poetry.group.dev.dependencies]
+black = ">=23.3.0"
+pre-commit = ">=3.3.3"
+ruff = ">=0.0.276, <1"
+mypy = "^1.4.1"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+
+[tool.ruff]
+src = ["src"]
+select = ["E", "F", "I", "N", "W", "D207", "D208", "D300", "UP", "YTT", "ASYNC", "DTZ", "G10", "G101", "G201", "G202", "INP001", "PIE", "T20", "SIM", "PTH", "PD", "PLE", "PLR", "PLW", "TRY", "NPY", "RUF"]
+ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712"]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.extend-per-file-ignores]
+"test/***" = ["INP001"]
+"__init__.py" = ["E402", "F401"]
+
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_unimported  = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = false
+disallow_untyped_defs = true
+implicit_reexport = false
+no_implicit_optional = false
+python_version = "3.11"
+strict_equality = true
+show_error_codes = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+addopts = "-v"
+pythonpath = ["src"]
+testpaths = ["test"]

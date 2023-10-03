@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================
 Plotting a prior
@@ -8,9 +7,9 @@ If you have 1D priors that you don't want to appear in the contour, thats possib
 
 """
 import numpy as np
-from numpy.random import normal, random, multivariate_normal
-from chainconsumer import ChainConsumer
+from numpy.random import multivariate_normal, normal, random
 
+from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
     np.random.seed(0)
@@ -19,9 +18,11 @@ if __name__ == "__main__":
 
     prior = normal(0, 1, size=100000)
 
-    fig = ChainConsumer()\
-        .add_chain(data, parameters=["x", "y"], name="Normal")\
-        .add_chain(prior, parameters=["y"], name="Prior", show_as_1d_prior=True)\
+    fig = (
+        ChainConsumer()
+        .add_chain(data, parameters=["x", "y"], name="Normal")
+        .add_chain(prior, parameters=["y"], name="Prior", show_as_1d_prior=True)
         .plotter.plot()
+    )
 
     fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

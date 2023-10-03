@@ -1,4 +1,4 @@
-"""
+r"""
 =================
 Confidence Levels
 =================
@@ -10,12 +10,13 @@ levels gives 39% and 86% confidence levels.
 
 By default ChainConsumer uses the 2D levels, such that the contours will line up and agree with the
 marginalised distributions shown above them, however you can also choose to switch to using the 1D
-Gaussian method, such that the contour encloses 68% and 95% confidence regions, by switching `sigma2d` to `False` 
+Gaussian method, such that the contour encloses 68% and 95% confidence regions, by switching `sigma2d` to `False`
 
 """
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)
@@ -33,8 +34,7 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
 c.configure(flip=False, sigma2d=True, sigmas=[1, 2])
-fig = c.plotter.plot()# -*- coding: utf-8 -*-
-
+fig = c.plotter.plot()  # -*- coding: utf-8 -*-
 
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

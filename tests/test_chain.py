@@ -1,15 +1,14 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
-from numpy.random import normal
 import pytest
-import sys
-sys.path.append("..")
+from numpy.random import normal
+from scipy.stats import norm
+
 from chainconsumer.chain import Chain
 from chainconsumer.chainconsumer import ChainConsumer
 
 
-class TestChain(object):
+class TestChain:
     d = normal(size=(100, 3))
     d2 = normal(size=(1000000, 3))
     bad = d.copy()
@@ -323,10 +322,3 @@ class TestChain(object):
         assert np.isclose(summary1["a"][0], -1, atol=0.03)
         assert np.isclose(summary1["a"][1], 0, atol=0.05)
         assert np.isclose(summary1["a"][2], 1, atol=0.03)
-
-if __name__ == "__main__":
-    import sys
-    sys.path.append("..")
-    c = TestChain()
-    
-    c.test_pass_in_dataframe2()

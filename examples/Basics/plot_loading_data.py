@@ -13,11 +13,13 @@ If you want examples of loading grid data, see the grid data example!
 # You can specify truth values using a list (in the same order as the
 # declared parameters).
 
+import os
+import tempfile
+
 import numpy as np
 import pandas as pd
 from numpy.random import multivariate_normal
-import tempfile
-import os
+
 from chainconsumer import ChainConsumer
 
 # Lets create some data here to set things up

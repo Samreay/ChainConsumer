@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =====================
 Plot Model Comparison
@@ -19,8 +18,8 @@ Turned into glorious LaTeX, we would get something like the following:
 
 
 from scipy.stats import norm
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 n = 10000
 d1 = norm.rvs(size=n)

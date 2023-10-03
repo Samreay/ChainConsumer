@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-from scipy import spatial
 import numpy as np
+from scipy import spatial
 
 
-class MegKDE(object):
-    """ Matched Elliptical Gaussian Kernel Density Estimator
-    
+class MegKDE:
+    """Matched Elliptical Gaussian Kernel Density Estimator
+
     Adapted from the algorithm specified in the BAMBIS's model specified Wolf 2017
     to support weighted samples.
     """
@@ -52,13 +51,13 @@ class MegKDE(object):
         # self.scaling = np.power(self.norm * self.sigma, -self.num_dim)
 
     def evaluate(self, data):
-        """ Estimate un-normalised probability density at target points
-        
+        """Estimate un-normalised probability density at target points
+
         Parameters
         ----------
         data : np.ndarray
-            A `(num_targets, num_dim)` array of points to investigate. 
-        
+            A `(num_targets, num_dim)` array of points to investigate.
+
         Returns
         -------
         np.ndarray

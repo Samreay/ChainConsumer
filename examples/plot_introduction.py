@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 =============
 Plot Contours
@@ -21,6 +20,7 @@ more information.
 """
 
 import numpy as np
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

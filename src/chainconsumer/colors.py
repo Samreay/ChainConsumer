@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-from matplotlib.colors import rgb2hex
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import rgb2hex
 
 # Colours drawn from material designs colour pallet at https://material.io/guidelines/style/color.html
 
 
-class Colors(object):
+class Colors:
     def __init__(self):
         self.color_map = {
             "blue": "#1976D2",
@@ -39,7 +38,20 @@ class Colors(object):
             "lg": "lgreen",
             "lb": "lblue",
         }
-        self.default_colors = ["blue", "lgreen", "red", "purple", "yellow", "grey", "lblue", "magenta", "green", "brown", "black", "orange"]
+        self.default_colors = [
+            "blue",
+            "lgreen",
+            "red",
+            "purple",
+            "yellow",
+            "grey",
+            "lblue",
+            "magenta",
+            "green",
+            "brown",
+            "black",
+            "orange",
+        ]
 
     def format(self, color):
         if isinstance(color, np.ndarray):
@@ -77,7 +89,7 @@ class Colors(object):
         r = self._clamp(int(r * scalefactor))
         g = self._clamp(int(g * scalefactor))
         b = self._clamp(int(b * scalefactor))
-        return "#%02x%02x%02x" % (r, g, b)
+        return f"#{r:02x}{g:02x}{b:02x}"
 
     def _clamp(self, val, minimum=0, maximum=255):
         if val < minimum:

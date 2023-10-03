@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==============
 Shifting Plots
@@ -14,6 +13,7 @@ So you can use truth dict for both! Takes a list or a dict as input for convenie
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

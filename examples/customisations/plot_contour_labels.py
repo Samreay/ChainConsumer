@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==============
 Contour Labels
@@ -11,8 +10,8 @@ You can set the contour_labels to display confidence levels, as shown below.
 """
 
 from numpy.random import multivariate_normal
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 data = multivariate_normal([0, 0], [[1, 0.5], [0.5, 1.0]], size=1000000)
 

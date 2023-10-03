@@ -1,18 +1,18 @@
-# -*- coding: utf-8 -*-
-from scipy.interpolate import griddata
-import numpy as np
 import logging
+
+import numpy as np
+from scipy.interpolate import griddata
 
 from .helpers import get_latex_table_frame
 
 
-class Comparison(object):
+class Comparison:
     def __init__(self, parent):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
 
     def dic(self):
-        r""" Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
+        r"""Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, this method will return `None` for that chain. **Note that
         the DIC metric is only valid on posterior surfaces which closely resemble multivariate normals!**
@@ -66,7 +66,7 @@ class Comparison(object):
         return dics_fin
 
     def bic(self):
-        r""" Returns the corrected Bayesian Information Criterion (BIC) for all chains loaded into ChainConsumer.
+        r"""Returns the corrected Bayesian Information Criterion (BIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
         loaded, this method will return `None` for that chain. Formally, the BIC is defined as
@@ -96,7 +96,7 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warning("You need to set %s for chain %s to get the BIC" % (missing[:-2], chain.name))
+                self._logger.warning(f"You need to set {missing[:-2]} for chain {chain.name} to get the BIC")
             else:
                 bics_bool.append(True)
                 bics.append(n_free * np.log(n_data) - 2 * np.max(p))
@@ -113,7 +113,7 @@ class Comparison(object):
         return bics_fin
 
     def aic(self):
-        r""" Returns the corrected Akaike Information Criterion (AICc) for all chains loaded into ChainConsumer.
+        r"""Returns the corrected Akaike Information Criterion (AICc) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
         loaded, this method will return `None` for that chain. Formally, the AIC is defined as
@@ -149,7 +149,7 @@ class Comparison(object):
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warning("You need to set %s for chain %s to get the AIC" % (missing[:-2], chain.name))
+                self._logger.warning(f"You need to set {missing[:-2]} for chain {chain.name} to get the AIC")
             else:
                 aics_bool.append(True)
                 c_cor = 1.0 * n_free * (n_free + 1) / (n_data - n_free - 1)
@@ -167,7 +167,15 @@ class Comparison(object):
         return aics_fin
 
     def comparison_table(
-        self, caption=None, label="tab:model_comp", hlines=True, aic=True, bic=True, dic=True, sort="bic", descending=True
+        self,
+        caption=None,
+        label="tab:model_comp",
+        hlines=True,
+        aic=True,
+        bic=True,
+        dic=True,
+        sort="bic",
+        descending=True,
     ):  # pragma: no cover
         """
         Return a LaTeX ready table of model comparisons.
@@ -217,21 +225,14 @@ class Comparison(object):
         hline_text = "\\hline\n"
         if hlines:
             center_text += hline_text
-        center_text += "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") + (" & DIC " if dic else "") + end_text
+        center_text += (
+            "\tModel" + (" & AIC" if aic else "") + (" & BIC " if bic else "") + (" & DIC " if dic else "") + end_text
+        )
         if hlines:
             center_text += "\t" + hline_text
-        if aic:
-            aics = self.aic()
-        else:
-            aics = np.zeros(len(self.parent.chains))
-        if bic:
-            bics = self.bic()
-        else:
-            bics = np.zeros(len(self.parent.chains))
-        if dic:
-            dics = self.dic()
-        else:
-            dics = np.zeros(len(self.parent.chains))
+        aics = self.aic() if aic else np.zeros(len(self.parent.chains))
+        bics = self.bic() if bic else np.zeros(len(self.parent.chains))
+        dics = self.dic() if dic else np.zeros(len(self.parent.chains))
 
         if sort == "bic":
             to_sort = bics

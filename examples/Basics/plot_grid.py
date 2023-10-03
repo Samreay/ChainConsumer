@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==========
 Grid Data!
@@ -18,12 +17,12 @@ the order of the parameters is not preserved in the dictionary.
 
 """
 import numpy as np
-from chainconsumer import ChainConsumer
 from scipy.stats import multivariate_normal
 
+from chainconsumer import ChainConsumer
 
 x, y = np.linspace(-3, 3, 50), np.linspace(-7, 7, 100)
-xx, yy = np.meshgrid(x, y, indexing='ij')
+xx, yy = np.meshgrid(x, y, indexing="ij")
 pdf = np.exp(-0.5 * (xx * xx + yy * yy / 4 + np.abs(xx * yy)))
 
 c = ChainConsumer()

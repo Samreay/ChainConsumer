@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ======================
 Cloud and Sigma Levels
@@ -15,7 +14,8 @@ thinness of the correlation.
 """
 
 import numpy as np
-from numpy.random import normal, multivariate_normal
+from numpy.random import multivariate_normal, normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(1)

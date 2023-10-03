@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===================
 Blinding Parameters
@@ -13,6 +12,7 @@ or give it a string (or list of strings) detailing the specific parameters you w
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)

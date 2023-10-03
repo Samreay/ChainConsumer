@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===========================
 Plot Parameter Correlations
@@ -19,8 +18,8 @@ Turned into glorious LaTeX, we would get something like the following:
 
 
 import numpy as np
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 cov = [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]]
 data = np.random.multivariate_normal([0, 0, 1], cov, size=100000)
@@ -30,4 +29,3 @@ c.add_chain(data, parameters=parameters)
 latex_table = c.analysis.get_correlation_table()
 
 print(latex_table)
-

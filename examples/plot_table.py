@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ===========
 Plot Tables
@@ -18,8 +17,8 @@ Turned into glorious LaTeX, we would get something like the following:
 
 
 import numpy as np
-from chainconsumer import ChainConsumer
 
+from chainconsumer import ChainConsumer
 
 ndim, nsamples = 4, 200000
 np.random.seed(0)
@@ -27,11 +26,11 @@ np.random.seed(0)
 data = np.random.randn(nsamples, ndim)
 data[:, 2] += data[:, 1] * data[:, 2]
 data[:, 1] = data[:, 1] * 3 + 5
-data[:, 3] /= (np.abs(data[:, 1]) + 1)
+data[:, 3] /= np.abs(data[:, 1]) + 1
 
 data2 = np.random.randn(nsamples, ndim)
 data2[:, 0] -= 1
-data2[:, 2] += data2[:, 1]**2
+data2[:, 2] += data2[:, 1] ** 2
 data2[:, 1] = data2[:, 1] * 2 - 5
 data2[:, 3] = data2[:, 3] * 1.5 + 2
 

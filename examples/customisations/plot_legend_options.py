@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ==============
 Legend Options
@@ -11,6 +10,7 @@ Because of that, you can pass any keywords to the legend call you want via `lege
 
 import numpy as np
 from numpy.random import multivariate_normal
+
 from chainconsumer import ChainConsumer
 
 np.random.seed(0)
@@ -20,7 +20,7 @@ data2 = data1 + 2
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(colors=['lb', 'g'])
+c.configure(colors=["lb", "g"])
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -31,7 +31,7 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(colors=['lb', 'lb'], linestyles=["-", "--"])
+c.configure(colors=["lb", "lb"], linestyles=["-", "--"])
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -42,8 +42,12 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(linestyles=["-", "--"], sigmas=[0, 1, 2, 3],
-            legend_kwargs={"loc": "upper left", "fontsize": 10},
-            legend_color_text=False, legend_location=(0, 0))
+c.configure(
+    linestyles=["-", "--"],
+    sigmas=[0, 1, 2, 3],
+    legend_kwargs={"loc": "upper left", "fontsize": 10},
+    legend_color_text=False,
+    legend_location=(0, 0),
+)
 fig = c.plotter.plot(figsize=1.5)
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
