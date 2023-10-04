@@ -5,10 +5,10 @@ from chainconsumer import ChainConsumer
 
 
 class TestChain:
-    np.random.seed(1)
+    rng = np.random.default_rng(1)
     n = 2000000
-    data = np.random.normal(loc=5.0, scale=1.5, size=n)
-    data2 = np.random.normal(loc=3, scale=1.0, size=n)
+    data = rng.normal(loc=5.0, scale=1.5, size=n)
+    data2 = rng.normal(loc=3, scale=1.0, size=n)
 
     def test_plotter_extents1(self):
         c = ChainConsumer()
@@ -61,7 +61,7 @@ class TestChain:
     def test_plotter_extents6(self):
         c = ChainConsumer()
         for mid in np.linspace(-1, 1, 3):
-            data = np.random.normal(loc=0, size=1000)
+            data = self.rng.normal(loc=0, size=1000)
             posterior = norm.logpdf(data)
             data += mid
             c.add_chain(data, parameters=["x"], posterior=posterior, plot_point=True, plot_contour=False)

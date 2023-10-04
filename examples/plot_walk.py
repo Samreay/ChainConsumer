@@ -24,9 +24,9 @@ import numpy as np
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data1 = np.random.randn(100000, 2)
-data2 = np.random.randn(100000, 2) - 2
+rng = np.random.default_rng(0)
+data1 = rng.random((100000, 2))
+data2 = rng.random((100000, 2)) - 2
 data1[:, 1] += 1
 
 c = ChainConsumer()

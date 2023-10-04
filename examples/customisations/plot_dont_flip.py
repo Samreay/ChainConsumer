@@ -16,7 +16,7 @@ import numpy as np
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
+rng = np.random.default_rng(0)
 data = np.random.multivariate_normal([1.5, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
 data[:, 0] = np.abs(data[:, 0])
 

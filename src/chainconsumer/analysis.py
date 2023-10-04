@@ -480,35 +480,35 @@ class Analysis:
         ys = np.concatenate((y_start, ys, y_end))
         cs = ys.cumsum()
         cs = cs / cs.max()
-        startIndex = ys.argmax()
-        maxVal = ys[startIndex]
-        minVal = 0
+        start_index = ys.argmax()
+        max_val = ys[start_index]
+        min_val = 0
         threshold = 0.003
         x1 = None
         x2 = None
         count = 0
         while x1 is None:
-            mid = (maxVal + minVal) / 2.0
+            mid = (max_val + min_val) / 2.0
             count += 1
             try:
                 if count > 50:
                     raise ValueError("Failed to converge")
-                i1 = startIndex - np.where(ys[:startIndex][::-1] < mid)[0][0]
-                i2 = startIndex + np.where(ys[startIndex:] < mid)[0][0]
+                i1 = start_index - np.where(ys[:start_index][::-1] < mid)[0][0]
+                i2 = start_index + np.where(ys[start_index:] < mid)[0][0]
                 area = cs[i2] - cs[i1]
                 deviation = np.abs(area - desired_area)
                 if deviation < threshold:
                     x1 = xs[i1]
                     x2 = xs[i2]
                 elif area < desired_area:
-                    maxVal = mid
+                    max_val = mid
                 elif area > desired_area:
-                    minVal = mid
+                    min_val = mid
             except ValueError:
                 self._logger.warning(f"Parameter {parameter} in chain {chain.name} is not constrained")
-                return [None, xs[startIndex], None]
+                return [None, xs[start_index], None]
 
-        return [x1, xs[startIndex], x2]
+        return [x1, xs[start_index], x2]
 
     def get_paramater_summary_max_symmetric(self, chain, parameter):
         xs, ys, cs = self._get_smoothed_histogram(chain, parameter)

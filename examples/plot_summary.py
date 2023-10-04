@@ -17,14 +17,14 @@ from chainconsumer import ChainConsumer
 
 
 def get_instance():
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     c = ChainConsumer()
     parameters = ["$x$", r"$\Omega_\epsilon$", "$r^2(x_0)$"]
     for name in ["Ref. model", "Test A", "Test B", "Test C"]:
         # Add some random data
-        mean = np.random.normal(loc=0, scale=3, size=3)
-        sigma = np.random.uniform(low=1, high=3, size=3)
-        data = np.random.multivariate_normal(mean=mean, cov=np.diag(sigma**2), size=100000)
+        mean = rng.normal(loc=0, scale=3, size=3)
+        sigma = rng.uniform(low=1, high=3, size=3)
+        data = rng.multivariate_normal(mean=mean, cov=np.diag(sigma**2), size=100000)
         c.add_chain(data, parameters=parameters, name=name)
     return c
 

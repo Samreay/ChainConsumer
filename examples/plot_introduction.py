@@ -23,8 +23,8 @@ import numpy as np
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+rng = np.random.default_rng(0)
+data = rng.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
 
 c = ChainConsumer()
 c.add_chain(data, parameters=["$x_1$", "$x_2$"])

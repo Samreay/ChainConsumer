@@ -12,17 +12,16 @@ data sets in to get some overlap.
 """
 
 import numpy as np
-from numpy.random import multivariate_normal, normal, uniform
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(1)
+rng = np.random.default_rng(1)
 n = 1000000
-data = multivariate_normal([0.4, 1], [[0.01, -0.003], [-0.003, 0.001]], size=n)
+data = rng.multivariate_normal([0.4, 1], [[0.01, -0.003], [-0.003, 0.001]], size=n)
 data = np.hstack((data, (67 + 10 * data[:, 0] - data[:, 1] ** 2)[:, None]))
-data2 = np.vstack((uniform(-0.1, 1.1, n), normal(1.2, 0.1, n))).T
+data2 = np.vstack((rng.uniform(-0.1, 1.1, n), rng.normal(1.2, 0.1, n))).T
 data2[:, 1] -= data2[:, 0] ** 2
-data3 = multivariate_normal([0.3, 0.7], [[0.02, 0.05], [0.05, 0.1]], size=n)
+data3 = rng.multivariate_normal([0.3, 0.7], [[0.02, 0.05], [0.05, 0.1]], size=n)
 
 c = ChainConsumer()
 c.add_chain(data2, parameters=[r"$\Omega_m$", "$-w$"], name="B")

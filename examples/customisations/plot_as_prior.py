@@ -7,14 +7,14 @@ If you have 1D priors that you don't want to appear in the contour, thats possib
 
 """
 import numpy as np
-from numpy.random import multivariate_normal, normal, random
+from numpy.random import normal, random
 
 from chainconsumer import ChainConsumer
 
 if __name__ == "__main__":
-    np.random.seed(0)
+    rng = np.random.default_rng(0)
     cov = random(size=(2, 2)) + np.identity(2)
-    data = multivariate_normal(normal(size=2), np.dot(cov, cov.T), size=100000)
+    data = rng.multivariate_normal(normal(size=2), np.dot(cov, cov.T), size=100000)
 
     prior = normal(0, 1, size=100000)
 

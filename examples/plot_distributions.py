@@ -11,13 +11,12 @@ simply plot all of the marginalised distributions using this method.
 """
 
 import numpy as np
-from numpy.random import multivariate_normal, random
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-means, cov = np.arange(8), random(size=(8, 8))
-data = multivariate_normal(means, np.dot(cov, cov.T), size=1000000)
+rng = np.random.default_rng(0)
+means, cov = np.arange(8), rng.random(size=(8, 8))
+data = rng.multivariate_normal(means, np.dot(cov, cov.T), size=1000000)
 
 params = ["$x$", "$y$", "$z$", "a", "b", "c", "d", "e"]
 c = ChainConsumer().add_chain(data, parameters=params)

@@ -45,7 +45,7 @@ target-version = "py310"
 [tool.ruff.extend-per-file-ignores]
 "test/***" = ["INP001"]
 "__init__.py" = ["E402", "F401"]
-
+"examples/***" = ["T201"]
 
 [tool.mypy]
 check_untyped_defs = true

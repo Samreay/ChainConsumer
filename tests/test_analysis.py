@@ -10,10 +10,10 @@ from chainconsumer import ChainConsumer
 
 
 class TestChain:
-    np.random.seed(1)
+    rng = np.random.default_rng(1)
     n = 2000000
-    data = np.random.normal(loc=5.0, scale=1.5, size=n)
-    data2 = np.random.normal(loc=3, scale=1.0, size=n)
+    data = rng.normal(loc=5.0, scale=1.5, size=n)
+    data2 = rng.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
     data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
 
@@ -108,7 +108,7 @@ class TestChain:
     def test_summary_power(self):
         tolerance = 5e-2
         consumer = ChainConsumer()
-        data = np.random.normal(loc=0, scale=np.sqrt(2), size=1000000)
+        data = self.rng.normal(loc=0, scale=np.sqrt(2), size=1000000)
         consumer.add_chain(data, power=2.0)
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
@@ -327,7 +327,7 @@ class TestChain:
             ChainConsumer().add_chain({"x": self.data}, parameters=["$x$"])
 
     def test_convergence_failure(self):
-        data = np.concatenate((np.random.normal(loc=0.0, size=10000), np.random.normal(loc=4.0, size=10000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=10000), self.rng.normal(loc=4.0, size=10000)))
         consumer = ChainConsumer()
         consumer.add_chain(data)
         summary = consumer.analysis.get_summary()
@@ -335,8 +335,7 @@ class TestChain:
         assert actual[0] is None and actual[2] is None
 
     def test_divide_chains_default(self):
-        np.random.seed(0)
-        data = np.concatenate((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=100000), self.rng.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
         num_walkers = 2
         consumer.add_chain(data, walkers=num_walkers)
@@ -350,8 +349,7 @@ class TestChain:
             assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_index(self):
-        np.random.seed(0)
-        data = np.concatenate((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=100000), self.rng.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
         num_walkers = 2
         consumer.add_chain(data, walkers=num_walkers)
@@ -365,8 +363,7 @@ class TestChain:
             assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_name(self):
-        np.random.seed(0)
-        data = np.concatenate((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=100000), self.rng.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
         num_walkers = 2
         consumer.add_chain(data, walkers=num_walkers, name="test")
@@ -379,16 +376,14 @@ class TestChain:
             assert np.abs(c.chains[i].chain[:, 0].mean() - means[i]) < 1e-2
 
     def test_divide_chains_fail(self):
-        np.random.seed(0)
-        data = np.concatenate((np.random.normal(loc=0.0, size=100000), np.random.normal(loc=1.0, size=100000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=100000), self.rng.normal(loc=1.0, size=100000)))
         consumer = ChainConsumer()
         consumer.add_chain(data, walkers=2)
         with pytest.raises(ValueError):
             consumer.divide_chain(chain=2.0)
 
     def test_divide_chains_name_fail(self):
-        np.random.seed(0)
-        data = np.concatenate((np.random.normal(loc=0.0, size=200000), np.random.normal(loc=1.0, size=200000)))
+        data = np.concatenate((self.rng.normal(loc=0.0, size=200000), self.rng.normal(loc=1.0, size=200000)))
         consumer = ChainConsumer()
         consumer.add_chain(data, walkers=2)
         with pytest.raises(AssertionError):
@@ -590,7 +585,7 @@ class TestChain:
             assert np.all(np.abs(summary[k] - expected) < 0.2)
 
     def test_correlations_1d(self):
-        data = np.random.normal(0, 1, size=100000)
+        data = self.rng.normal(0, 1, size=100000)
         parameters = ["x"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -600,7 +595,7 @@ class TestChain:
         assert cor.shape == (1, 1)
 
     def test_correlations_2d(self):
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=100000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=100000)
         parameters = ["x", "y"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -613,7 +608,7 @@ class TestChain:
         assert cor.shape == (2, 2)
 
     def test_correlations_3d(self):
-        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=100000)
+        data = self.rng.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=100000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters, name="chain1")
@@ -630,7 +625,7 @@ class TestChain:
         assert np.abs(cor[1, 2] - 0.2) < 0.01
 
     def test_correlations_2d_non_unitary(self):
-        data = np.random.multivariate_normal([0, 0], [[4, 0], [0, 4]], size=100000)
+        data = self.rng.multivariate_normal([0, 0], [[4, 0], [0, 4]], size=100000)
         parameters = ["x", "y"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -643,7 +638,7 @@ class TestChain:
         assert cor.shape == (2, 2)
 
     def test_correlation_latex_table(self):
-        data = np.random.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=1000000)
+        data = self.rng.multivariate_normal([0, 0, 1], [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]], size=1000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -665,7 +660,7 @@ class TestChain:
         assert latex_table.replace(" ", "") == actual.replace(" ", "")
 
     def test_covariance_1d(self):
-        data = np.random.normal(0, 2, size=2000000)
+        data = self.rng.normal(0, 2, size=2000000)
         parameters = ["x"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -675,7 +670,7 @@ class TestChain:
         assert cor.shape == (1, 1)
 
     def test_covariance_2d(self):
-        data = np.random.multivariate_normal([0, 0], [[3, 0], [0, 9]], size=2000000)
+        data = self.rng.multivariate_normal([0, 0], [[3, 0], [0, 9]], size=2000000)
         parameters = ["x", "y"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -689,7 +684,7 @@ class TestChain:
 
     def test_covariance_3d(self):
         cov = [[3, 0.5, 0.2], [0.5, 4, 0.3], [0.2, 0.3, 5]]
-        data = np.random.multivariate_normal([0, 0, 1], cov, size=2000000)
+        data = self.rng.multivariate_normal([0, 0, 1], cov, size=2000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters, name="chain1")
@@ -707,7 +702,7 @@ class TestChain:
 
     def test_covariance_latex_table(self):
         cov = [[2, 0.5, 0.2], [0.5, 3, 0.3], [0.2, 0.3, 4.0]]
-        data = np.random.multivariate_normal([0, 0, 1], cov, size=20000000)
+        data = self.rng.multivariate_normal([0, 0, 1], cov, size=20000000)
         parameters = ["x", "y", "z"]
         c = ChainConsumer()
         c.add_chain(data, parameters=parameters)
@@ -733,8 +728,8 @@ class TestChain:
             ChainConsumer().add_chain(self.data_combined, parameters=["x", "y", "z"])
 
     def test_covariant_covariance_calc(self):
-        data1 = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
-        data2 = np.random.multivariate_normal([0, 0], [[2, 1], [1, 2]], size=10000)
+        data1 = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data2 = self.rng.multivariate_normal([0, 0], [[2, 1], [1, 2]], size=10000)
         weights = np.concatenate((np.ones(10000), np.zeros(10000)))
         data = np.concatenate((data1, data2))
         c = ChainConsumer()
@@ -923,7 +918,7 @@ class TestChain:
 
     def test_max_likelihood_1(self):
         c = ChainConsumer()
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
         posterior = norm.logpdf(data).sum(axis=1)
         data[:, 1] += 1
         c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
@@ -934,7 +929,7 @@ class TestChain:
 
     def test_max_likelihood_2(self):
         c = ChainConsumer()
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
         posterior = norm.logpdf(data).sum(axis=1)
         data[:, 1] += 2
         c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
@@ -946,7 +941,7 @@ class TestChain:
 
     def test_max_likelihood_3(self):
         c = ChainConsumer()
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
         posterior = norm.logpdf(data).sum(axis=1)
         data[:, 1] += 3
         c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
@@ -958,7 +953,7 @@ class TestChain:
 
     def test_max_likelihood_4(self):
         c = ChainConsumer()
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
         posterior = norm.logpdf(data).sum(axis=1)
         data[:, 1] += 2
         c.add_chain(data, parameters=["x", "y"], posterior=posterior, name="A")
@@ -970,7 +965,7 @@ class TestChain:
 
     def test_max_likelihood_5_failure(self):
         c = ChainConsumer()
-        data = np.random.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
+        data = self.rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=10000)
         data[:, 1] += 2
         c.add_chain(data, parameters=["x", "y"], name="A")
         result = c.analysis.get_max_posteriors(parameters="x", chains="A")

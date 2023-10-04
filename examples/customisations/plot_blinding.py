@@ -11,12 +11,11 @@ or give it a string (or list of strings) detailing the specific parameters you w
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data = multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
+rng = np.random.default_rng(0)
+data = rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
 c.configure(colors=["g"])

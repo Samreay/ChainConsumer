@@ -10,12 +10,11 @@ more ticks added, and label size increased!
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data = multivariate_normal([0, 1, 2], np.eye(3) + 0.2, size=100000)
+rng = np.random.default_rng(0)
+data = rng.multivariate_normal([0, 1, 2], np.eye(3) + 0.2, size=100000)
 
 # If you pass in parameter labels and only one chain, you can also get parameter bounds
 c = ChainConsumer()

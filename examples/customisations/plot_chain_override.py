@@ -14,14 +14,13 @@ thus override the default configure behaviour).
 
 """
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data1 = multivariate_normal([-2, 0], [[1, 0], [0, 1]], size=100000)
-data2 = multivariate_normal([4, -4], [[1, 0], [0, 1]], size=100000)
-data3 = multivariate_normal([-2, -4], [[1, 0.7], [0.7, 1]], size=100000)
+rng = np.random.default_rng(0)
+data1 = rng.multivariate_normal([-2, 0], [[1, 0], [0, 1]], size=100000)
+data2 = rng.multivariate_normal([4, -4], [[1, 0], [0, 1]], size=100000)
+data3 = rng.multivariate_normal([-2, -4], [[1, 0.7], [0.7, 1]], size=100000)
 
 c = ChainConsumer()
 c.add_chain(data1, parameters=["x", "y"], color="red", linestyle=":", name="Red dots")

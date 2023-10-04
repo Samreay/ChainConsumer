@@ -12,7 +12,7 @@ from numpy.random import multivariate_normal, normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
+rng = np.random.default_rng(0)
 cov = normal(size=(3, 3))
 cov2 = normal(size=(4, 4))
 data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)

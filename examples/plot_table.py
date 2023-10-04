@@ -21,9 +21,9 @@ import numpy as np
 from chainconsumer import ChainConsumer
 
 ndim, nsamples = 4, 200000
-np.random.seed(0)
+rng = np.random.default_rng(0)
 
-data = np.random.randn(nsamples, ndim)
+data = rng.random((nsamples, ndim))
 data[:, 2] += data[:, 1] * data[:, 2]
 data[:, 1] = data[:, 1] * 3 + 5
 data[:, 3] /= np.abs(data[:, 1]) + 1

@@ -21,8 +21,9 @@ import numpy as np
 
 from chainconsumer import ChainConsumer
 
+rng = np.random.default_rng(0)
 cov = [[1, 0.5, 0.2], [0.5, 1, 0.3], [0.2, 0.3, 1.0]]
-data = np.random.multivariate_normal([0, 0, 1], cov, size=100000)
+data = rng.multivariate_normal([0, 0, 1], cov, size=100000)
 parameters = ["x", "y", "z"]
 c = ChainConsumer()
 c.add_chain(data, parameters=parameters)

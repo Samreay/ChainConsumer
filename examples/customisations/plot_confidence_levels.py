@@ -15,12 +15,11 @@ Gaussian method, such that the contour encloses 68% and 95% confidence regions, 
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data = multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
+rng = np.random.default_rng(0)
+data = rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$"])
 c.configure(flip=False, sigma2d=False, sigmas=[1, 2])  # The default case, so you don't need to specify sigma2d

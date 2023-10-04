@@ -1086,7 +1086,7 @@ class Plotter:
 
         return fig, axes, params1, params2, extents
 
-    def _get_parameter_extents(self, parameter, chains, wide_extents=True):
+    def _get_parameter_extents(self, parameter, chains, wide_extents=True) -> tuple[float, float]:
         min_val, max_val = None, None
         for chain in chains:
             if parameter not in chain.parameters:
@@ -1249,12 +1249,14 @@ class Plotter:
         )
 
         if contour_labels is not None:
-            lvls = [l for l in con.levels if l != 0.0]
+            lvls = [lvl for lvl in con.levels if lvl != 0.0]
             if contour_labels == "sigma":
                 sigmas = self.parent.config["sigmas"]
-                fmt = dict([(l, ("$%.1f \\sigma$" % s).replace(".0", "")) for l, s in zip(lvls, sigmas[1:])])
+                fmt = dict(
+                    [(lvl, ("$%.1f \\sigma$" % sigma).replace(".0", "")) for lvl, sigma in zip(lvls, sigmas[1:])]
+                )
             else:
-                fmt = dict([(l, "%d\\%%" % (100 * l)) for l in lvls])
+                fmt = dict([(lvl, "%d\\%%" % (100 * lvl)) for lvl in lvls])
             ax.clabel(con, lvls, inline=True, fmt=fmt, fontsize=self.parent.config["contour_label_font_size"])
         return h
 

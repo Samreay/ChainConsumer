@@ -12,14 +12,13 @@ So you can use truth dict for both! Takes a list or a dict as input for convenie
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data1 = multivariate_normal([1, 0], [[3, 2], [2, 3]], size=300000)
-data2 = multivariate_normal([0, 0.5], [[1, -0.7], [-0.7, 1]], size=300000)
-data3 = multivariate_normal([2, -1], [[0.5, 0], [0, 0.5]], size=300000)
+rng = np.random.default_rng(0)
+data1 = rng.multivariate_normal([1, 0], [[3, 2], [2, 3]], size=300000)
+data2 = rng.multivariate_normal([0, 0.5], [[1, -0.7], [-0.7, 1]], size=300000)
+data3 = rng.multivariate_normal([2, -1], [[0.5, 0], [0, 0.5]], size=300000)
 
 ###############################################################################
 # And this is how easy it is to shift them. Note the different means for each dataset!

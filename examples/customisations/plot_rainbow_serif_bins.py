@@ -18,19 +18,19 @@ your plots and summaries would be calculated with 30 bins.
 
 """
 import numpy as np
-from numpy.random import multivariate_normal, normal, random
+from numpy.random import normal, random
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
+rng = np.random.default_rng(0)
 cov = 0.3 * random(size=(3, 3)) + np.identity(3)
-data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
+data = rng.multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 cov = 0.3 * random(size=(3, 3)) + np.identity(3)
-data2 = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
+data2 = rng.multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 cov = 0.3 * random(size=(3, 3)) + np.identity(3)
-data3 = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
+data3 = rng.multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 cov = 0.3 * random(size=(3, 3)) + np.identity(3)
-data4 = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
+data4 = rng.multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
 
 c = ChainConsumer()
 c.add_chain(data, name="A")

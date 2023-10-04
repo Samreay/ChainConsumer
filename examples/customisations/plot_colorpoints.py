@@ -15,13 +15,12 @@ We can *also* display this as a posterior surface by setting
 """
 
 import numpy as np
-from numpy.random import multivariate_normal, normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(1)
-cov = normal(size=(3, 3))
-data = multivariate_normal(normal(size=3), np.dot(cov, cov.T), size=100000)
+rng = np.random.default_rng(1)
+cov = rng.normal(size=(3, 3))
+data = rng.multivariate_normal(rng.normal(size=3), np.dot(cov, cov.T), size=100000)
 
 c = ChainConsumer().add_chain(data, parameters=["$x$", "$y$", "$z$"])
 c.configure(color_params="$z$")

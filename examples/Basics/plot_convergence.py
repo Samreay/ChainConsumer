@@ -17,7 +17,7 @@ from numpy.random import normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
+rng = np.random.default_rng(0)
 # Here we have some nice data, and then some bad data,
 # where the last part of the chain has walked off, and the first part
 # of the chain isn't agreeing with anything else!

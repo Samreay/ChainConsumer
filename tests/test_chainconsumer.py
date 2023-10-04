@@ -6,10 +6,10 @@ from chainconsumer import ChainConsumer
 
 
 class TestChainConsumer:
-    np.random.seed(1)
+    rng = np.random.default_rng(1)
     n = 2000000
-    data = np.random.normal(loc=5.0, scale=1.5, size=n)
-    data2 = np.random.normal(loc=3, scale=1.0, size=n)
+    data = rng.normal(loc=5.0, scale=1.5, size=n)
+    data2 = rng.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
     data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
 

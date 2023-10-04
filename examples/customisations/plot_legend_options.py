@@ -9,12 +9,11 @@ Because of that, you can pass any keywords to the legend call you want via `lege
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data1 = multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
+rng = np.random.default_rng(0)
+data1 = rng.multivariate_normal([0, 0], [[1, 0], [0, 1]], size=1000000)
 data2 = data1 + 2
 
 c = ChainConsumer()

@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.random import normal
 from scipy.stats import norm
 
 from chainconsumer.chain import Chain
@@ -9,11 +8,12 @@ from chainconsumer.chainconsumer import ChainConsumer
 
 
 class TestChain:
-    d = normal(size=(100, 3))
-    d2 = normal(size=(1000000, 3))
+    rng = np.random.default_rng(0)
+    d = rng.normal(size=(100, 3))
+    d2 = rng.normal(size=(1000000, 3))
     bad = d.copy()
     bad[0, 0] = np.nan
-    p = ["a", "b", "c"]
+    p = ("a", "b", "c")
     n = "A"
     w = np.ones(100)
     w2 = np.ones(1000000)
@@ -278,7 +278,7 @@ class TestChain:
 
     def test_cache_invalidation(self):
         c = ChainConsumer()
-        c.add_chain(normal(size=(1000000, 1)), parameters=["a"])
+        c.add_chain(self.rng.normal(size=(1000000, 1)), parameters=["a"])
         c.configure(summary_area=0.68)
         summary1 = c.analysis.get_summary()
         c.configure(summary_area=0.95)
@@ -312,7 +312,7 @@ class TestChain:
         assert np.isclose(summary1["c"][0], -1, atol=0.03)
 
     def test_pass_in_dataframe3(self):
-        data = np.random.uniform(-4, 6, size=(1000000, 1))
+        data = self.rng.uniform(-4, 6, size=(1000000, 1))
         weight = norm.pdf(data)
         df = pd.DataFrame(data, columns=["a"])
         df["weight"] = weight

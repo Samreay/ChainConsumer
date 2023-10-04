@@ -19,7 +19,7 @@ from scipy.stats import skewnorm
 from chainconsumer import ChainConsumer
 
 # Lets create some data here to set things up
-np.random.seed(0)
+rng = np.random.default_rng(0)
 data = skewnorm.rvs(5, size=(1000000, 2))
 parameters = ["$x$", "$y$"]
 

@@ -17,13 +17,12 @@ figures!
 """
 
 import numpy as np
-from numpy.random import multivariate_normal
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
-data1 = multivariate_normal([3, 5], [[1, 0], [0, 1]], size=1000000)
-data2 = multivariate_normal([5, 3], [[1, 0], [0, 1]], size=10000)
+rng = np.random.default_rng(0)
+data1 = rng.multivariate_normal([3, 5], [[1, 0], [0, 1]], size=1000000)
+data2 = rng.multivariate_normal([5, 3], [[1, 0], [0, 1]], size=10000)
 
 
 c = ChainConsumer()

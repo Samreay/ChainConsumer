@@ -13,13 +13,13 @@ the shading is all computed from the colour hex code.
 """
 
 import numpy as np
-from numpy.random import multivariate_normal, normal, random
+from numpy.random import normal, random
 
 from chainconsumer import ChainConsumer
 
-np.random.seed(0)
+rng = np.random.default_rng(0)
 cov = random(size=(6, 6))
-data = multivariate_normal(normal(size=6), np.dot(cov, cov.T), size=200000)
+data = rng.multivariate_normal(normal(size=6), np.dot(cov, cov.T), size=200000)
 parameters = ["$x$", "$y$", "$z$", "$a$", "$b$", "$c$"]
 c = ChainConsumer().add_chain(data, parameters=parameters).configure(colors="#388E3C")
 fig = c.plotter.plot(parameters=parameters[:4], figsize="page")
