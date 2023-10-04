@@ -1,13 +1,17 @@
+from collections.abc import Iterable
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import rgb2hex
 
 # Colours drawn from material designs colour pallet at https://material.io/guidelines/style/color.html
 
+ColourInput = str | np.ndarray | list[float]
+
 
 class Colors:
     def __init__(self):
-        self.color_map = {
+        self.color_map: dict[str, str] = {
             "blue": "#1976D2",
             "lblue": "#4FC3F7",
             "red": "#E53935",
@@ -23,7 +27,7 @@ class Colors:
             "amber": "#FFB300",
             "brown": "#795548",
         }
-        self.aliases = {
+        self.aliases: dict[str, str] = {
             "b": "blue",
             "r": "red",
             "g": "green",
@@ -38,7 +42,7 @@ class Colors:
             "lg": "lgreen",
             "lb": "lblue",
         }
-        self.default_colors = [
+        self.default_colors: tuple[str, ...] = (
             "blue",
             "lgreen",
             "red",
@@ -51,11 +55,11 @@ class Colors:
             "brown",
             "black",
             "orange",
-        ]
+        )
 
-    def format(self, color):
-        if isinstance(color, np.ndarray):
-            color = rgb2hex(color)
+    def format(self, color: ColourInput) -> str:
+        if isinstance(color, np.ndarray | list):
+            color = rgb2hex(color)  # type: ignore
         if color[0] == "#":
             return color
         elif color in self.color_map:
@@ -66,34 +70,34 @@ class Colors:
         else:
             raise ValueError("Color %s is not mapped. Please give a hex code" % color)
 
-    def get_formatted(self, list_colors):
+    def get_formatted(self, list_colors: Iterable[ColourInput]) -> list[str]:
         return [self.format(c) for c in list_colors]
 
-    def get_default(self):
+    def get_default(self) -> list[str]:
         return self.get_formatted(self.default_colors)
 
-    def get_colormap(self, num, cmap_name, scale=0.7):  # pragma: no cover
+    def get_colormap(self, num: int, cmap_name: str, scale: float = 0.7) -> list[str]:  # pragma: no cover
         color_list = self.get_formatted(plt.get_cmap(cmap_name)(np.linspace(0.05, 0.9, num)))
         scales = scale + (1 - scale) * np.abs(1 - np.linspace(0, 2, num))
         scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales)]
         return scaled
 
-    def scale_colour(self, colour, scalefactor):  # pragma: no cover
-        if isinstance(colour, np.ndarray):
-            r, g, b = colour[:3] * 255.0
-        else:
-            hexx = colour.strip("#")
-            if scalefactor < 0 or len(hexx) != 6:
-                return hexx
-            r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)
+    def scale_colour(self, color: ColourInput, scalefactor: float) -> str:  # pragma: no cover
+        hexx = self.format(color).strip("#")
+        if scalefactor < 0 or len(hexx) != 6:
+            return hexx
+        r, g, b = int(hexx[:2], 16), int(hexx[2:4], 16), int(hexx[4:], 16)
         r = self._clamp(int(r * scalefactor))
         g = self._clamp(int(g * scalefactor))
         b = self._clamp(int(b * scalefactor))
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    def _clamp(self, val, minimum=0, maximum=255):
+    def _clamp(self, val: float, minimum: int = 0, maximum: int = 255):
         if val < minimum:
             return minimum
         if val > maximum:
             return maximum
         return val
+
+
+colors = Colors()

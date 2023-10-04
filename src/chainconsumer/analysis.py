@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 import numpy as np
 from scipy.integrate import simps
@@ -7,6 +8,15 @@ from scipy.ndimage.filters import gaussian_filter
 
 from .helpers import get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
+
+
+class SummaryStatistic(Enum):
+    MAX = "max"
+    MEAN = "mean"
+    CUMULATIVE = "cumulative"
+    MAX_SYMMETRIC = "max_symmetric"
+    MAX_SHORTEST = "max_shortest"
+    MAX_CENTRAL = "max_central"
 
 
 class Analysis:
