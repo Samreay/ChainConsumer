@@ -19,7 +19,7 @@ data2 = data1 + 2
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(colors=["lb", "g"])
+c.configure_overrides(colors=["lb", "g"])
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -30,7 +30,7 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(colors=["lb", "lb"], linestyles=["-", "--"])
+c.configure_overrides(colors=["lb", "lb"], linestyles=["-", "--"])
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 
@@ -41,7 +41,7 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"], name="Chain 1")
 c.add_chain(data2, parameters=["$x$", "$y$"], name="Chain 2")
-c.configure(
+c.configure_overrides(
     linestyles=["-", "--"],
     sigmas=[0, 1, 2, 3],
     legend_kwargs={"loc": "upper left", "fontsize": 10},

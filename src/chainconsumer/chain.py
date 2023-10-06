@@ -1,31 +1,93 @@
 import logging
+from typing import Any, TypeAlias
 
 import numpy as np
 import pandas as pd
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .analysis import SummaryStatistic
 from .base import BetterBase
-from .colors import ColourInput, colors
+from .colors import ColorInput, colors
+from .helpers import get_bins
+
+ChainName: TypeAlias = str
+ColumnName: TypeAlias = str
 
 
-class Chain(BetterBase):
-    chain: pd.DataFrame = Field(
+class MaxPosterior(BetterBase):
+    log_posterior: float
+    coordinate: dict[ColumnName, float]
+
+    @property
+    def vec_coordinate(self) -> np.ndarray:
+        return np.array(list(self.coordinate.values()))
+
+
+class Named2DMatrix(BetterBase):
+    columns: list[str]
+    matrix: np.ndarray  # type: ignore
+
+
+class Config(BetterBase):
+    # Note that a None default means that this will be inferred
+    # automatically when you go to plot.
+    statistics: SummaryStatistic = Field(default=SummaryStatistic.MAX, description="The summary statistic to use")
+    summary_area: float | None = Field(default=0.6827, description="The area to use for summary statistics")
+    sigmas: list[float] | None = Field(default=None, description="The sigmas to use for summary statistics")
+    color: ColorInput | None = Field(default=None, description="The color of the chain")
+    linestyle: str | None = Field(default="-", description="The line style of the chain")
+    linewidth: float | None = Field(default=1.0, description="The line width of the chain")
+    cloud: bool | None = Field(default=False, description="Whether to show the cloud of the chain")
+    show_contour_labels: bool | None = Field(default=False, description="Whether to show contour labels")
+    shade: bool | None = Field(default=None, description="Whether to shade the chain")
+    shade_alpha: float | None = Field(default=None, description="The alpha of the shading")
+    shade_gradient: float | None = Field(default=1.0, description="The contrast between contour levels")
+    bar_shade: bool | None = Field(default=None, description="Whether to shade marginalised distributions")
+    bins: int | float | None = Field(default=None, description="The number of bins to use for histograms")
+    kde: int | float | bool | None = Field(default=False, description="The bandwidth for KDEs")
+    smooth: int | float | bool | None = Field(default=3, description="The smoothing for histograms.")
+    color_params: str | None = Field(default=None, description="The parameter (column) to use for coloring")
+    plot_color_params: bool | None = Field(default=None, description="Whether to plot the color parameter")
+    cmap: str | None = Field(default="viridis", description="The colormap to use for shading cloud points")
+    num_cloud: int | float | None = Field(default=10000, description="The number of points in the cloud")
+    plot_cloud: bool | None = Field(default=False, description="Whether to plot the cloud")
+    plot_contour: bool | None = Field(default=True, description="Whether to plot contours")
+    plot_point: bool | None = Field(default=False, description="Whether to plot points")
+    show_as_1d_prior: bool | None = Field(default=False, description="Whether to show as a 1D prior")
+    marker_style: str | None = Field(default=None, description="The marker style to use")
+    marker_size: int | float | None = Field(default=None, description="The marker size to use")
+    marker_alpha: int | float | None = Field(default=None, description="The marker alpha to use")
+    zorder: int | None = Field(default=None, description="The zorder to use")
+    shift_params: bool = Field(
+        default=False,
+        description="Whether to shift the parameters by subtracting each parameters mean",
+    )
+
+    def apply_if_none(self, **kwargs: dict[str, Any]) -> None:
+        for key, value in kwargs.items():
+            if getattr(self, key) is None:
+                setattr(self, key, value)
+
+    def apply(self, **kwargs: dict[str, Any]) -> None:
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+class Chain(Config):
+    samples: pd.DataFrame = Field(
         default=...,
         description="The chain data as a pandas DataFrame",
     )
-    name: str = Field(
+    name: ChainName = Field(
         default=...,
         description="The name of the chain",
     )
-    column_labels: dict[str, str] = Field(
-        default={}, description="A dictionary mapping column names to labels. If not set, will use the column names."
-    )
-    weight_column: str = Field(
+
+    weight_column: ColumnName = Field(
         default="weights",
         description="The name of the weight column, if it exists",
     )
-    posterior_column: str = Field(
+    posterior_column: ColumnName = Field(
         default="posterior",
         description="The name of the log posterior column, if it exists",
     )
@@ -53,68 +115,29 @@ class Chain(BetterBase):
         description="Raise the posterior surface to this. Useful for inflating or deflating uncertainty for debugging.",
     )
 
-    statistics: SummaryStatistic = Field(
-        default=SummaryStatistic.MAX,
-        description="The summary statistic to use",
-    )
-
-    color: ColourInput | None = Field(default=None, description="The color of the chain")
-    linestyle: str | None = Field(default=None, description="The line style of the chain")
-    linewidth: float | None = Field(default=None, description="The line width of the chain")
-    cloud: bool | None = Field(default=False, description="Whether to show the cloud of the chain")
-    shade: bool | None = Field(default=True, description="Whether to shade the chain")
-    shade_alpha: float | None = Field(default=None, description="The alpha of the shading")
-    shade_gradient: float | None = Field(default=None, description="The contrast between contour levels")
-    bar_shade: bool | None = Field(default=None, description="Whether to shade marginalised distributions")
-    bins: int | float | None = Field(default=None, description="The number of bins to use for histograms")
-    kde: int | float | bool | None = Field(default=False, description="The bandwidth for KDEs")
-    smooth: int | float | bool | None = Field(default=3, description="The smoothing for histograms.")
-    color_params: str | None = Field(default=None, description="The parameter (column) to use for coloring")
-    plot_color_params: bool | None = Field(default=None, description="Whether to plot the color parameter")
-    cmap: str | None = Field(default=None, description="The colormap to use for shading")
-    num_cloud: int | float | None = Field(default=None, description="The number of points in the cloud")
-    plot_contour: bool | None = Field(default=True, description="Whether to plot contours")
-    plot_point: bool | None = Field(default=False, description="Whether to plot points")
-    show_as_1d_prior: bool | None = Field(default=False, description="Whether to show as a 1D prior")
-    marker_style: str | None = Field(default=None, description="The marker style to use")
-    marker_size: int | float | None = Field(default=None, description="The marker size to use")
-    marker_alpha: int | float | None = Field(default=None, description="The marker alpha to use")
-    zorder: int | None = Field(default=None, description="The zorder to use")
-
-    shift_params: bool = Field(
-        default=False,
-        description="Whether to shift the parameters by subtracting each parameters mean",
-    )
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     @property
     def max_posterior_row(self) -> pd.Series | None:
-        if self.posterior_column not in self.chain.columns:
+        if self.posterior_column not in self.samples.columns:
             logging.warning("No posterior column found, cannot find max posterior row")
             return None
-        argmax = self.chain[self.posterior_column].argmax()
-        return self.chain.loc[argmax]
-
-    @property
-    def labels(self) -> list[str]:
-        return [self.column_labels.get(col, col) for col in self.chain.columns]
+        argmax = self.samples[self.posterior_column].argmax()
+        return self.samples.loc[argmax]
 
     @property
     def weights(self) -> np.ndarray:
-        return self.chain[self.weight_column].to_numpy()
+        return self.samples[self.weight_column].to_numpy()
 
     @property
     def log_posterior(self) -> np.ndarray | None:
-        if self.posterior_column not in self.chain.columns:
+        if self.posterior_column not in self.samples.columns:
             return None
-        return self.chain[self.posterior_column].to_numpy()
+        return self.samples[self.posterior_column].to_numpy()
 
     @property
     def color_data(self) -> np.ndarray | None:
         if self.color_params is None:
             return None
-        return self.chain[self.color_params].to_numpy()
+        return self.samples[self.color_params].to_numpy()
 
     @field_validator("color")
     @classmethod
@@ -125,23 +148,23 @@ class Chain(BetterBase):
 
     @model_validator(mode="after")
     def validate_model(self) -> "Chain":
-        assert not self.chain.empty, "Your chain is empty. This is not ideal."
+        assert not self.samples.empty, "Your chain is empty. This is not ideal."
 
         # If weights aren't set, add them all as one
-        if self.weight_column not in self.chain:
-            self.chain[self.weight_column] = 1.0
+        if self.weight_column not in self.samples:
+            self.samples[self.weight_column] = 1.0
         else:
             assert np.all(self.weights > 0), "Weights must be positive and non-zero"
             assert np.all(np.isfinite(self.weights)), "Weights must be finite"
 
         # Apply the mean shift if it is set to true
         if self.shift_params:
-            for param in self.chain:
-                self.chain[param] -= np.average(self.chain[param], weights=self.weights)  # type: ignore
+            for param in self.samples:
+                self.samples[param] -= np.average(self.samples[param], weights=self.weights)  # type: ignore
 
         # Check the walkers
-        assert self.chain.shape[0] % self.walkers == 0, (
-            f"Chain {self.name} has {self.chain.shape[0]} steps, "
+        assert self.samples.shape[0] % self.walkers == 0, (
+            f"Chain {self.name} has {self.samples.shape[0]} steps, "
             "which is not divisible by {self.walkers} walkers. This is not good."
         )
 
@@ -152,12 +175,85 @@ class Chain(BetterBase):
         # And if the color_params are set, ensure they're in the dataframe
         if self.color_params is not None:
             assert (
-                self.color_params in self.chain.columns
+                self.color_params in self.samples.columns
             ), f"Chain {self.name} does not have color parameter {self.color_params}"
 
         return self
 
-    def get_data(self, columns: list[str] | str):
+    def get_data(self, columns: list[str] | str) -> pd.DataFrame:
         if isinstance(columns, str):
             columns = [columns]
-        return self.chain[columns]
+        return self.samples[columns]
+
+    @classmethod
+    def from_covariance(
+        cls,
+        mean: np.ndarray,
+        covariance: np.ndarray,
+        columns: list[str],
+        name: str,
+        **kwargs: dict[str, Any],
+    ) -> "Chain":
+        """Generate samples as per mean and covariance supplied. Useful for Fisher matrix forecasts.
+
+        Args:
+            mean (np.ndarray): The an array of mean values.
+            covariance (np.ndarray): The 2D array describing the covariance.
+                Dimensions should agree with the `mean` input.
+            columns (list[str]): A list of parameter names, one for each column (dimension) in the mean array.
+            name (str): The name of the chain. Defaults to None.
+            kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            Chain: The generated chain.
+        """
+        rng = np.random.default_rng()
+        samples = rng.multivariate_normal(mean, covariance, size=1000000)
+        df = pd.DataFrame(samples, columns=columns)
+        return cls(samples=df, name=name, **kwargs)  # type: ignore
+
+    def divide(self) -> list["Chain"]:
+        """Returns a ChainConsumer instance containing all the walks of a given chain
+        as individual chains themselves.
+
+        This method might be useful if, for example, your chain was made using
+        MCMC with 4 walkers. To check the sampling of all 4 walkers agree, you could
+        call this to get a ChainConsumer instance with one chain for ech of the
+        four walks. If you then plot, hopefully all four contours
+        you would see agree.
+
+        Returns:
+            list[Chain]: One chain per walker, split evenly
+        """
+        assert self.walkers > 1, "Cannot divide a chain with only one walker"
+        assert not self.grid, "Cannot divide a grid chain"
+
+        splits = np.split(self.samples, self.walkers)
+        chains = []
+        for i, split in enumerate(splits):
+            df = pd.DataFrame(split, columns=self.samples.columns)
+            options = self.model_dump(exclude={"samples", "name"})
+            chain = Chain(samples=df, name=f"{self.name} Walker {i}", **options)
+            chains.append(chain)
+
+        return chains
+
+    def get_max_posterior_point(self) -> MaxPosterior | None:
+        if self.max_posterior_row is None:
+            return None
+        row = self.max_posterior_row.to_dict()
+        log_posterior = row.pop(self.posterior_column)
+        return MaxPosterior(log_posterior=log_posterior, coordinate=row)
+
+    def get_covariance(self, columns: list[str] | None) -> Named2DMatrix:
+        if columns is None:
+            columns = list(self.samples.columns)
+        cov = np.cov(self.samples[columns], rowvar=False, aweights=self.weights)
+        return Named2DMatrix(columns=columns, matrix=cov)
+
+    def get_correlation(self, columns: list[str] | None) -> Named2DMatrix:
+        cov = self.get_covariance(columns)
+        diag = np.sqrt(np.diag(cov.matrix))
+        divisor = diag[None, :] * diag[:, None]
+        correlations = cov.matrix / divisor
+        return Named2DMatrix(columns=cov.columns, matrix=correlations)

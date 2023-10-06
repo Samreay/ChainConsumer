@@ -20,7 +20,7 @@ data2 = rng.multivariate_normal([4, -4], [[1, 0], [0, 1]], size=1000000)
 c = ChainConsumer()
 c.add_chain(data1, parameters=["$x$", "$y$"])
 c.add_chain(data2, parameters=["$x$", "$y$"])
-c.configure(shade_gradient=[0.1, 3.0], colors=["o", "k"], sigmas=[0, 1, 2, 3], shade_alpha=1.0)
+c.configure_overrides(shade_gradient=[0.1, 3.0], colors=["o", "k"], sigmas=[0, 1, 2, 3], shade_alpha=1.0)
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

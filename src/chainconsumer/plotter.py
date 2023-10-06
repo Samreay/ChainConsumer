@@ -459,11 +459,11 @@ class Plotter:
             else:
                 if i == 0 and plot_posterior:
                     for chain in chains:
-                        if chain.posterior is not None:
+                        if chain.log_posterior is not None:
                             self._plot_walk(
                                 ax,
                                 r"$\log(P)$",
-                                chain.posterior - chain.posterior.max(),
+                                chain.log_posterior - chain.log_posterior.max(),
                                 convolve=convolve,
                                 color=chain.config["color"],
                             )
@@ -1097,7 +1097,7 @@ class Plotter:
                     min_prop, max_prop = np.min(data), np.max(data)
                 else:
                     if self.parent.config["global_point"]:
-                        min_prop = chain.posterior_max_params.get(parameter)
+                        min_prop = chain.log_posterior_max_params.get(parameter)
                         max_prop = min_prop
                     else:
                         data = chain.get_data(parameter)
@@ -1440,6 +1440,6 @@ class Plotter:
             if chain.power is not None:
                 hist = hist**chain.power
         elif smooth:
-            hist = gaussian_filter(hist, smooth, mode=self.parent._gauss_mode)
+            hist = gaussian_filter(hist, smooth, mode="reflect")
 
         return hist, x_centers, y_centers

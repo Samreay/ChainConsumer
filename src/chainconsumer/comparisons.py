@@ -1,17 +1,18 @@
-import logging
+from typing import Literal
 
 import numpy as np
+import pandas as pd
 from scipy.interpolate import griddata
 
 from .helpers import get_latex_table_frame
+from .log import logger
 
 
 class Comparison:
-    def __init__(self, parent):
+    def __init__(self, parent: "ChainConsumer"):
         self.parent = parent
-        self._logger = logging.getLogger("chainconsumer")
 
-    def dic(self):
+    def dic(self) -> dict[str, float]:
         r"""Returns the corrected Deviance Information Criterion (DIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, this method will return `None` for that chain. **Note that
@@ -27,45 +28,34 @@ class Comparison:
         .. math::
             DIC \equiv D(\bar{\theta}) + 2p_D = \bar{D}(\theta) + p_D.
 
-        Returns
-        -------
-        list[float]
-            A list of all the DIC values - one per chain, in the order in which the chains were added.
+        Returns:
+            dict[str, float]: A dict of chain name to DIC value.
 
         References
         ----------
         [1] Andrew R. Liddle, "Information criteria for astrophysical model selection", MNRAS (2007)
         """
-        dics = []
-        dics_bool = []
-        for i, chain in enumerate(self.parent.chains):
-            p = chain.posterior
+        dics = {}
+        for name, chain in self.parent.chains.items():
+            p = chain.log_posterior
             if p is None:
-                dics_bool.append(False)
-                self._logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
+                logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
             else:
-                dics_bool.append(True)
-                num_params = chain.chain.shape[1]
-                means = np.array([np.average(chain.chain[:, ii], weights=chain.weights) for ii in range(num_params)])
+                num_params = chain.samples.shape[1]
+                means = np.array([np.average(chain.samples[:, ii], weights=chain.weights) for ii in range(num_params)])
                 d = -2 * p
-                d_of_mean = griddata(chain.chain, d, means, method="nearest")[0]
+                d_of_mean = griddata(chain.samples, d, means, method="nearest")[0]
                 mean_d = np.average(d, weights=chain.weights)
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
-                dics.append(dic)
-        if len(dics) > 0:
-            dics -= np.min(dics)
-        dics_fin = []
-        i = 0
-        for b in dics_bool:
-            if not b:
-                dics_fin.append(None)
-            else:
-                dics_fin.append(dics[i])
-                i += 1
-        return dics_fin
+                dics[name] = dic
+        if dics:
+            min_dic = np.min(list(dics.values()))
+            for name in dics:
+                dics[name] -= min_dic
+        return dics
 
-    def bic(self):
+    def bic(self) -> dict[str, float]:
         r"""Returns the corrected Bayesian Information Criterion (BIC) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
@@ -77,17 +67,14 @@ class Comparison:
         where :math:`P` represents the posterior, :math:`k` the number of model parameters and :math:`N`
         the number of independent data points used in the model fitting.
 
-        Returns
-        -------
-        list[float]
-            A list of all the BIC values - one per chain, in the order in which the chains were added.
+        Returns:
+            dict[str, float]: A dict of chain name to BIC value.
+
         """
-        bics = []
-        bics_bool = []
-        for i, chain in enumerate(self.parent.chains):
-            p, n_data, n_free = chain.posterior, chain.num_eff_data_points, chain.num_free_params
+        bics = {}
+        for name, chain in self.parent.chains.items():
+            p, n_data, n_free = chain.log_posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
-                bics_bool.append(False)
                 missing = ""
                 if p is None:
                     missing += "posterior, "
@@ -96,23 +83,17 @@ class Comparison:
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warning(f"You need to set {missing[:-2]} for chain {chain.name} to get the BIC")
+                logger.warning(f"You need to set {missing[:-2]} for chain {name} to get the BIC")
             else:
-                bics_bool.append(True)
-                bics.append(n_free * np.log(n_data) - 2 * np.max(p))
-        if len(bics) > 0:
-            bics -= np.min(bics)
-        bics_fin = []
-        i = 0
-        for b in bics_bool:
-            if not b:
-                bics_fin.append(None)
-            else:
-                bics_fin.append(bics[i])
-                i += 1
-        return bics_fin
+                bics[name] = n_free * np.log(n_data) - 2 * np.max(p)
+        if bics:
+            min_bic = np.min(list(bics.values()))
+            for name in bics:
+                bics[name] -= min_bic
 
-    def aic(self):
+        return bics
+
+    def aic(self) -> dict[str, float]:
         r"""Returns the corrected Akaike Information Criterion (AICc) for all chains loaded into ChainConsumer.
 
         If a chain does not have a posterior, number of data points, and number of free parameters
@@ -130,17 +111,14 @@ class Comparison:
         where :math:`N` represents the number of independent data points used in the model fitting.
         The AICc is a correction for the AIC to take into account finite chain sizes.
 
-        Returns
-        -------
-        list[float]
-            A list of all the AICc values - one per chain, in the order in which the chains were added.
+        Returns:
+            dict[str, float]: A dict of chain name to AIC value.
+
         """
-        aics = []
-        aics_bool = []
-        for i, chain in enumerate(self.parent.chains):
-            p, n_data, n_free = chain.posterior, chain.num_eff_data_points, chain.num_free_params
+        aics = {}
+        for name, chain in self.parent.chains.items():
+            p, n_data, n_free = chain.log_posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
-                aics_bool.append(False)
                 missing = ""
                 if p is None:
                     missing += "posterior, "
@@ -149,60 +127,42 @@ class Comparison:
                 if n_free is None:
                     missing += "num_free_params, "
 
-                self._logger.warning(f"You need to set {missing[:-2]} for chain {chain.name} to get the AIC")
+                logger.warning(f"You need to set {missing[:-2]} for chain {chain.name} to get the AIC")
             else:
-                aics_bool.append(True)
                 c_cor = 1.0 * n_free * (n_free + 1) / (n_data - n_free - 1)
-                aics.append(2.0 * (n_free + c_cor - np.max(p)))
-        if len(aics) > 0:
-            aics -= np.min(aics)
-        aics_fin = []
-        i = 0
-        for b in aics_bool:
-            if not b:
-                aics_fin.append(None)
-            else:
-                aics_fin.append(aics[i])
-                i += 1
-        return aics_fin
+                aics[name] = 2.0 * (n_free + c_cor - np.max(p))
+        if aics:
+            min_aic = np.min(list(aics.values()))
+            for name in aics:
+                aics[name] -= min_aic
+        return aics
 
     def comparison_table(
         self,
-        caption=None,
-        label="tab:model_comp",
-        hlines=True,
-        aic=True,
-        bic=True,
-        dic=True,
-        sort="bic",
-        descending=True,
-    ):  # pragma: no cover
+        caption: str | None = None,
+        label: str = "tab:model_comp",
+        hlines: bool = True,
+        aic: bool = True,
+        bic: bool = True,
+        dic: bool = True,
+        sort: Literal["bic", "aic", "dic"] = "bic",
+        descending: bool = True,
+    ) -> str:  # pragma: no cover
         """
         Return a LaTeX ready table of model comparisons.
 
-        Parameters
-        ----------
-        caption : str, optional
-            The table caption to insert.
-        label : str, optional
-            The table label to insert.
-        hlines : bool, optional
-            Whether to insert hlines in the table or not.
-        aic : bool, optional
-            Whether to include a column for AICc or not.
-        bic : bool, optional
-            Whether to include a column for BIC or not.
-        dic : bool, optional
-            Whether to include a column for DIC or not.
-        sort : str, optional
-            How to sort the models. Should be one of "bic", "aic" or "dic".
-        descending : bool, optional
-            The sort order.
+        Args:
+            caption (str, optional): The table caption to insert. Defaults to None.
+            label (str, optional): The table label to insert. Defaults to "tab:model_comp".
+            hlines (bool, optional): Whether to insert hlines in the table or not. Defaults to True.
+            aic (bool, optional): Whether to include a column for AICc or not. Defaults to True.
+            bic (bool, optional): Whether to include a column for BIC or not. Defaults to True.
+            dic (bool, optional): Whether to include a column for DIC or not. Defaults to True.
+            sort (str, optional): How to sort the models. Should be one of "bic", "aic" or "dic". Defaults to "bic".
+            descending (bool, optional): The sort order. Defaults to True.
 
-        Returns
-        -------
-        str
-            A LaTeX table to be copied into your document.
+        Returns:
+            str: A LaTeX table to be copied into your document.
         """
 
         if sort == "bic":
@@ -211,6 +171,7 @@ class Comparison:
             assert aic, "You cannot sort by AIC if you turn it off"
         if sort == "dic":
             assert dic, "You cannot sort by DIC if you turn it off"
+        assert sort in ["bic", "aic", "dic"], f"sort {sort} not recognised, must be dic, aic or dic"
 
         if caption is None:
             caption = ""
@@ -230,41 +191,32 @@ class Comparison:
         )
         if hlines:
             center_text += "\t" + hline_text
-        aics = self.aic() if aic else np.zeros(len(self.parent.chains))
-        bics = self.bic() if bic else np.zeros(len(self.parent.chains))
-        dics = self.dic() if dic else np.zeros(len(self.parent.chains))
 
-        if sort == "bic":
-            to_sort = bics
-        elif sort == "aic":
-            to_sort = aics
-        elif sort == "dic":
-            to_sort = dics
-        else:
-            raise ValueError("sort %s not recognised, must be dic, aic or dic" % sort)
+        series = {}
+        if aic:
+            series["aic"] = self.aic()
+        if bic:
+            series["bic"] = self.bic()
+        if dic:
+            series["dic"] = self.dic()
 
-        good = [i for i, t in enumerate(to_sort) if t is not None]
-        names = [self.parent.chains[g].name for g in good]
-        aics = [aics[g] for g in good]
-        bics = [bics[g] for g in good]
-        to_sort = bics if sort == "bic" else aics
-
-        indexes = np.argsort(to_sort)
-
-        if descending:
-            indexes = indexes[::-1]
-
-        for i in indexes:
-            line = "\t" + names[i]
+        df = pd.DataFrame(series).sort_values(by=sort, ascending=not descending)
+        for name, row in df.iterrows():
+            chain_name: str = str(name)
+            line = "\t" + chain_name
             if aic:
-                line += "  &  %5.1f  " % aics[i]
+                line += f"  &  {row['aic']:5.1f}  "
             if bic:
-                line += "  &  %5.1f  " % bics[i]
+                line += f"  &  {row['bic']:5.1f}  "
             if dic:
-                line += "  &  %5.1f  " % dics[i]
+                line += f"  &  {row['dic']:5.1f}  "
             line += end_text
             center_text += line
         if hlines:
             center_text += "\t" + hline_text
 
         return base_string % (column_text, center_text)
+
+
+if __name__ == "__main__":
+    from .chainconsumer import ChainConsumer

@@ -21,7 +21,7 @@ data = np.random.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=
 
 c = ChainConsumer()
 c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-c.configure(smooth=0, linewidths=2, colors="#673AB7")
+c.configure_overrides(smooth=0, linewidths=2, colors="#673AB7")
 fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
 
 # If we wanted to save to file, we would instead have written

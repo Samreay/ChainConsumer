@@ -27,7 +27,7 @@ c.add_chain(d1, parameters=["$x$", "$y$"])
 c.add_chain(d2)
 c.add_chain(d3)
 
-c.configure(
+c.configure_overrides(
     linestyles=["-", "--", "-"],
     linewidths=[1.0, 3.0, 1.0],
     bins=[3.0, 1.0, 1.0],
@@ -54,7 +54,7 @@ fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't
 c = ChainConsumer()
 c.add_chain(d1, parameters=["$x$", "$y$"]).add_chain(d2).add_chain(d3, linestyle="-", linewidth=5)
 
-c.configure(linestyles=":", linewidths=2)
+c.configure_overrides(linestyles=":", linewidths=2)
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

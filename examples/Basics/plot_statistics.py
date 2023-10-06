@@ -74,6 +74,6 @@ c = ChainConsumer()
 stats = list(c.analysis._summaries.keys())
 for stat in stats:
     c.add_chain(data, parameters=parameters, name=stat.replace("_", " ").title())
-c.configure(statistics=stats, bar_shade=True)
+c.configure_overrides(statistics=stats, bar_shade=True)
 fig = c.plotter.plot()
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

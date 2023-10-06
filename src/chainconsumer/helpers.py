@@ -1,5 +1,7 @@
 import numpy as np
 
+from .chain import Chain
+
 
 def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=False):
     hist, be = np.histogram(data, weights=weight, bins=2000)
@@ -25,9 +27,9 @@ def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=Fal
     return lower, upper
 
 
-def get_bins(chains):
+def get_bins(chains: list[Chain]):
     proposal = [
-        max(35, np.floor(1.0 * np.power(chain.chain.shape[0] / chain.chain.shape[1], 0.25))) for chain in chains
+        max(35, np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25))) for chain in chains
     ]
     return proposal
 
@@ -47,12 +49,12 @@ def get_grid_bins(data):
     return bins
 
 
-def get_latex_table_frame(caption, label):  # pragma: no cover
-    base_string = r"""\begin{table}
+def get_latex_table_frame(caption: str, label: str) -> str:  # pragma: no cover
+    base_string = rf"""\begin{{table}}
     \centering
-    \caption{%s}
-    \label{%s}
-    \begin{tabular}{%s}
-        %s    \end{tabular}
-\end{table}"""
-    return base_string % (caption, label, "%s", "%s")
+    \caption{{{caption}}}
+    \label{{{label}}}
+    \begin{{tabular}}{{%s}}
+        %s    \end{{tabular}}
+\end{{table}}"""
+    return base_string

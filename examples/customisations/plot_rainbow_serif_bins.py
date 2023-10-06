@@ -37,7 +37,7 @@ c.add_chain(data, name="A")
 c.add_chain(data2, name="B")
 c.add_chain(data3, name="C")
 c.add_chain(data4, name="D")
-c.configure(bins=50, cmap="plasma")
+c.configure_overrides(bins=50, cmap="plasma")
 fig = c.plotter.plot(figsize=0.75)  # Also making the figure 75% of its original size, for fun
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

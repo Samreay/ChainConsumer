@@ -1,0 +1,16 @@
+- [ ] Add max_ticks to plotter
+- [ ] plot_hists
+- [ ] flip
+- [ ] serif
+- [ ] sigma2d
+- [ ] usetex
+- [ ] diagonal_tick_labels
+- [ ] label_font_size
+- [ ] tick_font_size
+- [ ] spacing
+- [ ] contour_label_font_size
+- [ ] legend_kwargs
+- [ ] legend_location
+- [ ] legend_artists
+- [ ] legend_color_text
+- [ ] watermark_text_kwargs

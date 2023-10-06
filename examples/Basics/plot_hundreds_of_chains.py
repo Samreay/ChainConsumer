@@ -88,7 +88,7 @@ c.add_chain(
     bar_shade=True,
 )
 
-c.configure(legend_artists=True)
+c.configure_overrides(legend_artists=True)
 
 fig = c.plotter.plot()
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
@@ -109,7 +109,7 @@ fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don
 # by the posterior values, the maximum point of each 2D slice, we can specify
 # to `configure` that `global_point=False`.
 
-c.configure(legend_artists=True, global_point=False)
+c.configure_overrides(legend_artists=True, global_point=False)
 fig = c.plotter.plot(chains="Sim1")
 fig.set_size_inches(2.5 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
 

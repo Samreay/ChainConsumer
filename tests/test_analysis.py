@@ -21,7 +21,7 @@ class TestChain:
         tolerance = 4e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data[::10])
-        consumer.configure(kde=True)
+        consumer.configure_overrides(kde=True)
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -32,7 +32,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(smooth=0, bins=2.4)
+        consumer.configure_overrides(smooth=0, bins=2.4)
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -63,7 +63,7 @@ class TestChain:
     def test_summary_some_params(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data_combined, parameters=["a", "b"], name="chain1")
-        summary = consumer.analysis.get_summary(parameters=["a"], squeeze=False)
+        summary = consumer.analysis.get_summary(columns=["a"], squeeze=False)
         k1 = list(summary[0].keys())
         assert len(k1) == 1
         assert "a" in k1
@@ -73,7 +73,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(bins=0.8)
+        consumer.configure_overrides(bins=0.8)
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -84,7 +84,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data, name="A")
-        consumer.configure(bins=0.8)
+        consumer.configure_overrides(bins=0.8)
         summary = consumer.analysis.get_summary(chains="A")
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -96,8 +96,8 @@ class TestChain:
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters="A")
         consumer.add_chain(self.data, parameters="B")
-        consumer.configure(bins=0.8)
-        summary = consumer.analysis.get_summary(parameters="A")
+        consumer.configure_overrides(bins=0.8)
+        summary = consumer.analysis.get_summary(columns="A")
         assert len(summary) == 2  # Two chains
         assert summary[1] == {}  # Second chain doesnt have param A
         actual = summary[0]["A"]
@@ -119,7 +119,7 @@ class TestChain:
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data, parameters=["a"])
-        consumer.configure(bins=0.8)
+        consumer.configure_overrides(bins=0.8)
         vals = consumer.analysis.get_summary()["a"]
         text = consumer.analysis.get_parameter_text(*vals)
         assert text == r"5.0\pm 1.5"
@@ -341,7 +341,7 @@ class TestChain:
         consumer.add_chain(data, walkers=num_walkers)
 
         c = consumer.divide_chain()
-        c.configure(bins=0.7)
+        c.configure_overrides(bins=0.7)
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = next(iter(c.analysis.get_summary()[i].values()))
@@ -355,7 +355,7 @@ class TestChain:
         consumer.add_chain(data, walkers=num_walkers)
 
         c = consumer.divide_chain(chain=0)
-        c.configure(bins=0.7)
+        c.configure_overrides(bins=0.7)
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = next(iter(c.analysis.get_summary()[i].values()))
@@ -368,7 +368,7 @@ class TestChain:
         num_walkers = 2
         consumer.add_chain(data, walkers=num_walkers, name="test")
         c = consumer.divide_chain(chain="test")
-        c.configure(bins=0.7)
+        c.configure_overrides(bins=0.7)
         means = [0, 1.0]
         for i in range(num_walkers):
             stats = next(iter(c.analysis.get_summary()[i].values()))
@@ -393,7 +393,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(statistics="max")
+        consumer.configure_overrides(statistics="max")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -407,7 +407,7 @@ class TestChain:
         weights = norm.pdf(data, 1, 2)
         consumer = ChainConsumer()
         consumer.add_chain(data, weights=weights)
-        consumer.configure(statistics="max", bins=4.0, smooth=1)
+        consumer.configure_overrides(statistics="max", bins=4.0, smooth=1)
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([0.0, 1.0, 2.73])
@@ -418,7 +418,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(statistics="mean")
+        consumer.configure_overrides(statistics="mean")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -429,7 +429,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure(statistics="cumulative")
+        consumer.configure_overrides(statistics="cumulative")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([3.5, 5.0, 6.5])
@@ -440,13 +440,13 @@ class TestChain:
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         with pytest.raises(AssertionError):
-            consumer.configure(statistics="monkey")
+            consumer.configure_overrides(statistics="monkey")
 
     def test_stats_max_skew(self):
         tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics="max")
+        consumer.configure_overrides(statistics="max")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([1.01, 1.55, 2.72])
@@ -457,7 +457,7 @@ class TestChain:
         tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics="mean")
+        consumer.configure_overrides(statistics="mean")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([1.27, 2.19, 3.11])
@@ -468,7 +468,7 @@ class TestChain:
         tolerance = 3e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics="cumulative")
+        consumer.configure_overrides(statistics="cumulative")
         summary = consumer.analysis.get_summary()
         actual = np.array(next(iter(summary.values())))
         expected = np.array([1.27, 2.01, 3.11])
@@ -480,7 +480,7 @@ class TestChain:
         consumer = ChainConsumer()
         consumer.add_chain(self.data_skew)
         consumer.add_chain(self.data_skew)
-        consumer.configure(statistics=["cumulative", "mean"])
+        consumer.configure_overrides(statistics=["cumulative", "mean"])
         summary = consumer.analysis.get_summary()
         actual0 = np.array(next(iter(summary[0].values())))
         actual1 = np.array(next(iter(summary[1].values())))
@@ -745,14 +745,14 @@ class TestChain:
     def test_2d_levels(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(sigmas=[0, 1, 2], sigma2d=True)
+        c.configure_overrides(sigmas=[0, 1, 2], sigma2d=True)
         levels = c.plotter._get_levels()
         assert np.allclose(levels, [0, 0.39, 0.86], atol=0.01)
 
     def test_1d_levels(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(sigmas=[0, 1, 2], sigma2d=False)
+        c.configure_overrides(sigmas=[0, 1, 2], sigma2d=False)
         levels = c.plotter._get_levels()
         assert np.allclose(levels, [0, 0.68, 0.95], atol=0.01)
 
@@ -766,7 +766,7 @@ class TestChain:
     def test_summary_area_default(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(summary_area=0.6827)
+        c.configure_overrides(summary_area=0.6827)
         summary = c.analysis.get_summary()["0"]
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
@@ -774,7 +774,7 @@ class TestChain:
     def test_summary_area_95(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(summary_area=0.95)
+        c.configure_overrides(summary_area=0.95)
         summary = c.analysis.get_summary()["0"]
         expected = [2, 5, 8]
         assert np.all(np.isclose(summary, expected, atol=0.1))
@@ -782,7 +782,7 @@ class TestChain:
     def test_summary_max_symmetric_1(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(statistics="max_symmetric")
+        c.configure_overrides(statistics="max_symmetric")
         summary = c.analysis.get_summary()["0"]
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
@@ -792,7 +792,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.6827
-        c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(0, 2, 1000)
@@ -810,7 +810,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.95
-        c.configure(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_symmetric", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(0, 2, 1000)
@@ -827,7 +827,7 @@ class TestChain:
     def test_summary_max_shortest_1(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(statistics="max_shortest")
+        c.configure_overrides(statistics="max_shortest")
         summary = c.analysis.get_summary()["0"]
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
@@ -836,7 +836,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.6827
-        c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_shortest", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(-1, 5, 1000)
@@ -857,7 +857,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.95
-        c.configure(statistics="max_shortest", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_shortest", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(-1, 5, 1000)
@@ -877,7 +877,7 @@ class TestChain:
     def test_summary_max_central_1(self):
         c = ChainConsumer()
         c.add_chain(self.data)
-        c.configure(statistics="max_central")
+        c.configure_overrides(statistics="max_central")
         summary = c.analysis.get_summary()["0"]
         expected = [3.5, 5, 6.5]
         assert np.all(np.isclose(summary, expected, atol=0.1))
@@ -886,7 +886,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.6827
-        c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_central", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(-1, 5, 1000)
@@ -903,7 +903,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data_skew)
         summary_area = 0.95
-        c.configure(statistics="max_central", bins=1.0, summary_area=summary_area)
+        c.configure_overrides(statistics="max_central", bins=1.0, summary_area=summary_area)
         summary = c.analysis.get_summary()["0"]
 
         xs = np.linspace(-1, 5, 1000)

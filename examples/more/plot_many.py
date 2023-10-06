@@ -28,7 +28,7 @@ c.add_chain(data2, parameters=[r"$\Omega_m$", "$-w$"], name="B")
 c.add_chain(data3, name="S")
 c.add_chain(data, parameters=[r"$\Omega_m$", "$-w$", "$H_0$"], name="P")
 
-c.configure(
+c.configure_overrides(
     color_params="$H_0$", shade=[True, True, False], shade_alpha=0.2, bar_shade=True, linestyles=["-", "--", "-"]
 )
 fig = c.plotter.plot(figsize=2.0, extents=[[0, 1], [0, 1.5]])

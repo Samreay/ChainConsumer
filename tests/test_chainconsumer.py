@@ -28,30 +28,30 @@ class TestChainConsumer:
         c = ChainConsumer()
         c.add_chain(self.data, name="A")
         c.add_chain(self.data, name="B")
-        assert c._get_chain(c.chains[0])[0] == 0
-        assert c._get_chain(c.chains[1])[0] == 1
-        assert len(c._get_chain(c.chains[0])) == 1
-        assert len(c._get_chain(c.chains[1])) == 1
+        assert c.get_chain(c.chains[0])[0] == 0
+        assert c.get_chain(c.chains[1])[0] == 1
+        assert len(c.get_chain(c.chains[0])) == 1
+        assert len(c.get_chain(c.chains[1])) == 1
 
     def test_summary_bad_input1(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=None)
+            ChainConsumer().add_chain(self.data).configure_overrides(summary_area=None)
 
     def test_summary_bad_input2(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area="Nope")
+            ChainConsumer().add_chain(self.data).configure_overrides(summary_area="Nope")
 
     def test_summary_bad_input3(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=0)
+            ChainConsumer().add_chain(self.data).configure_overrides(summary_area=0)
 
     def test_summary_bad_input4(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=1)
+            ChainConsumer().add_chain(self.data).configure_overrides(summary_area=1)
 
     def test_summary_bad_input5(self):
         with pytest.raises(AssertionError):
-            ChainConsumer().add_chain(self.data).configure(summary_area=-0.2)
+            ChainConsumer().add_chain(self.data).configure_overrides(summary_area=-0.2)
 
     def test_remove_last_chain(self):
         tolerance = 5e-2
@@ -59,7 +59,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data)
         consumer.add_chain(self.data * 2)
         consumer.remove_chain()
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         actual = np.array(next(iter(summary.values())))
@@ -73,7 +73,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data * 2)
         consumer.add_chain(self.data)
         consumer.remove_chain(chain=0)
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         actual = np.array(next(iter(summary.values())))
@@ -87,7 +87,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data * 2, name="a")
         consumer.add_chain(self.data, name="b")
         consumer.remove_chain(chain="a")
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         actual = np.array(next(iter(summary.values())))
@@ -101,7 +101,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data * 2, parameters=["p1"], name="a")
         consumer.add_chain(self.data, parameters=["p2"], name="b")
         consumer.remove_chain(chain="a")
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         assert "p2" in summary
@@ -118,7 +118,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data, parameters=["p2"], name="b")
         consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
         consumer.remove_chain(chain=["a", "c"])
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         assert "p2" in summary
@@ -136,7 +136,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data, parameters=["p2"], name="b")
         consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
         consumer.remove_chain(chain=[0, 2])
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         assert "p2" in summary
@@ -154,7 +154,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data, parameters=["p2"], name="b")
         consumer.add_chain(self.data * 3, parameters=["p3"], name="c")
         consumer.remove_chain(chain=["a", 2])
-        consumer.configure()
+        consumer.configure_overrides()
         summary = consumer.analysis.get_summary()
         assert isinstance(summary, dict)
         assert "p2" in summary
@@ -172,7 +172,7 @@ class TestChainConsumer:
     def test_shade_alpha_algorithm1(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
-        consumer.configure()
+        consumer.configure_overrides()
         alpha = consumer.chains[0].config["shade_alpha"]
         assert alpha == 1.0
 
@@ -180,7 +180,7 @@ class TestChainConsumer:
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
-        consumer.configure()
+        consumer.configure_overrides()
         alpha0 = consumer.chains[0].config["shade_alpha"]
         alpha1 = consumer.chains[0].config["shade_alpha"]
         assert alpha0 == 1.0 / np.sqrt(2.0)
@@ -191,7 +191,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
-        consumer.configure()
+        consumer.configure_overrides()
         alphas = [c.config["shade_alpha"] for c in consumer.chains]
         assert len(alphas) == 3
         assert alphas[0] == 1.0 / np.sqrt(3.0)

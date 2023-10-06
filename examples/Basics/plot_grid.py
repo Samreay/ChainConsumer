@@ -39,7 +39,7 @@ coords = np.vstack((xs, ys)).T
 pdf_flat = multivariate_normal.pdf(coords, mean=[0.0, 0.0], cov=[[1.0, 0.7], [0.7, 3.5]])
 c = ChainConsumer()
 c.add_chain([xs, ys], parameters=["$x$", "$y$"], weights=pdf_flat, grid=True)
-c.configure(smooth=1)  # Notice how smoothing changes the results!
+c.configure_overrides(smooth=1)  # Notice how smoothing changes the results!
 fig = c.plotter.plot()
 
 fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.

@@ -33,7 +33,7 @@ def get_instance():
 # If we want the full shape of the distributions, well, thats the default
 # behaviour!
 c = get_instance()
-c.configure(bar_shade=True)
+c.configure_overrides(bar_shade=True)
 c.plotter.plot_summary()
 
 ###############################################################################
@@ -41,7 +41,7 @@ c.plotter.plot_summary()
 # want errorbars, not distributions. And some fun truth values.
 
 c = get_instance()
-c.configure(legend_color_text=False)
+c.configure_overrides(legend_color_text=False)
 c.configure_truth(ls=":", color="#FB8C00")
 c.plotter.plot_summary(errorbar=True, truth=[[0], [-1, 1], [-2, 0, 2]])
 
@@ -50,6 +50,6 @@ c.plotter.plot_summary(errorbar=True, truth=[[0], [-1, 1], [-2, 0, 2]])
 # it with the others
 
 c = get_instance()
-c.configure(legend_color_text=False)
+c.configure_overrides(legend_color_text=False)
 c.configure_truth(ls="-", color="#555555")
 c.plotter.plot_summary(errorbar=True, truth="Ref. model", include_truth_chain=False, extra_parameter_spacing=1.5)

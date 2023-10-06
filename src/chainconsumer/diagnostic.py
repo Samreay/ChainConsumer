@@ -3,11 +3,12 @@ import logging
 import numpy as np
 from scipy.stats import normaltest
 
+from .log import logger
+
 
 class Diagnostic:
     def __init__(self, parent):
         self.parent = parent
-        self._logger = logging.getLogger("chainconsumer")
 
     def gelman_rubin(self, chain=None, threshold=0.05):
         r"""Runs the Gelman Rubin diagnostic on the supplied chains.
@@ -67,13 +68,13 @@ class Diagnostic:
         w = (1 / m) * chain_var.sum(axis=0)
         var = (n - 1) * w / n + b / n
         v = var + b / (n * m)
-        R = np.sqrt(v / w)
+        r = np.sqrt(v / w)
 
-        passed = np.abs(R - 1) < threshold
-        print("Gelman-Rubin Statistic values for chain %s" % name)
-        for p, v, pas in zip(parameters, R, passed):
+        passed = np.abs(r - 1) < threshold
+        logger.info("Gelman-Rubin Statistic values for chain %s" % name)
+        for p, v, pas in zip(parameters, r, passed):
             param = "Param %d" % p if isinstance(p, int) else p
-            print("{}: {:7.5f} ({})".format(param, v, "Passed" if pas else "Failed"))
+            logger.info(f"{param}: {v:7.5f} ({'Passed' if pas else 'Failed'})")
         return np.all(passed)
 
     def geweke(self, chain=None, first=0.1, last=0.5, threshold=0.05):
@@ -124,7 +125,7 @@ class Diagnostic:
         var_end = np.array([self._spec(c[n_end:, i]) / c[n_end:, i].size for c in chains for i in range(c.shape[1])])
         zs = (mean_start - mean_end) / (np.sqrt(var_start + var_end))
         _, pvalue = normaltest(zs)
-        print(f"Gweke Statistic for chain {name} has p-value {pvalue:e}")
+        logger.info(f"Gweke Statistic for chain {name} has p-value {pvalue:e}")
         return pvalue > threshold
 
     # Method of estimating spectral density following PyMC.
@@ -132,5 +133,5 @@ class Diagnostic:
     def _spec(self, x, order=2):
         from statsmodels.regression.linear_model import yule_walker
 
-        beta, sigma = yule_walker(x, order)
+        beta, sigma = yule_walker(x, order)  # type: ignore
         return sigma**2 / (1.0 - np.sum(beta)) ** 2
