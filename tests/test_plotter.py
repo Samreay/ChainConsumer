@@ -14,7 +14,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.data, parameters=["x"])
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
@@ -23,7 +23,7 @@ class TestChain:
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
@@ -32,7 +32,7 @@ class TestChain:
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["x"])
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains)
         assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
         assert np.isclose(maxv, (10.0 + 1.5 * 3.7), atol=0.2)
 
@@ -41,7 +41,7 @@ class TestChain:
         c.add_chain(self.data, parameters=["x"])
         c.add_chain(self.data + 5, parameters=["y"])
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains[:1])
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains[:1])
         assert np.isclose(minv, (5.0 - 1.5 * 3.7), atol=0.2)
         assert np.isclose(maxv, (5.0 + 1.5 * 3.7), atol=0.2)
 
@@ -54,7 +54,7 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(chain, parameters=["x", "y"], weights=pdf, grid=True)
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains)
         assert np.isclose(minv, -3, atol=0.001)
         assert np.isclose(maxv, 3, atol=0.001)
 
@@ -67,6 +67,6 @@ class TestChain:
             c.add_chain(data, parameters=["x"], posterior=posterior, plot_point=True, plot_contour=False)
 
         c.configure_overrides()
-        minv, maxv = c.plotter._get_parameter_extents("x", c.chains)
+        minv, maxv = c.plotter._get_parameter_extents("x", c._chains)
         assert np.isclose(minv, -1, atol=0.01)
         assert np.isclose(maxv, 1, atol=0.01)

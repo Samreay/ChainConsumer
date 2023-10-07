@@ -41,6 +41,7 @@ class Colors:
             "r": "red",
             "g": "green",
             "k": "gray",
+            "f": "gray",
             "m": "rose",
             "c": "cyan",
             "o": "orange",
@@ -73,8 +74,10 @@ class Colors:
             for color in self.default_colors:
                 yield ALL_COLOURS[color][index]
 
-    def format(self, color: ColorInput) -> str:
-        if isinstance(color, np.ndarray | list):
+    def format(self, color: ColorInput | None) -> str:
+        if color is None:
+            return next(iter(self.next_colour()))
+        elif isinstance(color, np.ndarray | list):
             color = rgb2hex(color)  # type: ignore
         if color[0] == "#":
             return color
@@ -83,9 +86,9 @@ class Colors:
         elif color in self.aliases:
             alias = self.aliases[color]
             index = 4
-            if color.lower() == "black":
+            if color.lower() in ["k", "black"]:
                 index = -1
-            elif color.lower() == "white":
+            elif color.lower() in ["f", "white"]:
                 index = 0
             return ALL_COLOURS[alias][index]
         else:

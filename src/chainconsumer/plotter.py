@@ -15,9 +15,9 @@ from matplotlib.textpath import TextPath
 from matplotlib.ticker import LogLocator, MaxNLocator, ScalarFormatter
 from numpy import meshgrid
 from pydantic import Field
-from scipy.interpolate import interp1d
-from scipy.ndimage import gaussian_filter
-from scipy.stats import norm
+from scipy.interpolate import interp1d  # type: ignore
+from scipy.ndimage import gaussian_filter  # type: ignore
+from scipy.stats import norm  # type: ignore
 
 from chainconsumer.truth import Truth
 
@@ -115,7 +115,7 @@ class FigSize(Enum):
             return input
 
         # Otherwise it must be grow, which is the default
-        return grow_factor * 1.5 * num_columns + (1 if has_cax else 0), grow_factor * 1.5 * num_columns
+        return 3 + grow_factor * 2 * num_columns + (1 if has_cax else 0), 3 + grow_factor * 2 * num_columns
 
 
 def get_artists_from_chains(chains: list[Chain]):
@@ -123,7 +123,14 @@ def get_artists_from_chains(chains: list[Chain]):
     for chain in chains:
         if chain.plot_contour and not chain.plot_point:
             artists.append(
-                Line2D((0, 1), (0, 0), color=colors.format(chain.color), ls=chain.linestyle, lw=chain.linewidth)
+                Line2D(
+                    (0, 1),
+                    (0, 0),
+                    color=colors.format(chain.color),
+                    ls=chain.linestyle,
+                    lw=chain.linewidth,
+                    label="  " + chain.name,
+                )
             )
         elif not chain.plot_contour and chain.plot_point:
             artists.append(
@@ -134,7 +141,8 @@ def get_artists_from_chains(chains: list[Chain]):
                     ls=chain.linestyle,
                     lw=0,
                     marker=chain.marker_style,
-                    markersize=chain.marker_size,
+                    markersize=np.sqrt(chain.marker_size),
+                    label="  " + chain.name,
                 )
             )
         else:
@@ -146,14 +154,15 @@ def get_artists_from_chains(chains: list[Chain]):
                     ls=chain.linestyle,
                     lw=chain.linewidth,
                     marker=chain.marker_style,
-                    markersize=chain.marker_size,
+                    markersize=np.sqrt(chain.marker_size),
+                    label="  " + chain.name,
                 )
             )
     return artists
 
 
 class Plotter:
-    def __init__(self, parent):
+    def __init__(self, parent: "ChainConsumer") -> None:
         self.parent: "ChainConsumer" = parent
         self._config: PlotConfig | None = None
         self._default_config = PlotConfig()
@@ -161,7 +170,7 @@ class Plotter:
         self.usetex_old = matplotlib.rcParams["text.usetex"]
         self.serif_old = matplotlib.rcParams["font.family"]
 
-    def set_config(self, config: PlotConfig):
+    def set_config(self, config: PlotConfig) -> None:
         self._config = config
 
     @property
@@ -177,12 +186,11 @@ class Plotter:
         chains: list[ChainName | Chain] | None = None,
         extents: dict[ColumnName, tuple[float, float]] | None = None,
         filename: list[str | Path] | str | Path | None = None,
-        display: bool = False,
         show_legend: bool | None = None,
         blind: bool | list[str] | None = None,
         watermark: str | None = None,
         log_scales: list[ColumnName] | None = None,
-    ):  # pragma: no cover
+    ) -> Figure:  # pragma: no cover
         """Plot the chain!
 
         Parameters
@@ -256,7 +264,7 @@ class Plotter:
 
                 # Plot the histograms
                 if plot_hists and i == j:
-                    for truth in self.parent.truths:
+                    for truth in self.parent._truths:
                         if do_flip:
                             self._add_truth(ax, truth, px=p1)
                         else:
@@ -284,28 +292,32 @@ class Plotter:
                     for chain in base.chains:
                         if p1 not in chain.samples or p2 not in chain.samples:
                             continue
-                        if not chain.plot_contour or chain.show_as_1d_prior:
-                            continue
 
-                        h = self._plot_contour(ax, chain, p1, p2)
-                        cp = chain.color_param
-                        if h is not None and cp is not None and cp not in cbar_done:
-                            cbar_done.append(cp)
-                            aspect = fig_size[1] / 0.15
-                            fraction = 0.85 / fig_size[0]
-                            cbar = fig.colorbar(h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False)
-                            label = self.config.get_label(cp)
-                            if label == "weights":
-                                label = "Weights"
-                            elif label == "log_weights":
-                                label = "log(Weights)"
-                            elif label == "posterior":
-                                label = "log(Posterior)"
-                            cbar.set_label(label, fontsize=self.config.label_font_size)
-                            if cbar.solids is not None:
-                                cbar.solids.set(alpha=1)
+                        if chain.plot_contour:
+                            h = self._plot_contour(ax, chain, p1, p2)
+                            cp = chain.color_param
+                            if h is not None and cp is not None and cp not in cbar_done:
+                                cbar_done.append(cp)
+                                aspect = fig_size[1] / 0.15
+                                fraction = 0.85 / fig_size[0]
+                                cbar = fig.colorbar(
+                                    h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False
+                                )
+                                label = self.config.get_label(cp)
+                                if label == "weights":
+                                    label = "Weights"
+                                elif label == "log_weights":
+                                    label = "log(Weights)"
+                                elif label == "posterior":
+                                    label = "log(Posterior)"
+                                cbar.set_label(label, fontsize=self.config.label_font_size)
+                                if cbar.solids is not None:
+                                    cbar.solids.set(alpha=1)
 
-                    for truth in self.parent.truths:
+                        if chain.plot_point:
+                            self._plot_point(ax, chain, p2, p1)
+
+                    for truth in self.parent._truths:
                         self._add_truth(ax, truth, px=p1, py=p2)
 
         legend_location = self.config.legend_location
@@ -320,7 +332,7 @@ class Plotter:
                 legend_kwargs["markerfirst"] = legend_outside or not self.config.legend_artists
 
             artists = get_artists_from_chains(base.chains)
-            leg = ax.legend(artists, **legend_kwargs)
+            leg = ax.legend(handles=artists, **legend_kwargs)
             if self.config.legend_color_text:
                 for text, chain in zip(leg.get_texts(), base.chains):
                     text.set_fontweight("medium")
@@ -353,8 +365,6 @@ class Plotter:
                 filename = [filename]
             for f in filename:
                 self._save_fig(fig, f, dpi)
-        if display:
-            plt.show()
 
         return fig
 
@@ -917,7 +927,7 @@ class Plotter:
 
     def _sanitise_columns(self, columns: list[ColumnName] | None, chains: list[Chain]) -> list[ColumnName]:
         if columns is None:
-            return list(set([c for chain in chains for c in chain.samples.columns]))
+            return list(set([c for chain in chains for c in chain.plotting_columns]))
         return columns
 
     def _sanitise_logscale(self, log_scales: list[ColumnName] | None) -> list[ColumnName]:
@@ -1006,7 +1016,16 @@ class Plotter:
             gridspec_kw = {"width_ratios": [3, 1], "height_ratios": [1, 3]}
 
         fig, axes = plt.subplots(n, n, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw)
-        fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05 * spacing, hspace=0.05 * spacing)
+        min_left_for_axes = min(max(0.85 / figsize[0], 0.1), 0.3)
+        min_bottom_for_axes = min(max(0.85 / figsize[1], 0.1), 0.3)
+        fig.subplots_adjust(
+            left=min_left_for_axes,
+            right=0.95,
+            top=0.9,
+            bottom=min_bottom_for_axes,
+            wspace=0.05 * spacing,
+            hspace=0.05 * spacing,
+        )
 
         if self.config.plot_hists:
             params_x = base.columns
@@ -1054,7 +1073,7 @@ class Plotter:
                         else:
                             display_x_ticks = True
                         if isinstance(p2, str):
-                            ax.set_xlabel(p2, fontsize=self.config.label_font_size)
+                            ax.set_xlabel(self.config.get_label(p2), fontsize=self.config.label_font_size)
                     if j != 0 or (self.config.plot_hists and i == 0):
                         ax.set_yticks([])
                     else:
@@ -1063,7 +1082,7 @@ class Plotter:
                         else:
                             display_y_ticks = True
                         if isinstance(p1, str):
-                            ax.set_ylabel(p1, fontsize=self.config.label_font_size)
+                            ax.set_ylabel(self.config.get_label(p1), fontsize=self.config.label_font_size)
                     if display_x_ticks:
                         if self.config.diagonal_tick_labels:
                             _ = [label.set_rotation(45) for label in ax.get_xticklabels()]
@@ -1130,27 +1149,34 @@ class Plotter:
             levels: np.ndarray = 2 * norm.cdf(sigmas) - 1.0
         return levels
 
-    def _plot_point(self, ax: Axes, chain: Chain, px: str, py: str) -> PathCollection:  # pragma: no cover
+    def _plot_point(self, ax: Axes, chain: Chain, px: str, py: str) -> PathCollection | None:  # pragma: no cover
         point = chain.get_max_posterior_point()
         if point is None or px not in point.coordinate or py not in point.coordinate:
-            return
+            return None
+        # Determine if we need to darken the point
+        c = colors.format(chain.color)
+        if chain.plot_contour:
+            c = colors.scale_colour(chain.color, 0.5)
         h = ax.scatter(
             [point.coordinate[px]],
-            point.coordinate[py],
+            [point.coordinate[py]],
             marker=chain.marker_style,
-            c=colors.format(chain.color),
+            c=c,
             s=chain.marker_size,
             alpha=chain.marker_alpha,
+            zorder=chain.zorder + 1,
         )
         return h
 
     def _sanitise_chains(self, chains: list[Chain | ChainName] | dict[ChainName, Chain] | None) -> list[Chain]:
+        overriden_chains = self.parent._get_final_chains()
+        final_chains = []
         if isinstance(chains, list):
-            final_chains = [self.parent.chains[n] if isinstance(n, ChainName) else n for n in chains]
+            final_chains = [overriden_chains[c if isinstance(c, ChainName) else c.name] for c in chains]
         elif isinstance(chains, dict):
-            final_chains = list(chains.values())
+            final_chains = [overriden_chains[c.name] for c in chains.values()]
         else:
-            final_chains = list(self.parent.chains.values())
+            final_chains = list(overriden_chains.values())
         return [c for c in final_chains if not c.skip]
 
     def plot_contour(
@@ -1180,7 +1206,7 @@ class Plotter:
         else:
             kwargs = {"c": color, "alpha": 0.3}
 
-        h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", **kwargs)
+        h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", zorder=chain.zorder - 1, **kwargs)
         if chain.color_data is not None:
             return h
         else:
@@ -1195,7 +1221,7 @@ class Plotter:
         sub = max(0.1, 1 - 0.2 * chain.shade_gradient)
         paths = None
 
-        if chain.cloud:
+        if chain.plot_cloud:
             paths = self._plot_scatter(ax, chain, contour_colours[1], x, y)
 
         # TODO: Figure out whats going on here
@@ -1217,7 +1243,7 @@ class Plotter:
                 levels=levels,
                 colors=contour_colours,
                 alpha=chain.shade_alpha,
-                zorder=chain.zorder,
+                zorder=chain.zorder - 2,
             )
         con = ax.contour(
             x_centers,
@@ -1232,23 +1258,22 @@ class Plotter:
 
         if chain.show_contour_labels:
             lvls = [lvl for lvl in con.levels if lvl != 0.0]
-            # TODO: see if this can just be "0.0%"
-            fmt = {lvl: f"{lvl:0.0%}" for lvl in lvls}
-            ax.clabel(con, lvls, inline=True, fmt=fmt, fontsize=self.config.contour_label_font_size)
+            fmt = {lvl: f" {lvl:0.0%} " if lvl < 0.991 else f" {lvl:0.1%} " for lvl in lvls}
+            texts = ax.clabel(con, lvls, inline=True, fmt=fmt, fontsize=self.config.contour_label_font_size)
+            for text in texts:
+                text.set_fontweight("semibold")
 
-        if chain.plot_point:
-            self._plot_point(ax, chain, px, py)
         return paths
 
     def _add_truth(
         self, ax: Axes, truth: Truth, px: str | None = None, py: str | None = None
     ) -> None:  # pragma: no cover
         if px is not None:
-            val_x = truth.truth_value.get(px)
+            val_x = truth.location.get(px)
             if val_x is not None:
                 ax.axhline(val_x, **truth.kwargs)
         if py is not None:
-            val_y = truth.truth_value.get(py)
+            val_y = truth.location.get(py)
             if val_y is not None:
                 ax.axvline(val_y, **truth.kwargs)
 
@@ -1290,8 +1315,8 @@ class Plotter:
         if chain.bar_shade:
             fit_values = self.parent.analysis.get_parameter_summary(chain, column)
             if fit_values is not None:
-                lower = fit_values[0]
-                upper = fit_values[2]
+                lower = fit_values.lower
+                upper = fit_values.upper
                 if lower is not None and upper is not None:
                     if lower < xs.min():
                         lower = xs.min()
@@ -1317,7 +1342,7 @@ class Plotter:
                             zorder=chain.zorder,
                         )
                     if summary:
-                        t = self.parent.analysis.get_parameter_text(*fit_values)
+                        t = self.parent.analysis.get_parameter_text(fit_values)
                         if isinstance(column, str):
                             ax.set_title(r"${} = {}$".format(column.strip("$"), t), fontsize=self.config.title_size)
                         else:
@@ -1350,7 +1375,7 @@ class Plotter:
             ax.plot(x[:-1], filtered[:-1], ls=":", color=color2, alpha=1)
 
     def _plot_walk_truth(self, ax: Axes, truth: Truth, col: str) -> None:
-        ax.axhline(truth.truth_value[col], **truth.kwargs)
+        ax.axhline(truth.location[col], **truth.kwargs)
 
     def _convert_to_stdev(self, sigma: np.ndarray) -> np.ndarray:  # pragma: no cover
         # From astroML

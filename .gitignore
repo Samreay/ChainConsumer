@@ -59,3 +59,5 @@ qodana.yaml
 **/*tmp*
 **/*secret*
 **/*.pkl
+
+generated/

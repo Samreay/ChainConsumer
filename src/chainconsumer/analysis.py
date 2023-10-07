@@ -1,26 +1,19 @@
+from __future__ import annotations
+
 import logging
-from enum import Enum
 from pathlib import Path
 
 import numpy as np
 from pydantic import Field
 from scipy.integrate import simps
 from scipy.interpolate import interp1d
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName, MaxPosterior, Named2DMatrix
 from .helpers import get_bins, get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
-
-
-class SummaryStatistic(Enum):
-    MAX = "max"
-    MEAN = "mean"
-    CUMULATIVE = "cumulative"
-    MAX_SYMMETRIC = "max_symmetric"
-    MAX_SHORTEST = "max_shortest"
-    MAX_CENTRAL = "max_central"
+from .summary_stats import SummaryStatistic
 
 
 class Bound(BetterBase):
@@ -80,13 +73,13 @@ class Analysis:
             str: the LaTeX table.
         """
         if columns is None:
-            columns = self.parent.all_columns
+            columns = self.parent._all_columns
         elif isinstance(columns, int):
-            columns = self.parent.all_columns[:columns]
+            columns = self.parent._all_columns[:columns]
         # TODO: ensure labels are a thin we can add
         num_parameters = len(columns)
 
-        chains = self.parent.chains
+        chains = self.parent._chains
         num_chains = len(chains)
         fit_values = self.get_summary(chains=chains)
         if label is None:
@@ -153,9 +146,9 @@ class Analysis:
         """
         results = {}
         if chains is None:
-            chains = self.parent.chains
+            chains = self.parent._chains
         if isinstance(chains, list):
-            chains = {c: self.parent.chains[c] for c in chains}
+            chains = {c: self.parent._chains[c] for c in chains}
 
         for name, chain in chains.items():
             res = {}
@@ -183,9 +176,9 @@ class Analysis:
 
         results = {}
         if chains is None:
-            chains = self.parent.chains
+            chains = self.parent._chains
         if isinstance(chains, list):
-            chains = {c: self.parent.chains[c] for c in chains}
+            chains = {c: self.parent._chains[c] for c in chains}
 
         for chain_name, chain in chains.items():
             max_posterior = chain.get_max_posterior_point()
@@ -219,11 +212,11 @@ class Analysis:
             str: The LaTeX table ready to go!
         """
         if isinstance(chain, str):
-            assert chain in self.parent.chains, f"Chain {chain} not found!"
-            chain = self.parent.chains[chain]
+            assert chain in self.parent._chains, f"Chain {chain} not found!"
+            chain = self.parent._chains[chain]
         if chain is None:
-            assert len(self.parent.chains) == 1, "You must specify a chain if there are multiple chains"
-            chain = next(iter(self.parent.chains.values()))
+            assert len(self.parent._chains) == 1, "You must specify a chain if there are multiple chains"
+            chain = next(iter(self.parent._chains.values()))
 
         correlations = chain.get_correlation(columns=columns)
         return self._get_2d_latex_table(correlations, caption, label)
@@ -248,11 +241,11 @@ class Analysis:
             str: The LaTeX table ready to go!
         """
         if isinstance(chain, str):
-            assert chain in self.parent.chains, f"Chain {chain} not found!"
-            chain = self.parent.chains[chain]
+            assert chain in self.parent._chains, f"Chain {chain} not found!"
+            chain = self.parent._chains[chain]
         if chain is None:
-            assert len(self.parent.chains) == 1, "You must specify a chain if there are multiple chains"
-            chain = next(iter(self.parent.chains.values()))
+            assert len(self.parent._chains) == 1, "You must specify a chain if there are multiple chains"
+            chain = next(iter(self.parent._chains.values()))
 
         covariance = chain.get_covariance(columns=columns)
         return self._get_2d_latex_table(covariance, caption, label)

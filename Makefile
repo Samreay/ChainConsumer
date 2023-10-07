@@ -12,6 +12,10 @@ precommit:
 test:
 	poetry run pytest
 
+serve:
+	# rm -rf docs/generated/gallery; 
+	poetry run mkdocs serve --clean
+
 tests: test
 
 all: precommit tests

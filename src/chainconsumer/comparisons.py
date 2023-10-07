@@ -36,7 +36,7 @@ class Comparison:
         [1] Andrew R. Liddle, "Information criteria for astrophysical model selection", MNRAS (2007)
         """
         dics = {}
-        for name, chain in self.parent.chains.items():
+        for name, chain in self.parent._chains.items():
             p = chain.log_posterior
             if p is None:
                 logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
@@ -72,7 +72,7 @@ class Comparison:
 
         """
         bics = {}
-        for name, chain in self.parent.chains.items():
+        for name, chain in self.parent._chains.items():
             p, n_data, n_free = chain.log_posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
                 missing = ""
@@ -116,7 +116,7 @@ class Comparison:
 
         """
         aics = {}
-        for name, chain in self.parent.chains.items():
+        for name, chain in self.parent._chains.items():
             p, n_data, n_free = chain.log_posterior, chain.num_eff_data_points, chain.num_free_params
             if p is None or n_data is None or n_free is None:
                 missing = ""

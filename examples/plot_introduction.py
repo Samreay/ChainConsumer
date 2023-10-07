@@ -20,20 +20,18 @@ more information.
 """
 
 import numpy as np
+import pandas as pd
 
-from chainconsumer import ChainConsumer
+from chainconsumer import Chain, ChainConsumer
 
+# Here's what you might start with
 rng = np.random.default_rng(0)
 data = rng.multivariate_normal([0.0, 4.0], [[1.0, 0.7], [0.7, 1.5]], size=1000000)
+df = pd.DataFrame(data, columns=["x_1", "x_2"])
 
+# And how we give this to chainconsumer
 c = ChainConsumer()
-c.add_chain(data, parameters=["$x_1$", "$x_2$"])
-fig = c.plotter.plot(figsize="column", truth=[0.0, 4.0])
+c.add_chain(Chain(samples=df, name="An Example Contour"))
+fig = c.plotter.plot()
 
-# If we wanted to save to file, we would instead have written
-# fig = c.plotter.plot(filename="location", figsize="column", truth=[0.0, 4.0])
-
-# If we wanted to display the plot interactively...
-# fig = c.plotter.plot(display=True, figsize="column", truth=[0.0, 4.0])
-
-fig.set_size_inches(3 + fig.get_size_inches())  # Resize fig for doco. You don't need this.
+print("whoa")

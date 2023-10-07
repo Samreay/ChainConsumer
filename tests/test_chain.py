@@ -207,66 +207,66 @@ class TestChain:
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
         c.configure_overrides(color_params=None)
-        chain = c.chains[0]
+        chain = c._chains[0]
         assert chain.get_color_data() is None
 
     def test_color_data_p1(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
         c.configure_overrides(color_params=self.p[0])
-        chain = c.chains[0]
+        chain = c._chains[0]
         assert np.all(chain.get_color_data() == self.d[:, 0])
 
     def test_color_data_w(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
         c.configure_overrides(color_params="weights")
-        chain = c.chains[0]
+        chain = c._chains[0]
         assert np.all(chain.get_color_data() == self.w)
 
     def test_color_data_logw(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
         c.configure_overrides(color_params="log_weights")
-        chain = c.chains[0]
+        chain = c._chains[0]
         assert np.all(chain.get_color_data() == np.log(self.w))
 
     def test_color_data_posterior(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, name=self.n, weights=self.w, posterior=np.ones(100))
         c.configure_overrides(color_params="posterior")
-        chain = c.chains[0]
+        chain = c._chains[0]
         assert np.all(chain.get_color_data() == np.ones(100))
 
     def test_override_color(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, color="#4286f4")
         c.configure_overrides()
-        assert c.chains[0].config["color"] == "#4286f4"
+        assert c._chains[0].config["color"] == "#4286f4"
 
     def test_override_linewidth(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, linewidth=2.0)
         c.configure_overrides(linewidths=[100])
-        assert c.chains[0].config["linewidth"] == 100
+        assert c._chains[0].config["linewidth"] == 100
 
     def test_override_linestyle(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, linestyle="--")
         c.configure_overrides()
-        assert c.chains[0].config["linestyle"] == "--"
+        assert c._chains[0].config["linestyle"] == "--"
 
     def test_override_shade_alpha(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, shade_alpha=0.8)
         c.configure_overrides()
-        assert c.chains[0].config["shade_alpha"] == 0.8
+        assert c._chains[0].config["shade_alpha"] == 0.8
 
     def test_override_kde(self):
         c = ChainConsumer()
         c.add_chain(self.d, parameters=self.p, kde=2.0)
         c.configure_overrides()
-        assert c.chains[0].config["kde"] == 2.0
+        assert c._chains[0].config["kde"] == 2.0
 
     def test_override_kde_grid(self):
         c = ChainConsumer()
@@ -274,7 +274,7 @@ class TestChain:
         z = np.ones((10, 10))
         c.add_chain([x, y], weights=z, grid=True, kde=2.0)
         c.configure_overrides()
-        assert not c.chains[0].config["kde"]
+        assert not c._chains[0].config["kde"]
 
     def test_cache_invalidation(self):
         c = ChainConsumer()

@@ -28,10 +28,10 @@ class TestChainConsumer:
         c = ChainConsumer()
         c.add_chain(self.data, name="A")
         c.add_chain(self.data, name="B")
-        assert c.get_chain(c.chains[0])[0] == 0
-        assert c.get_chain(c.chains[1])[0] == 1
-        assert len(c.get_chain(c.chains[0])) == 1
-        assert len(c.get_chain(c.chains[1])) == 1
+        assert c.get_chain(c._chains[0])[0] == 0
+        assert c.get_chain(c._chains[1])[0] == 1
+        assert len(c.get_chain(c._chains[0])) == 1
+        assert len(c.get_chain(c._chains[1])) == 1
 
     def test_summary_bad_input1(self):
         with pytest.raises(AssertionError):
@@ -173,7 +173,7 @@ class TestChainConsumer:
         consumer = ChainConsumer()
         consumer.add_chain(self.data)
         consumer.configure_overrides()
-        alpha = consumer.chains[0].config["shade_alpha"]
+        alpha = consumer._chains[0].config["shade_alpha"]
         assert alpha == 1.0
 
     def test_shade_alpha_algorithm2(self):
@@ -181,8 +181,8 @@ class TestChainConsumer:
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
         consumer.configure_overrides()
-        alpha0 = consumer.chains[0].config["shade_alpha"]
-        alpha1 = consumer.chains[0].config["shade_alpha"]
+        alpha0 = consumer._chains[0].config["shade_alpha"]
+        alpha1 = consumer._chains[0].config["shade_alpha"]
         assert alpha0 == 1.0 / np.sqrt(2.0)
         assert alpha1 == 1.0 / np.sqrt(2.0)
 
@@ -192,7 +192,7 @@ class TestChainConsumer:
         consumer.add_chain(self.data)
         consumer.add_chain(self.data)
         consumer.configure_overrides()
-        alphas = [c.config["shade_alpha"] for c in consumer.chains]
+        alphas = [c.config["shade_alpha"] for c in consumer._chains]
         assert len(alphas) == 3
         assert alphas[0] == 1.0 / np.sqrt(3.0)
         assert alphas[1] == 1.0 / np.sqrt(3.0)
@@ -203,8 +203,8 @@ class TestChainConsumer:
         cov = [[1, 1], [1, 2.5]]
         c = ChainConsumer()
         c.add_covariance(mean, cov)
-        mean_obs = np.mean(c.chains[0].chain, axis=0)
-        cov_obs = np.cov(c.chains[0].chain.T)
+        mean_obs = np.mean(c._chains[0].chain, axis=0)
+        cov_obs = np.cov(c._chains[0].chain.T)
         assert np.all(np.isclose(mean, mean_obs, atol=1e-2))
         assert np.all(np.isclose(cov, cov_obs, atol=1e-2))
 
@@ -212,4 +212,4 @@ class TestChainConsumer:
         loc = [0, 1, 2]
         c = ChainConsumer()
         c.add_marker(loc)
-        assert np.all(np.equal(loc, c.chains[0].chain[0, :]))
+        assert np.all(np.equal(loc, c._chains[0].chain[0, :]))
