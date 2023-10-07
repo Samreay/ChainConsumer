@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 
 from .analysis import Analysis
-from .chain import Chain, ChainName, ColumnName, Config
+from .chain import Chain, ChainConfig, ChainName, ColumnName
 from .colors import ColorInput, colors
 from .comparisons import Comparison
 from .diagnostic import Diagnostic
 from .helpers import get_bins
-from .plotter import Plotter
+from .plotter import PlotConfig, Plotter
 from .truth import Truth
 
 __all__ = ["ChainConsumer"]
@@ -21,7 +21,7 @@ class ChainConsumer:
         self.chains: dict[ChainName, Chain] = {}
         self.truths: list[Truth] = []
         self.labels = {}
-        self.override: Config | None = None
+        self.global_chain_override: ChainConfig | None = None
 
         self.plotter = Plotter(self)
         self.diagnostic = Diagnostic(self)
@@ -35,6 +35,18 @@ class ChainConsumer:
     def get_label(self, str: ColumnName) -> str:
         return self.labels.get(str, str)
 
+    def set_labels(self, labels: dict[str, str]) -> "ChainConsumer":
+        """Set the labels for the chains.
+
+        Args:
+            labels (dict[str, str]): A dictionary mapping column names to labels.
+
+        Returns:
+            ChainConsumer: Itself, to allow chaining calls.
+        """
+        self.labels = labels
+        return self
+
     def add_chain(self, chain: Chain):
         """Add a chain to ChainConsumer.
 
@@ -47,6 +59,18 @@ class ChainConsumer:
         key = chain.name
         assert key not in self.chains, f"Chain with name {key} already exists!"
         self.chains[key] = chain
+        return self
+
+    def set_plot_config(self, plot_config: PlotConfig) -> "ChainConsumer":
+        """Set the plot config for ChainConsumer.
+
+        Args:
+            plot_config (PlotConfig): The plot config to use.
+
+        Returns:
+            ChainConsumer: Itself, to allow chaining calls.
+        """
+        self.plotter.set_config(plot_config)
         return self
 
     def add_marker(
@@ -83,7 +107,7 @@ class ChainConsumer:
         chain = Chain(
             samples=samples,
             name=name,
-            color=color,
+            color=color,  # type: ignore # ignoring the None override as this means we figure out colour later
             marker_size=marker_size,
             marker_style=marker_style,
             marker_alpha=marker_alpha,
@@ -111,7 +135,7 @@ class ChainConsumer:
 
     def add_override(
         self,
-        override: Config,
+        override: ChainConfig,
     ) -> "ChainConsumer":
         """Apply a custom override config
 
@@ -121,7 +145,7 @@ class ChainConsumer:
         Returns:
             ChainConsumer: Itself, to allow chaining calls.
         """
-        self.override = override
+        self.global_chain_override = override
         return self
 
     def _get_final_chains(self) -> dict[ChainName, Chain]:
@@ -136,12 +160,14 @@ class ChainConsumer:
         global_config["bar_shade"] = num_chains < 5
         global_config["sigmas"] = [0, 1, 2]
         global_config["shade"] = num_chains < 5
-        global_config["bins"] = get_bins(chain_list)
         global_config["shade_alpha"] = 1.0 / np.sqrt(num_chains)
 
         for _, chain in final_chains.items():
             # copy global config into local config
             local_config = global_config.copy()
+
+            if isinstance(chain.bins, float):
+                chain.bins = int(chain.bins * get_bins(chain))
 
             # Reduce shade alpha if we're showing contour labels
             if chain.show_contour_labels:
@@ -154,8 +180,8 @@ class ChainConsumer:
             chain.apply_if_none(**local_config)
 
             # Apply user overrides
-            if self.override is not None:
-                chain.apply(**self.override.model_dump())
+            if self.global_chain_override is not None:
+                chain.apply(**self.global_chain_override.model_dump())
 
         return final_chains
 

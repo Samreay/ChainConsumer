@@ -45,7 +45,7 @@ class Diagnostic:
         :math:`\hat{V} = \frac{n_1}{n}W + \frac{1}{n}B`, and have our convergence ratio
         :math:`\hat{R} = \sqrt{\frac{\hat{V}}{W}}`. We check that for all parameters,
         this ratio deviates from unity by less than the supplied threshold.
-        """
+        """  # noqa: E501
         if chain is None:
             return np.all([self.gelman_rubin(k, threshold=threshold) for k in range(len(self.parent.chains))])
 

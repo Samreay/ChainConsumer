@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 from pydantic import Field, ValidationError, field_validator
 
@@ -23,3 +24,13 @@ class Truth(BetterBase):
         elif isinstance(v, pd.Series):
             return v.to_dict()
         raise ValidationError("Truth must be a dict or a pandas Series")
+
+    @property
+    def kwargs(self) -> dict[str, Any]:
+        return {
+            "ls": self.line_style,
+            "c": self.line_color,
+            "lw": self.line_width,
+            "alpha": self.line_alpha,
+            "zorder": self.line_zorder,
+        }

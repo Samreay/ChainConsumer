@@ -1,5 +1,4 @@
-from collections.abc import Iterable
-from typing import Generator
+from collections.abc import Generator, Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np

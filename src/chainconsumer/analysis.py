@@ -10,7 +10,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName, MaxPosterior, Named2DMatrix
-from .helpers import get_grid_bins, get_latex_table_frame, get_smoothed_bins
+from .helpers import get_bins, get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
 
 
@@ -38,7 +38,6 @@ class Analysis:
             SummaryStatistic.MAX: self.get_parameter_summary_max,
             SummaryStatistic.MEAN: self.get_parameter_summary_mean,
             SummaryStatistic.CUMULATIVE: self.get_parameter_summary_cumulative,
-            SummaryStatistic.MAX_SYMMETRIC: self.get_paramater_summary_max_symmetric,
             SummaryStatistic.MAX_SHORTEST: self.get_parameter_summary_max_shortest,
             SummaryStatistic.MAX_CENTRAL: self.get_parameter_summary_max_central,
         }
@@ -196,12 +195,9 @@ class Analysis:
 
         return results
 
-    def get_parameter_summary(self, chain, parameter):
-        # Ensure config has been called so we get the statistics set in config
-        if not self.parent._configured:
-            self.parent.configure_overrides()
-        callback = self._summaries[chain.config["statistics"]]
-        return chain.get_summary(parameter, callback)
+    def get_parameter_summary(self, chain: Chain, column: ColumnName):
+        callback = self._summaries[chain.statistics]
+        return callback(chain, column)
 
     def get_correlation_table(
         self,
@@ -261,14 +257,14 @@ class Analysis:
         covariance = chain.get_covariance(columns=columns)
         return self._get_2d_latex_table(covariance, caption, label)
 
-    def _get_smoothed_histogram(self, chain, parameter, pad=False):
-        data = chain.get_data(parameter)
-        smooth = chain.config["smooth"]
+    def _get_smoothed_histogram(
+        self, chain: Chain, column: ColumnName, pad: bool = False
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        data = chain.get_data(column)
         if chain.grid:
             bins = get_grid_bins(data)
         else:
-            bins = chain.config["bins"]
-            bins, smooth = get_smoothed_bins(smooth, bins, data, chain.weights, pad=pad)
+            bins, _ = get_smoothed_bins(chain.smooth, get_bins(chain), data, chain.weights, pad=pad)
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
@@ -276,12 +272,12 @@ class Analysis:
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
 
-        if smooth:
-            hist = gaussian_filter(hist, smooth, mode="reflect")
-        kde = chain.config["kde"]
-        if kde:
+        if chain.smooth:
+            hist = gaussian_filter(hist, chain.smooth, mode="reflect")
+        if chain.kde:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
-            ys = MegKDE(data, chain.weights, factor=kde).evaluate(kde_xs)
+            factor = chain.kde if isinstance(chain.kde, int | float) else 1.0
+            ys = MegKDE(data.to_numpy(), chain.weights, factor=factor).evaluate(kde_xs)
             area = simps(ys, x=kde_xs)
             ys = ys / area
             ys = interp1d(kde_xs, ys, kind="linear")(xs)
@@ -385,24 +381,21 @@ class Analysis:
             text = "$%s$" % text
         return text
 
-    def get_parameter_summary_mean(self, chain, parameter):
-        desired_area = chain.config["summary_area"]
-        xs, _, cs = self._get_smoothed_histogram(chain, parameter)
-        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+    def get_parameter_summary_mean(self, chain: Chain, column: ColumnName) -> Bound | None:
+        xs, _, cs = self._get_smoothed_histogram(chain, column)
+        vals = [0.5 - chain.summary_area / 2, 0.5, 0.5 + chain.summary_area / 2]
         bounds = interp1d(cs, xs)(vals)
         bounds[1] = 0.5 * (bounds[0] + bounds[2])
-        return bounds
+        return Bound(lower=bounds[0], center=bounds[1], upper=bounds[2])
 
-    def get_parameter_summary_cumulative(self, chain, parameter):
-        xs, _, cs = self._get_smoothed_histogram(chain, parameter)
-        desired_area = chain.config["summary_area"]
-        vals = [0.5 - desired_area / 2, 0.5, 0.5 + desired_area / 2]
+    def get_parameter_summary_cumulative(self, chain: Chain, column: ColumnName) -> Bound | None:
+        xs, _, cs = self._get_smoothed_histogram(chain, column)
+        vals = [0.5 - chain.summary_area / 2, 0.5, 0.5 + chain.summary_area / 2]
         bounds = interp1d(cs, xs)(vals)
-        return bounds
+        return Bound(lower=bounds[0], center=bounds[1], upper=bounds[2])
 
-    def get_parameter_summary_max(self, chain, parameter):
-        xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
-        desired_area = chain.config["summary_area"]
+    def get_parameter_summary_max(self, chain: Chain, column: ColumnName) -> Bound | None:
+        xs, ys, cs = self._get_smoothed_histogram(chain, column)
         n_pad = 1000
         x_start = xs[0] * np.ones(n_pad)
         x_end = xs[-1] * np.ones(n_pad)
@@ -424,79 +417,53 @@ class Analysis:
             count += 1
             try:
                 if count > 50:
-                    raise ValueError("Failed to converge")
+                    raise ValueError("Failed to converge")  # noqa: TRY301
                 i1 = start_index - np.where(ys[:start_index][::-1] < mid)[0][0]
                 i2 = start_index + np.where(ys[start_index:] < mid)[0][0]
                 area = cs[i2] - cs[i1]
-                deviation = np.abs(area - desired_area)
+                deviation = np.abs(area - chain.summary_area)
                 if deviation < threshold:
-                    x1 = xs[i1]
-                    x2 = xs[i2]
-                elif area < desired_area:
+                    x1 = float(xs[i1])
+                    x2 = float(xs[i2])
+                elif area < chain.summary_area:
                     max_val = mid
-                elif area > desired_area:
+                elif area > chain.summary_area:
                     min_val = mid
             except ValueError:
-                self._logger.warning(f"Parameter {parameter} in chain {chain.name} is not constrained")
-                return [None, xs[start_index], None]
+                self._logger.warning(f"Parameter {column} in chain {chain.name} is not constrained")
+                return Bound(lower=None, center=float(xs[start_index]), upper=None)
 
-        return [x1, xs[start_index], x2]
-
-    def get_paramater_summary_max_symmetric(self, chain, parameter):
-        xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
-        desired_area = chain.config["summary_area"]
-
-        x_to_c = interp1d(xs, cs, bounds_error=False, fill_value=(0, 1))  # type: ignore
-
-        # Get max likelihood x
-        max_index = ys.argmax()
-        x = xs[max_index]
-
-        # Estimate width
-        h = 0.5 * (xs[-1] - xs[0])
-        prev_h = 0
-
-        # Hone in on right answer
-        while True:
-            current_area = x_to_c(x + h) - x_to_c(x - h)
-            if np.abs(current_area - desired_area) < 0.0001:
-                return [x - h, x, x + h]
-            temp = h
-            h += 0.5 * np.abs(prev_h - h) * (1 if current_area < desired_area else -1)
-            prev_h = temp
+        return Bound(lower=x1, center=float(xs[start_index]), upper=x2)
 
     def get_parameter_summary_max_shortest(self, chain, parameter):
         xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
-        desired_area = chain.config["summary_area"]
 
-        c_to_x = interp1d(cs, xs, bounds_error=False, fill_value=(-np.inf, np.inf)) # type: ignore
+        c_to_x = interp1d(cs, xs, bounds_error=False, fill_value=(-np.inf, np.inf))  # type: ignore
 
         # Get max likelihood x
         max_index = ys.argmax()
         x = xs[max_index]
 
         # Pair each lower bound with an upper to get the right area
-        x2 = c_to_x(cs + desired_area)
+        x2 = c_to_x(cs + chain.summary_area)
         dists = x2 - xs
         mask = (xs > x) | (x2 < x)  # Ensure max point is inside the area
         dists[mask] = np.inf
         ind = dists.argmin()
-        return [xs[ind], x, x2[ind]]
+        return Bound(lower=xs[ind], center=x, upper=x2[ind])
 
     def get_parameter_summary_max_central(self, chain, parameter):
         xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
-        desired_area = chain.config["summary_area"]
 
         c_to_x = interp1d(cs, xs)
-
         # Get max likelihood x
         max_index = ys.argmax()
         x = xs[max_index]
 
-        vals = [0.5 - 0.5 * desired_area, 0.5 + 0.5 * desired_area]
+        vals = [0.5 - 0.5 * chain.summary_area, 0.5 + 0.5 * chain.summary_area]
         xvals = c_to_x(vals)
 
-        return [xvals[0], x, xvals[1]]
+        return Bound(lower=xvals[0], center=x, upper=xvals[1])
 
 
 if __name__ == "__main__":

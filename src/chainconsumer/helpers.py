@@ -1,9 +1,17 @@
 import numpy as np
+import pandas as pd
 
 from .chain import Chain
 
 
-def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=False):
+def get_extents(
+    data: pd.Series,
+    weight: np.ndarray,
+    plot: bool = False,
+    wide_extents: bool = True,
+    tiny: bool = False,
+    pad: bool = False,
+) -> tuple[float, float]:
     hist, be = np.histogram(data, weights=weight, bins=2000)
     bc = 0.5 * (be[1:] + be[:-1])
     cdf = hist.cumsum()
@@ -18,8 +26,8 @@ def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=Fal
         threshold = 0.3
     i1 = np.where(cdf > threshold)[0][0]
     i2 = np.where(icdf > threshold)[0][0]
-    lower = bc[i1]
-    upper = bc[-i2]
+    lower = float(bc[i1])
+    upper = float(bc[-i2])
     if pad:
         width = upper - lower
         lower -= 0.2 * width
@@ -27,22 +35,38 @@ def get_extents(data, weight, plot=False, wide_extents=True, tiny=False, pad=Fal
     return lower, upper
 
 
-def get_bins(chains: list[Chain]):
-    proposal = [
-        max(35, np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25))) for chain in chains
-    ]
-    return proposal
+def get_bins(chain: Chain) -> int:
+    return max((35, np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25))))
 
 
-def get_smoothed_bins(smooth, bins, data, weight, marginalised=True, plot=False, pad=False):
+def get_smoothed_bins(
+    smooth: int,
+    bins: int,
+    data: pd.Series,
+    weight: np.ndarray,
+    plot: bool = False,
+    pad: bool = False,
+) -> tuple[np.ndarray, int]:
+    """Get the bins for a histogram, with smoothing.
+
+    Args:
+        smooth (int): The smoothing factor
+        bins (int): The number of bins
+        data (pd.Series): The data
+        weight (np.ndarray): The weights
+        plot (bool, optional): Whether this is used in plotting. Determines how conservative to be on extents
+            Defaults to False.
+        pad (bool, optional): Whether to pad the histogram.  Determines how conservative to be on extents
+            Defaults to False.
+    """
     minv, maxv = get_extents(data, weight, plot=plot, pad=pad)
-    if smooth is None or not smooth or smooth == 0:
+    if smooth == 0:
         return np.linspace(minv, maxv, int(bins)), 0
     else:
-        return np.linspace(minv, maxv, int((2 if marginalised else 2) * smooth * bins)), smooth
+        return np.linspace(minv, maxv, 2 * smooth * bins), smooth
 
 
-def get_grid_bins(data):
+def get_grid_bins(data: pd.Series[float]) -> np.ndarray:
     bin_c = np.sort(np.unique(data))
     delta = 0.5 * (bin_c[1] - bin_c[0])
     bins = np.concatenate((bin_c - delta, [bin_c[-1] + delta]))
