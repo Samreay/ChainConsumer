@@ -13,7 +13,7 @@ from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName, MaxPosterior, Named2DMatrix
 from .helpers import get_bins, get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
-from .summary_stats import SummaryStatistic
+from .statistics import SummaryStatistic
 
 
 class Bound(BetterBase):
@@ -23,7 +23,7 @@ class Bound(BetterBase):
 
 
 class Analysis:
-    def __init__(self, parent: "ChainConsumer"):
+    def __init__(self, parent: ChainConsumer):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
 
@@ -31,7 +31,6 @@ class Analysis:
             SummaryStatistic.MAX: self.get_parameter_summary_max,
             SummaryStatistic.MEAN: self.get_parameter_summary_mean,
             SummaryStatistic.CUMULATIVE: self.get_parameter_summary_cumulative,
-            SummaryStatistic.MAX_SHORTEST: self.get_parameter_summary_max_shortest,
             SummaryStatistic.MAX_CENTRAL: self.get_parameter_summary_max_central,
         }
 
@@ -99,7 +98,7 @@ class Analysis:
             if hlines:
                 center_text += "\t\t" + hline_text
             for p in columns:
-                arr = ["\t\t" + self.parent.get_label(p)]
+                arr = ["\t\t" + self.parent.plotter.config.get_label(p)]
                 for _, column_results in fit_values.items():
                     if p in column_results:
                         arr.append(self.get_parameter_text(column_results[p], wrap=True))
@@ -107,7 +106,7 @@ class Analysis:
                         arr.append(blank_fill)
                 center_text += " & ".join(arr) + end_text
         else:
-            center_text += " & ".join(["Model", *[self.parent.get_label(c) for c in columns]]) + end_text
+            center_text += " & ".join(["Model", *[self.parent.plotter.config.get_label(c) for c in columns]]) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
             for name, chain_res in fit_values.items():
@@ -281,7 +280,7 @@ class Analysis:
         return xs, ys, cs
 
     def _get_2d_latex_table(self, named_matrix: Named2DMatrix, caption: str, label: str):
-        parameters = [self.parent.get_label(c) for c in named_matrix.columns]
+        parameters = [self.parent.plotter.config.get_label(c) for c in named_matrix.columns]
         matrix = named_matrix.matrix
         latex_table = get_latex_table_frame(caption=caption, label=label)
         column_def = "c|%s" % ("c" * len(parameters))
@@ -428,28 +427,10 @@ class Analysis:
 
         return Bound(lower=x1, center=float(xs[start_index]), upper=x2)
 
-    def get_parameter_summary_max_shortest(self, chain, parameter):
-        xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
-
-        c_to_x = interp1d(cs, xs, bounds_error=False, fill_value=(-np.inf, np.inf))  # type: ignore
-
-        # Get max likelihood x
-        max_index = ys.argmax()
-        x = xs[max_index]
-
-        # Pair each lower bound with an upper to get the right area
-        x2 = c_to_x(cs + chain.summary_area)
-        dists = x2 - xs
-        mask = (xs > x) | (x2 < x)  # Ensure max point is inside the area
-        dists[mask] = np.inf
-        ind = dists.argmin()
-        return Bound(lower=xs[ind], center=x, upper=x2[ind])
-
     def get_parameter_summary_max_central(self, chain, parameter):
         xs, ys, cs = self._get_smoothed_histogram(chain, parameter)
 
         c_to_x = interp1d(cs, xs)
-        # Get max likelihood x
         max_index = ys.argmax()
         x = xs[max_index]
 

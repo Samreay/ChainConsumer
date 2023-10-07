@@ -13,7 +13,7 @@ test:
 	poetry run pytest
 
 serve:
-	# rm -rf docs/generated/gallery; 
+	rm -rf docs/generated/gallery;
 	poetry run mkdocs serve --clean
 
 tests: test

@@ -5,18 +5,15 @@ At the most basic, we take a contour as a pandas DataFrame and let ChainConsumer
 handle the defaults and display.
 
 """
-
-import pandas as pd
-from scipy.stats import multivariate_normal as mv
-
-from chainconsumer import Chain, ChainConfig, ChainConsumer, PlotConfig, Truth
+from chainconsumer import Chain, ChainConfig, ChainConsumer, PlotConfig, Truth, make_sample
 
 # Here's what you might start with
-norm = mv(mean=[0.0, 4.0], cov=[[1.0, 0.7], [0.7, 1.5]])  # type: ignore
-data = norm.rvs(size=1000000)
-df = pd.DataFrame(data, columns=["x_1", "x_2"])
+df = make_sample(num_dimensions=2, seed=1)
+print(df.head())
 
-# And how we give this to chainconsumer
+# %% New cell
+
+# And now we give this to chainconsumer
 c = ChainConsumer()
 c.add_chain(Chain(samples=df, name="An Example Contour"))
 fig = c.plotter.plot()
@@ -29,7 +26,7 @@ fig = c.plotter.plot()
 chain2 = Chain.from_covariance(
     [3.0, 1.0],
     [[1.0, -0.7], [-0.7, 1.5]],
-    columns=["x_1", "x_2"],
+    columns=["A", "B"],
     name="Another contour!",
     color="#065f46",
     linestyle=":",
@@ -45,8 +42,8 @@ fig = c.plotter.plot()
 # plenty of very specific examples in a sub gallery you can check out, but as a final one for here,
 # let's add markers and truth values.
 
-c.add_marker(location={"x_1": 4, "x_2": 4}, name="A point", color="orange", marker_style="P", marker_size=50)
-c.add_truth(Truth(location={"x_1": 5, "x_2": 5}))
+c.add_marker(location={"A": 0, "B": 2}, name="A point", color="orange", marker_style="P", marker_size=50)
+c.add_truth(Truth(location={"A": 0, "B": 1}))
 fig = c.plotter.plot()
 
 
@@ -60,10 +57,7 @@ fig = c.plotter.plot()
 # To keep this clean, let's remake everything. I'm going to add an extra few columns into our
 # dataframe. You'll see what they do
 
-df2 = df.assign(
-    x_3=lambda x: x["x_1"] + x["x_2"],
-    log_posterior=lambda x: norm.logpdf(x[["x_1", "x_2"]]),
-)
+df2 = df.assign(C=lambda x: x["A"] + x["B"])
 
 c = ChainConsumer()
 # Customise the chain when you add it
@@ -80,20 +74,20 @@ chain = Chain(
     linewidth=2.0,
     cmap="magma",
     show_contour_labels=True,
-    color_param="x_3",
+    color_param="C",
 )
 c.add_chain(chain)
 # You can also override *all* chains at once like so
 # Notice that Chain is a child of ChainConfig
 # So you could override base properties like line weights... but not samples
-c.add_override(ChainConfig(sigmas=[0, 1, 2, 3]))
-c.add_truth(Truth(location={"x_1": 0, "x_2": 4}, line_color="#500724"))
+c.set_override(ChainConfig(sigmas=[0, 1, 2, 3]))
+c.add_truth(Truth(location={"A": 0, "B": 1}, color="#500724"))
 
 # And if we want to change the plot itself in some way, we can do that via
 c.set_plot_config(
     PlotConfig(
         flip=True,
-        labels={"x_1": "$x_1$", "x_2": "$x_2$", "x_3": "$x_3$"},
+        labels={"A": "$A$", "B": "$B$", "C": r"$\alpha^2$"},
         contour_label_font_size=12,
     )
 )

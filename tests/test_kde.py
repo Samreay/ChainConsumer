@@ -7,7 +7,7 @@ from chainconsumer.kde import MegKDE
 
 
 @pytest.fixture
-def rng():
+def rng() -> np.random.Generator:
     return np.random.default_rng(0)
 
 
@@ -53,7 +53,7 @@ def test_megkde_1d_changing_weights(rng):
     assert np.isclose(std, 1.0, atol=0.1)
 
 
-def test_megkde_2d_basic():
+def test_megkde_2d_basic(rng):
     # Draw from normal, fit KDE, see if sampling from kde's pdf recovers norm
     data = rng.multivariate_normal([0, 1], [[1.0, 0.0], [0.0, 0.75**2]], size=10000)
     xs, ys = np.linspace(-4, 4, 50), np.linspace(-4, 4, 50)

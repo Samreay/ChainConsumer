@@ -26,7 +26,6 @@ from .chain import Chain, ChainName, ColumnName
 from .colors import ColorInput, colors
 from .helpers import get_extents, get_grid_bins, get_smoothed_bins
 from .kde import MegKDE
-from .log import logger
 
 
 class PlottingBase(BetterBase):
@@ -304,9 +303,9 @@ class Plotter:
                                     h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False
                                 )
                                 label = self.config.get_label(cp)
-                                if label == "weights":
+                                if label == "weight":
                                     label = "Weights"
-                                elif label == "log_weights":
+                                elif label == "log_weight":
                                     label = "log(Weights)"
                                 elif label == "posterior":
                                     label = "log(Posterior)"
@@ -1271,11 +1270,11 @@ class Plotter:
         if px is not None:
             val_x = truth.location.get(px)
             if val_x is not None:
-                ax.axhline(val_x, **truth.kwargs)
+                ax.axhline(val_x, **truth._kwargs)
         if py is not None:
             val_y = truth.location.get(py)
             if val_y is not None:
-                ax.axvline(val_y, **truth.kwargs)
+                ax.axvline(val_y, **truth._kwargs)
 
     def _plot_bars(
         self, ax: Axes, column: str, chain: Chain, flip: bool = False, summary: bool = False
@@ -1375,7 +1374,7 @@ class Plotter:
             ax.plot(x[:-1], filtered[:-1], ls=":", color=color2, alpha=1)
 
     def _plot_walk_truth(self, ax: Axes, truth: Truth, col: str) -> None:
-        ax.axhline(truth.location[col], **truth.kwargs)
+        ax.axhline(truth.location[col], **truth._kwargs)
 
     def _convert_to_stdev(self, sigma: np.ndarray) -> np.ndarray:  # pragma: no cover
         # From astroML

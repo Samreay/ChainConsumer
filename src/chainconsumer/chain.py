@@ -18,7 +18,7 @@ from pydantic import Field, field_validator, model_validator
 
 from .base import BetterBase
 from .colors import ColorInput, colors
-from .summary_stats import SummaryStatistic
+from .statistics import SummaryStatistic
 
 ChainName: TypeAlias = str
 ColumnName: TypeAlias = str
@@ -42,7 +42,7 @@ class ChainConfig(BetterBase):
     """
 
     statistics: SummaryStatistic = Field(default=SummaryStatistic.MAX, description="The summary statistic to use")
-    summary_area: float = Field(default=0.6827, description="The area to use for summary statistics")
+    summary_area: float = Field(default=0.6827, ge=0, le=1.0, description="The area to use for summary statistics")
     sigmas: list[float] = Field(default=[0, 1, 2], description="The sigmas to use for summary statistics")
     color: ColorInput = Field(default=None, description="The color of the chain")  # type: ignore
     linestyle: str = Field(default="-", description="The line style of the chain")
@@ -102,7 +102,7 @@ class Chain(ChainConfig):
     )
 
     weight_column: ColumnName = Field(
-        default="weights",
+        default="weight",
         description="The name of the weight column, if it exists",
     )
     posterior_column: ColumnName = Field(
@@ -209,10 +209,17 @@ class Chain(ChainConfig):
 
         # If weights aren't set, add them all as one
         if self.weight_column not in self.samples:
+            assert (
+                self.weight_column == "weight"
+            ), f"weight column has been changed to {self.weight_column}, but its not in the dataframe"
+
             self.samples[self.weight_column] = 1.0
         else:
             assert np.all(self.weights > 0), "Weights must be positive and non-zero"
-            assert np.all(np.isfinite(self.weights)), "Weights must be finite"
+
+        for column in self.samples.columns:
+            assert isinstance(column, str), f"Column {column} is not a string"
+            assert np.all(np.isfinite(self.samples[column])), f"Column {column} has NaN or inf in it"
 
         # Apply the mean shift if it is set to true
         if self.shift_params:
@@ -225,15 +232,18 @@ class Chain(ChainConfig):
             "which is not divisible by {self.walkers} walkers. This is not good."
         )
 
-        # And the log posterior
-        if self.log_posterior is not None:
-            assert np.all(np.isfinite(self.log_posterior)), f"Chain {self.name} has NaN or inf in the log-posterior"
-
         # And if the color_params are set, ensure they're in the dataframe
         if self.color_param is not None:
             assert (
                 self.color_param in self.samples.columns
             ), f"Chain {self.name} does not have color parameter {self.color_param}"
+
+        # more nan checks
+        if self.num_eff_data_points is not None:
+            assert np.isfinite(self.num_eff_data_points), "num_eff_data_points is not finite"
+
+        if self.num_free_params is not None:
+            assert np.isfinite(self.num_free_params), "num_free_params is not finite"
 
         return self
 

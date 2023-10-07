@@ -1,4 +1,5 @@
 from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -83,12 +84,11 @@ class ChainConsumer:
         marker_size: float = 20.0,
         marker_style: str = ".",
         marker_alpha: float = 1.0,
-    ):
+    ) -> "ChainConsumer":
         r"""Add a marker to the plot at the given location.
 
         Args:
             location: The location of the marker.
-            columns: The names of the columns in the chain that correspond to the location.
             name: The name of the marker.
             color: The colour of the marker. Defaults to None.
             marker_size: The size of the marker. Defaults to 20.0.
@@ -101,7 +101,7 @@ class ChainConsumer:
         """
 
         samples = pd.DataFrame(location, index=[0])
-        samples["weights"] = 1.0
+        samples["weight"] = 1.0
         samples["log_posterior"] = 1.0
         kwargs = {}
         if color is not None:
@@ -134,7 +134,7 @@ class ChainConsumer:
         self._chains.pop(remove)
         return self
 
-    def add_override(
+    def set_override(
         self,
         override: ChainConfig,
     ) -> "ChainConsumer":
@@ -201,5 +201,5 @@ class ChainConsumer:
         """Get the names of all chains.
 
         Returns:
-            The names of all chains."""
+        The names of all chains."""
         return list(self._chains.keys())

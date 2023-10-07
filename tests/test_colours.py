@@ -1,44 +1,39 @@
 import numpy as np
 import pytest
 
-from chainconsumer.colors import Colors
+from chainconsumer.colors import ALL_COLOURS, colors
 
 
 def test_colors_rgb2hex_1():
     c = np.array([1, 1, 1, 1])
-    colourmap = Colors()
-    assert colourmap.get_formatted([c])[0] == "#ffffff"
+    assert colors.get_formatted([c])[0] == "#ffffff"
 
 
 def test_colors_rgb2hex_2():
     c = np.array([0, 0, 0.5, 1])
-    colourmap = Colors()
-    assert colourmap.get_formatted([c])[0] == "#000080"
+    assert colors.get_formatted([c])[0] == "#000080"
 
 
 def test_colors_alias_works():
-    colourmap = Colors()
-    assert colourmap.get_formatted(["b"])[0] == colourmap.color_map["blue"]
+    assert colors.format("b") in ALL_COLOURS["blue"]
 
 
 def test_colors_name_works():
-    colourmap = Colors()
-    assert colourmap.get_formatted(["blue"])[0] == colourmap.color_map["blue"]
+    assert colors.format("blue") in ALL_COLOURS["blue"]
 
 
 def test_colors_error_on_garbage():
-    colourmap = Colors()
     with pytest.raises(ValueError):
-        colourmap.get_formatted(["java"])
+        colors.get_formatted(["java"])
 
 
 def test_clamp1():
-    assert Colors()._clamp(-10) == 0
+    assert colors._clamp(-10) == 0
 
 
 def test_clamp2():
-    assert Colors()._clamp(10) == 10
+    assert colors._clamp(10) == 10
 
 
 def test_clamp3():
-    assert Colors()._clamp(1000) == 255
+    assert colors._clamp(1000) == 255

@@ -40,15 +40,10 @@ plugins:
           show_root_heading: true
           show_if_no_docstring: true
           show_signature_annotations: true
-          extensions:
-            - docs/plugins/griffe_doclinks.py
-  # gallery:
-  #   examples_dirs: docs/examples          # path to your example scripts
-  #   gallery_dirs: docs/generated/gallery  # where to save generated gallery
-  #   image_srcset: ['2x']
-  #   image_scrapers: matplotlib
-  #   compress_images: ['images', 'thumbnails']
-  #   doc_module: ['mkdocs_gallery', 'numpy']
+  gallery:
+    examples_dirs: docs/examples          # path to your example scripts
+    gallery_dirs: docs/generated/gallery  # where to save generated gallery
+    image_srcset: ['2x']
   search: {}
 
 markdown_extensions:
@@ -68,5 +63,6 @@ watch:
   - src
 nav:
   - Home: index.md
-  - Python API: api/api.md
+  - Statistics: statistics.md
   - Examples: generated/gallery
+  - Python API: api.md
