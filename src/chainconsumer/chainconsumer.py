@@ -36,7 +36,7 @@ class ChainConsumer:
     @property
     def _all_columns(self) -> list[str]:
         """All the columns across all chains"""
-        return list(set([c for chain in self._chains.values() for c in chain.samples.columns]))
+        return list(set([c for chain in self._chains.values() for c in chain.data_columns]))
 
     def add_truth(self, truth: Truth) -> "ChainConsumer":
         """Add a truth to ChainConsumer.

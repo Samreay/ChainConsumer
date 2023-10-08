@@ -57,7 +57,8 @@ class Analysis:
 
     def get_latex_table(
         self,
-        columns: list[str] | int | None = None,
+        chains: list[ChainName | Chain] | None = None,
+        columns: list[ColumnName] | None = None,
         transpose: bool = False,
         caption: str | None = None,
         label: str = "tab:model_params",
@@ -68,9 +69,13 @@ class Analysis:
         """Generates a LaTeX table from parameter summaries.
 
         Args:
-            columns : list[str], int optional
-                A list of what parameters to include in the table. By default, includes all columns.
-                If an integer is passed, will include the first N columns.
+            chains:
+                Used to specify which chain to show if more than one chain is loaded in.
+                Can be an integer, specifying the
+                chain index, or a str, specifying the chain name.
+            columns:
+                If set, only creates a plot for those specific parameters (if list). If an
+                integer is given, only plots the fist so many parameters.
             transpose : bool, optional
                 Defaults to False, which gives each column as a parameter, each chain (framework)
                 as a row. You can swap it so that you have a parameter each row and a framework
@@ -92,16 +97,12 @@ class Analysis:
         Returns:
             str: the LaTeX table.
         """
-        if columns is None:
-            columns = self.parent._all_columns
-        elif isinstance(columns, int):
-            columns = self.parent._all_columns[:columns]
-        # TODO: ensure labels are a thin we can add
-        num_parameters = len(columns)
+        final_chains = self.parent.plotter._sanitise_chains(chains)
+        final_columns = self.parent.plotter._sanitise_columns(columns, final_chains)
 
-        chains = self.parent._chains
-        num_chains = len(chains)
-        fit_values = self.get_summary(chains=chains)
+        num_chains = len(final_chains)
+        num_parameters = len(final_columns)
+        fit_values = self.get_summary(chains=final_chains)
         if label is None:
             label = ""
         if caption is None:
@@ -115,10 +116,10 @@ class Analysis:
         if hlines:
             center_text += hline_text + "\t\t"
         if transpose:
-            center_text += " & ".join(["Parameter"] + [c.name for c in chains.values()]) + end_text
+            center_text += " & ".join(["Parameter"] + [c.name for c in final_chains]) + end_text
             if hlines:
                 center_text += "\t\t" + hline_text
-            for p in columns:
+            for p in final_columns:
                 arr = ["\t\t" + self.parent.plotter.config.get_label(p)]
                 for _, column_results in fit_values.items():
                     if p in column_results:
@@ -127,12 +128,14 @@ class Analysis:
                         arr.append(blank_fill)
                 center_text += " & ".join(arr) + end_text
         else:
-            center_text += " & ".join(["Model", *[self.parent.plotter.config.get_label(c) for c in columns]]) + end_text
+            center_text += (
+                " & ".join(["Model", *[self.parent.plotter.config.get_label(c) for c in final_columns]]) + end_text
+            )
             if hlines:
                 center_text += "\t\t" + hline_text
             for name, chain_res in fit_values.items():
                 arr = ["\t\t" + name]
-                for p in columns:
+                for p in final_columns:
                     if p in chain_res:
                         arr.append(self.get_parameter_text(chain_res[p], wrap=True))
                     else:
@@ -152,8 +155,8 @@ class Analysis:
 
     def get_summary(
         self,
-        columns: list[str] | None = None,
-        chains: dict[str, Chain] | list[str] | None = None,
+        chains: list[Chain] | None = None,
+        columns: list[ColumnName] | None = None,
     ) -> dict[ChainName, dict[ColumnName, Bound]]:
         """Gets a summary of the marginalised parameter distributions.
 
@@ -166,11 +169,11 @@ class Analysis:
         """
         results = {}
         if chains is None:
-            chains = self.parent._chains
-        if isinstance(chains, list):
-            chains = {c: self.parent._chains[c] for c in chains}
+            chains = self.parent.plotter._sanitise_chains(None, include_skip=True)
+        if columns is None:
+            columns = self.parent.plotter._sanitise_columns(None, chains)
 
-        for name, chain in chains.items():
+        for chain in chains:
             res = {}
             params_to_find = columns if columns is not None else chain.data_columns
             for p in params_to_find:
@@ -178,7 +181,7 @@ class Analysis:
                     continue
                 summary = self.get_parameter_summary(chain, p)
                 res[p] = summary
-            results[name] = res
+            results[chain.name] = res
 
         return results
 

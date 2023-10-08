@@ -7,7 +7,7 @@ from chainconsumer import Bound, Chain, ChainConfig, ChainConsumer
 
 class TestChain:
     rng = np.random.default_rng(1)
-    n = 2000000
+    n = 3000000
     data = rng.normal(loc=5.0, scale=1.5, size=n)
     data2 = rng.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
@@ -32,7 +32,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.chain)
-        consumer.set_override(ChainConfig(smooth=0, bins=2.4))
+        consumer.set_override(ChainConfig(smooth=0, bins=2.0))
         summary = consumer.analysis.get_summary()
         actual = summary["a"]["x"].array
         expected = np.array([3.5, 5.0, 6.5])

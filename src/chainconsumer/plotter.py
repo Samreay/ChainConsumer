@@ -381,288 +381,240 @@ class Plotter:
         else:
             axes.text(px, py, text, transform=axes.transAxes, fontdict=property_dict, rotation=rotation, fontsize=size)
 
-    # def plot_walks(
-    #     self,
-    #     parameters=None,
-    #     truth=None,
-    #     extents=None,
-    #     display=False,
-    #     filename=None,
-    #     chains=None,
-    #     convolve=None,
-    #     figsize=None,
-    #     plot_weights=True,
-    #     plot_posterior=True,
-    #     log_weight=None,
-    #     log_scales=None,
-    # ):  # pragma: no cover
-    #     """Plots the chain walk; the parameter values as a function of step index.
+    def plot_walks(
+        self,
+        chains: list[ChainName | Chain] | None = None,
+        columns: list[ColumnName] | None = None,
+        filename: list[str | Path] | str | Path | None = None,
+        figsize: float | tuple[float, float] | None = None,
+        convolve: int | None = None,
+        plot_weights: bool = True,
+        plot_posterior: bool = True,
+        log_weight: bool = False,
+    ) -> Figure:  # pragma: no cover
+        """Plots the chain walk; the parameter values as a function of step index.
 
-    #     This plot is more for a sanity or consistency check than for use with final results.
-    #     Plotting this before plotting with :func:`plot` allows you to quickly see if the
-    #     chains are well behaved, or if certain parameters are suspect
-    #     or require a greater burn in period.
+        This plot is more for a sanity or consistency check than for use with final results.
+        Plotting this before plotting with :func:`plot` allows you to quickly see if the
+        chains are well behaved, or if certain parameters are suspect
+        or require a greater burn in period.
 
-    #     The desired outcome is to see an unchanging distribution along the x-axis of the plot.
-    #     If there are obvious tails or features in the parameters, you probably want
-    #     to investigate.
+        The desired outcome is to see an unchanging distribution along the x-axis of the plot.
+        If there are obvious tails or features in the parameters, you probably want
+        to investigate.
 
-    #     Parameters
-    #     ----------
-    #     parameters : list[str]|int, optional
-    #         Specify a subset of parameters to plot. If not set, all parameters are plotted.
-    #         If an integer is given, only the first so many parameters are plotted.
-    #     truth : list[float]|dict[str], optional
-    #         A list of truth values corresponding to parameters, or a dictionary of
-    #         truth values keyed by the parameter.
-    #     extents : list[tuple]|dict[str], optional
-    #         A list of two-tuples for plot extents per parameter, or a dictionary of
-    #         extents keyed by the parameter.
-    #     display : bool, optional
-    #         If set, shows the plot using ``plt.show()``
-    #     filename : str, optional
-    #         If set, saves the figure to the filename
-    #     chains : int|str, list[str|int], optional
-    #         Used to specify which chain to show if more than one chain is loaded in.
-    #         Can be an integer, specifying the
-    #         chain index, or a str, specifying the chain name.
-    #     convolve : int, optional
-    #         If set, overplots a smoothed version of the steps using ``convolve`` as
-    #         the width of the smoothing filter.
-    #     figsize : tuple, optional
-    #         If set, sets the created figure size.
-    #     plot_weights : bool, optional
-    #         If true, plots the weight if they are available
-    #     plot_posterior : bool, optional
-    #         If true, plots the log posterior if they are available
-    #     log_weight : bool, optional
-    #         Whether to display weights in log space or not. If None, the value is
-    #         inferred by the mean weights of the plotted chains.
-    #     log_scales : bool, list[bool] or dict[bool], optional
-    #         Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
-    #         names to set to true, a dictionary of param names with true/false
-    #         or just a bool (just `True` would set everything to log scales).
+        Args:
+            chains:
+                Used to specify which chain to show if more than one chain is loaded in.
+                Can be an integer, specifying the
+                chain index, or a str, specifying the chain name.
+            columns:
+                If set, only creates a plot for those specific parameters (if list). If an
+                integer is given, only plots the fist so many parameters.
+            filename:
+                If set, saves the figure to this location
+            figsize:
+                Scale horizontal and vertical figure size.
+            col_wrap:
+                How many columns to plot before wrapping.
+            convolve:
+                If set, overplots a smoothed version of the steps using ``convolve`` as
+                the width of the smoothing filter.
+            plot_weights:
+                If true, plots the weight if they are available
+            plot_posterior:
+                If true, plots the log posterior if they are available
+            log_weight:
+                Whether to display weights in log space or not. If None, the value is
+                inferred by the mean weights of the plotted chains.
 
-    #     Returns
-    #     -------
-    #     figure
-    #         the matplotlib figure created
+        Returns:
+            the matplotlib figure created
 
-    #     """
+        """
 
-    #     chains, parameters, truth, extents, _, log_scales = self._sanitise(
-    #         chains, parameters, truth, extents, log_scales=log_scales
-    #     )
+        base = self._sanitise(
+            chains,
+            columns,
+            self.config.extents,
+            blind=self.config.blind,
+            log_scales=self.config.log_scales,
+        )
 
-    #     chains = [c for c in chains if c.mcmc_chain]
-    #     n = len(parameters)
-    #     extra = 0
-    #     if plot_weights:
-    #         plot_weights = plot_weights and np.any([np.any(c.weights != 1.0) for c in chains])
+        n = len(base.columns)
+        extra = 0
 
-    #     plot_posterior = plot_posterior and np.any([c.posterior is not None for c in chains])
+        plot_posterior = plot_posterior and np.any([c.log_posterior is not None for c in base.chains])
 
-    #     if plot_weights:
-    #         extra += 1
-    #     if plot_posterior:
-    #         extra += 1
+        if plot_weights:
+            extra += 1
+        if plot_posterior:
+            extra += 1
 
-    #     if figsize is None:
-    #         figsize = (8, 0.75 + (n + extra))
+        if figsize is None:
+            figsize = (8, 0.75 + (n + extra))
 
-    #     fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
+        fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
 
-    #     for i, axes_row in enumerate(axes):
-    #         ax = axes_row[0]
-    #         if i >= extra:
-    #             p = parameters[i - n]
-    #             for chain in chains:
-    #                 if p in chain.parameters:
-    #                     chain_row = chain.get_data(p)
-    #                     log = log_scales.get(p, False)
-    #                     self._plot_walk(
-    #                         ax,
-    #                         p,
-    #                         chain_row,
-    #                         extents=extents.get(p),
-    #                         convolve=convolve,
-    #                         color=chain.config["color"],
-    #                         log_scale=log,
-    #                     )
-    #             if truth.get(p) is not None:
-    #                 self._plot_walk_truth(ax, truth.get(p))
-    #         else:
-    #             if i == 0 and plot_posterior:
-    #                 for chain in chains:
-    #                     if chain.log_posterior is not None:
-    #                         self._plot_walk(
-    #                             ax,
-    #                             r"$\log(P)$",
-    #                             chain.log_posterior - chain.log_posterior.max(),
-    #                             convolve=convolve,
-    #                             color=chain.config["color"],
-    #                         )
-    #             else:
-    #                 if log_weight is None:
-    #                     log_weight = np.any([chain.weights.mean() < 0.1 for chain in chains])
-    #                 if log_weight:
-    #                     for chain in chains:
-    #                         self._plot_walk(
-    #                             ax,
-    #                             r"$\log_{10}(w)$",
-    #                             np.log10(chain.weights),
-    #                             convolve=convolve,
-    #                             color=chain.config["color"],
-    #                         )
-    #                 else:
-    #                     for chain in chains:
-    #                         self._plot_walk(ax, "$w$", chain.weights, convolve=convolve, color=chain.config["color"])
+        for i, axes_row in enumerate(axes):
+            ax = axes_row[0]
+            if i >= extra:
+                p = base.columns[i - extra]
+                for chain in base.chains:
+                    if p in chain.data_columns:
+                        chain_row = chain.get_data(p)
+                        log = p in base.log_scales
+                        self._plot_walk(
+                            ax,
+                            p,
+                            chain_row,
+                            extents=base.extents.get(p),
+                            convolve=convolve,
+                            color=colors.format(chain.color),
+                            log_scale=log,
+                        )
+                for truth in self.parent._truths:
+                    if p in truth.location:
+                        self._plot_walk_truth(ax, truth, p)
 
-    #     if filename is not None:
-    #         if isinstance(filename, str):
-    #             filename = [filename]
-    #         for f in filename:
-    #             self._save_fig(fig, f, 300)
-    #     if display:
-    #         plt.show()
+            else:  # noqa: PLR5501
+                if i == 0 and plot_posterior:
+                    for chain in base.chains:
+                        if chain.log_posterior is not None:
+                            self._plot_walk(
+                                ax,
+                                r"$\log(P)$",
+                                chain.log_posterior - chain.log_posterior.max(),
+                                convolve=convolve,
+                                color=colors.format(chain.color),
+                            )
+                else:
+                    label = r"$\log_{10}$Weight" if log_weight else "Weight"
 
-    #     return fig
+                    for chain in base.chains:
+                        if chain.weights is not None:
+                            self._plot_walk(
+                                ax,
+                                label,
+                                np.log10(chain.weights) if log_weight else chain.weights,
+                                convolve=convolve,
+                                color=colors.format(chain.color),
+                            )
 
-    # def plot_distributions(
-    #     self,
-    #     parameters=None,
-    #     truth=None,
-    #     extents=None,
-    #     display=False,
-    #     filename=None,
-    #     chains=None,
-    #     col_wrap=4,
-    #     figsize=None,
-    #     blind=None,
-    #     log_scales=None,
-    # ):  # pragma: no cover
-    #     """Plots the 1D parameter distributions for verification purposes.
+        if filename is not None:
+            if not isinstance(filename, list):
+                filename = [filename]
+            for f in filename:
+                self._save_fig(fig, f, self.config.dpi)
 
-    #     This plot is more for a sanity or consistency check than for use with final results.
-    #     Plotting this before plotting with :func:`plot` allows you to quickly see if the
-    #     chains give well behaved distributions, or if certain parameters are suspect
-    #     or require a greater burn in period.
+        return fig
 
-    #     Parameters
-    #     ----------
-    #     parameters : list[str]|int, optional
-    #         Specify a subset of parameters to plot. If not set, all parameters are plotted.
-    #         If an integer is given, only the first so many parameters are plotted.
-    #     truth : list[float]|dict[str], optional
-    #         A list of truth values corresponding to parameters, or a dictionary of
-    #         truth values keyed by the parameter.
-    #     extents : list[tuple]|dict[str], optional
-    #         A list of two-tuples for plot extents per parameter, or a dictionary of
-    #         extents keyed by the parameter.
-    #     display : bool, optional
-    #         If set, shows the plot using ``plt.show()``
-    #     filename : str, optional
-    #         If set, saves the figure to the filename
-    #     chains : int|str, list[str|int], optional
-    #         Used to specify which chain to show if more than one chain is loaded in.
-    #         Can be an integer, specifying the
-    #         chain index, or a str, specifying the chain name.
-    #     col_wrap : int, optional
-    #         How many columns to plot before wrapping.
-    #     figsize : tuple(float)|float, optional
-    #         Either a tuple specifying the figure size or a float scaling factor.
-    #     blind : bool|string|list[string], optional
-    #         Whether to blind axes values. Can be set to `True` to blind all parameters,
-    #         or can pass in a string (or list of strings) which specify the parameters to blind.
-    #     log_scales : bool, list[bool] or dict[bool], optional
-    #         Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
-    #         names to set to true, a dictionary of param names with true/false
-    #         or just a bool (just `True` would set everything to log scales).
+    def plot_distributions(
+        self,
+        chains: list[ChainName | Chain] | None = None,
+        columns: list[ColumnName] | None = None,
+        filename: list[str | Path] | str | Path | None = None,
+        col_wrap: int = 4,
+        figsize: float | tuple[float, float] | None = None,
+    ) -> Figure:  # pragma: no cover
+        """Plots the 1D parameter distributions for verification purposes.
 
-    #     Returns
-    #     -------
-    #     figure
-    #         the matplotlib figure created
+        This plot is more for a sanity or consistency check than for use with final results.
+        Plotting this before plotting with :func:`plot` allows you to quickly see if the
+        chains give well behaved distributions, or if certain parameters are suspect
+        or require a greater burn in period.
 
-    #     """
-    #     chains, parameters, truth, extents, blind, log_scales = self._sanitise(
-    #         chains, parameters, truth, extents, blind=blind, log_scales=log_scales
-    #     )
+        Args:
+            chains:
+                Used to specify which chain to show if more than one chain is loaded in.
+                Can be an integer, specifying the
+                chain index, or a str, specifying the chain name.
+            columns:
+                If set, only creates a plot for those specific parameters (if list). If an
+                integer is given, only plots the fist so many parameters.
+            filename:
+                If set, saves the figure to this location
+            figsize:
+                Scale horizontal and vertical figure size.
+            col_wrap:
+                How many columns to plot before wrapping.
 
-    #     n = len(parameters)
-    #     num_cols = min(n, col_wrap)
-    #     num_rows = int(np.ceil(1.0 * n / col_wrap))
+        Returns:
+            the matplotlib figure created
 
-    #     if figsize is None:
-    #         figsize = 1.0
-    #     if isinstance(figsize, float):
-    #         figsize_float = figsize
-    #         figsize = (num_cols * 2 * figsize, num_rows * 2 * figsize)
-    #     else:
-    #         figsize_float = 1.0
+        """
+        base = self._sanitise(
+            chains,
+            columns,
+            self.config.extents,
+            blind=self.config.blind,
+            log_scales=self.config.log_scales,
+        )
 
-    #     summary = self.parent.config["summary"]
-    #     label_font_size = self.parent.config["label_font_size"]
-    #     tick_font_size = self.parent.config["tick_font_size"]
-    #     max_ticks = self.parent.config["max_ticks"]
-    #     diagonal_tick_labels = self.parent.config["diagonal_tick_labels"]
+        n = len(base.columns)
+        num_cols = min(n, col_wrap)
+        num_rows = int(np.ceil(1.0 * n / col_wrap))
 
-    #     if summary is None:
-    #         summary = len(self.parent.chains) == 1
+        if figsize is None:
+            figsize = 1.0
+        if isinstance(figsize, float):
+            figsize_float = figsize
+            figsize = (num_cols * 2.5 * figsize, num_rows * 2.5 * figsize)
+        else:
+            figsize_float = 1.0
 
-    #     hspace = (0.8 if summary else 0.5) / figsize_float
-    #     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=figsize, squeeze=False)
-    #     fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=hspace)
+        summary = self.config.summarise and len(base.chains) == 1
+        hspace = (0.8 if summary else 0.5) / figsize_float
+        fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=figsize, squeeze=False)
+        fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1, wspace=0.05, hspace=hspace)
 
-    #     formatter = ScalarFormatter(useOffset=False)
-    #     formatter.set_powerlimits((-3, 4))
+        formatter = ScalarFormatter(useOffset=False)
+        formatter.set_powerlimits((-3, 4))
 
-    #     for i, ax in enumerate(axes.flatten()):
-    #         if i >= len(parameters):
-    #             ax.set_axis_off()
-    #             continue
-    #         p = parameters[i]
+        for i, ax in enumerate(axes.flatten()):
+            if i >= n:
+                ax.set_axis_off()
+                continue
+            p = base.columns[i]
 
-    #         ax.set_yticks([])
-    #         if log_scales.get(p, False):
-    #             ax.set_xscale("log")
-    #         if p in blind:
-    #             ax.set_xticks([])
-    #         else:
-    #             if diagonal_tick_labels:
-    #                 _ = [l.set_rotation(45) for l in ax.get_xticklabels()]
-    #             _ = [l.set_fontsize(tick_font_size) for l in ax.get_xticklabels()]
+            ax.set_yticks([])
+            if p in base.log_scales:
+                ax.set_xscale("log")
+            if p in base.blind:
+                ax.set_xticks([])
+            else:
+                if self.config.diagonal_tick_labels:
+                    _ = [label.set_rotation(45) for label in ax.get_xticklabels()]
+                _ = [label.set_fontsize(self.config.tick_font_size) for label in ax.get_xticklabels()]
 
-    #             if log_scales.get(p, False):
-    #                 ax.xaxis.set_major_locator(LogLocator(numticks=max_ticks))
-    #             else:
-    #                 ax.xaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
-    #                 ax.xaxis.set_major_formatter(formatter)
-    #         ax.set_xlim(extents.get(p) or self._get_parameter_extents(p, chains))
+                if p in base.log_scales:
+                    ax.xaxis.set_major_locator(LogLocator(numticks=self.config.max_ticks))
+                else:
+                    ax.xaxis.set_major_locator(MaxNLocator(self.config.max_ticks, prune="lower"))
+                    ax.xaxis.set_major_formatter(formatter)
+            ax.set_xlim(base.extents.get(p) or self._get_parameter_extents(p, base.chains))
 
-    #         max_val = -np.inf
-    #         for chain in chains:
-    #             if not chain.config["plot_contour"]:
-    #                 continue
-    #             if p in chain.parameters:
-    #                 param_summary = summary and p not in blind
-    #                 m = self._plot_bars(ax, p, chain, summary=param_summary)
-    #                 if max_val is None or m > max_val:
-    #                     max_val = m
+            max_val = -np.inf
+            for chain in base.chains:
+                if not chain.plot_contour:
+                    continue
+                if p in chain.plotting_columns:
+                    param_summary = summary and p not in base.blind
+                    m = self._plot_bars(ax, p, chain, summary=param_summary)
+                    if max_val is None or m > max_val:
+                        max_val = m
+            for truth in self.parent._truths:
+                self._add_truth(ax, truth, py=p)
+            ax.set_ylim(0, 1.1 * max_val)
+            ax.set_xlabel(p, fontsize=self.config.label_font_size)
 
-    #         self._add_truth(ax, truth, None, py=p)
-    #         ax.set_ylim(0, 1.1 * max_val)
-    #         ax.set_xlabel(p, fontsize=label_font_size)
-
-    #     if filename is not None:
-    #         if isinstance(filename, str):
-    #             filename = [filename]
-    #         for f in filename:
-    #             self._save_fig(fig, f, 300)
-    #     if display:
-    #         plt.show()
-
-    #     return fig
+        if filename is not None:
+            if not isinstance(filename, list):
+                filename = [filename]
+            for f in filename:
+                self._save_fig(fig, f, self.config.dpi)
+        fig.tight_layout()
+        return fig
 
     def plot_summary(
         self,
@@ -781,7 +733,7 @@ class Plotter:
 
                 # Put title in
                 if i == 0:
-                    ax.set_title(r"$%s$" % p, fontsize=label_font_size)
+                    ax.set_title(self.config.get_label(p), fontsize=label_font_size)
 
                 # Add truth values
                 for truth in self.parent._truths:
@@ -875,7 +827,7 @@ class Plotter:
             blind=self._sanitise_blinds(blind, final_columns),
         )
 
-    def set_rc_params(self):
+    def set_rc_params(self) -> None:
         if self.config.usetex:
             plt.rc("text", usetex=True)
         else:
@@ -1078,7 +1030,9 @@ class Plotter:
         )
         return h
 
-    def _sanitise_chains(self, chains: list[Chain | ChainName] | dict[ChainName, Chain] | None) -> list[Chain]:
+    def _sanitise_chains(
+        self, chains: list[Chain | ChainName] | dict[ChainName, Chain] | None, include_skip: bool = False
+    ) -> list[Chain]:
         overriden_chains = self.parent._get_final_chains()
         final_chains = []
         if isinstance(chains, list):
@@ -1087,7 +1041,7 @@ class Plotter:
             final_chains = [overriden_chains[c.name] for c in chains.values()]
         else:
             final_chains = list(overriden_chains.values())
-        return [c for c in final_chains if not c.skip]
+        return [c for c in final_chains if include_skip or not c.skip]
 
     def plot_contour(
         self,
@@ -1232,7 +1186,7 @@ class Plotter:
                         lower = xs.min()
                     if upper > xs.max():
                         upper = xs.max()
-                    x = np.linspace(lower, upper, 1000)
+                    x = np.linspace(lower, upper, 1000)  # type: ignore
                     if flip:
                         ax.fill_betweenx(
                             x,
@@ -1259,17 +1213,24 @@ class Plotter:
                             )
                         else:
                             ax.set_title(r"$%s$" % t, fontsize=self.config.summary_font_size)
-        return ys.max()
+        return float(ys.max())
 
     def _plot_walk(
-        self, ax, parameter, data, truth=None, extents=None, convolve=None, color=None, log_scale=False
-    ):  # pragma: no cover
+        self,
+        ax: Axes,
+        column: ColumnName,
+        data: pd.Series,
+        extents: tuple[float, float] | None = None,
+        convolve: int | None = None,
+        color: str | None = None,
+        log_scale: bool = False,
+    ) -> None:  # pragma: no cover
         if extents is not None:
             ax.set_ylim(extents)
         assert convolve is None or isinstance(convolve, int), "Convolve must be an integer pixel window width"
         x = np.arange(data.size)
         ax.set_xlim(0, x[-1])
-        ax.set_ylabel(parameter)
+        ax.set_ylabel(self.config.get_label(column))
         if color is None:
             color = "#0345A1"
         ax.scatter(x, data, c=color, s=2, marker=".", edgecolors="none", alpha=0.5)
@@ -1281,10 +1242,11 @@ class Plotter:
             ax.yaxis.set_major_locator(MaxNLocator(max_ticks, prune="lower"))
 
         if convolve is not None:
+            trim = int(0.5 * convolve)
             color2 = colors.scale_colour(color, 0.5)
             filt = np.ones(convolve) / convolve
             filtered = np.convolve(data, filt, mode="same")
-            ax.plot(x[:-1], filtered[:-1], ls=":", color=color2, alpha=1)
+            ax.plot(x[trim:-trim], filtered[trim:-trim], color=color2, alpha=1)
 
     def _plot_walk_truth(self, ax: Axes, truth: Truth, col: str) -> None:
         ax.axhline(truth.location[col], **truth._kwargs)

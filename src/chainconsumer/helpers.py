@@ -38,7 +38,8 @@ def get_extents(
 
 
 def get_bins(chain: Chain) -> int:
-    return max((35, np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25))))
+    max_v = 35 if chain.smooth > 0 else 100
+    return max((max_v, np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25))))
 
 
 def get_smoothed_bins(
