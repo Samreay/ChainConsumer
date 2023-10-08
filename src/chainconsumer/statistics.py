@@ -8,7 +8,7 @@ class SummaryStatistic(Enum):
     finding an iso-likelihood surface which encapsulates the required volume."""
 
     MAX_CENTRAL = "max_central"
-    """"As per the MAX method, this has the centre point at the maximum likelihood.
+    """As per the MAX method, this has the centre point at the maximum likelihood.
     However the lower and upper values come from the CDF, like the cumulative method."""
 
     CUMULATIVE = "cumulative"

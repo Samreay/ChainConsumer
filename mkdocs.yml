@@ -64,6 +64,6 @@ watch:
   - src
 nav:
   - Home: index.md
-  - Statistics: statistics.md
-  - Examples: generated/gallery
+  - Usage: usage.md
   - Python API: api.md
+  - Examples: generated/gallery
