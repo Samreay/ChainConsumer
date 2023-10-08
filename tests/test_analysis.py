@@ -32,7 +32,7 @@ class TestChain:
         tolerance = 5e-2
         consumer = ChainConsumer()
         consumer.add_chain(self.chain)
-        consumer.set_override(ChainConfig(smooth=0, bins=2.0))
+        consumer.set_override(ChainConfig(smooth=0, bins=100))
         summary = consumer.analysis.get_summary()
         actual = summary["a"]["x"].array
         expected = np.array([3.5, 5.0, 6.5])
@@ -71,7 +71,6 @@ class TestChain:
         c2.name = "chain2"
         c2.samples = c2.samples.rename(columns={"x": "y"})
         consumer.add_chain(c2)
-        consumer.set_override(ChainConfig(bins=0.8))
         summary = consumer.analysis.get_summary(columns=["x"])
         assert len(summary) == 2  # Two chains
         assert not summary["chain2"]  # but this one has no cols
@@ -94,7 +93,6 @@ class TestChain:
     def test_output_text(self):
         consumer = ChainConsumer()
         consumer.add_chain(self.chain)
-        consumer.set_override(ChainConfig(bins=0.8))
         vals = consumer.analysis.get_summary()["a"]
         text = consumer.analysis.get_parameter_text(vals["x"])
         assert text == r"5.0\pm 1.5"
@@ -242,7 +240,6 @@ class TestChain:
         chain = Chain(samples=pd.DataFrame(data, columns=["x"]), walkers=num_walkers, name="test")
         for c in chain.divide():
             consumer.add_chain(c)
-        consumer.set_override(ChainConfig(bins=0.7))
         means = [0, 1.0]
         stats = consumer.analysis.get_summary()
 

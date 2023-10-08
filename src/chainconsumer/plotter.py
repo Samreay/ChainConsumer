@@ -23,8 +23,8 @@ from chainconsumer.truth import Truth
 
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName
-from .colors import ColorInput, colors
-from .helpers import get_extents, get_grid_bins, get_smoothed_bins
+from .color_finder import ColorInput, colors
+from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins
 from .kde import MegKDE
 
 
@@ -445,7 +445,6 @@ class Plotter:
         extra = 0
 
         plot_posterior = plot_posterior and np.any([c.log_posterior is not None for c in base.chains])
-
         if plot_weights:
             extra += 1
         if plot_posterior:
@@ -455,7 +454,7 @@ class Plotter:
             figsize = (8, 0.75 + (n + extra))
 
         fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
-
+        max_points = 100000
         for i, axes_row in enumerate(axes):
             ax = axes_row[0]
             if i >= extra:
@@ -463,6 +462,8 @@ class Plotter:
                 for chain in base.chains:
                     if p in chain.data_columns:
                         chain_row = chain.get_data(p)
+                        if len(chain_row) > max_points:
+                            chain_row = chain_row[:: int(len(chain_row) / max_points)]
                         log = p in base.log_scales
                         self._plot_walk(
                             ax,
@@ -477,14 +478,20 @@ class Plotter:
                     if p in truth.location:
                         self._plot_walk_truth(ax, truth, p)
 
+                if p in base.blind:
+                    ax.set_yticks([])
             else:  # noqa: PLR5501
                 if i == 0 and plot_posterior:
                     for chain in base.chains:
                         if chain.log_posterior is not None:
+                            posterior = chain.log_posterior - chain.log_posterior.max()
+                            if len(posterior) > max_points:
+                                posterior = posterior[:: int(len(posterior) / max_points)]
+
                             self._plot_walk(
                                 ax,
                                 r"$\log(P)$",
-                                chain.log_posterior - chain.log_posterior.max(),
+                                posterior,
                                 convolve=convolve,
                                 color=colors.format(chain.color),
                             )
@@ -493,10 +500,13 @@ class Plotter:
 
                     for chain in base.chains:
                         if chain.weights is not None:
+                            weights = chain.weights
+                            if len(weights) > max_points:
+                                weights = weights[:: int(len(weights) / max_points)]
                             self._plot_walk(
                                 ax,
                                 label,
-                                np.log10(chain.weights) if log_weight else chain.weights,
+                                np.log10(weights) if log_weight else weights,  # type: ignore
                                 convolve=convolve,
                                 color=colors.format(chain.color),
                             )
@@ -1070,7 +1080,7 @@ class Plotter:
         else:
             kwargs = {"c": color, "alpha": 0.3}
 
-        h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", zorder=chain.zorder - 1, **kwargs)
+        h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", zorder=chain.zorder - 5, **kwargs)
         if chain.color_data is not None:
             return h
         else:
@@ -1156,7 +1166,7 @@ class Plotter:
             if chain.grid:
                 bins = get_grid_bins(data)
             else:
-                bins, _ = get_smoothed_bins(chain.smooth, int(chain.bins), data, chain.weights)
+                bins, _ = get_smoothed_bins(chain.smooth, get_bins(chain), data, chain.weights)
             hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
             if chain.power is not None:
                 hist = hist**chain.power
@@ -1295,8 +1305,8 @@ class Plotter:
             binsy = get_grid_bins(y)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
         else:
-            binsx, smooth = get_smoothed_bins(chain.smooth, int(chain.bins), x, w)
-            binsy, _ = get_smoothed_bins(smooth, int(chain.bins), y, w)
+            binsx, smooth = get_smoothed_bins(chain.smooth, get_bins(chain), x, w)
+            binsy, _ = get_smoothed_bins(smooth, get_bins(chain), y, w)
             hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
         if chain.power is not None:

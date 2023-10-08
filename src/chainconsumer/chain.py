@@ -17,7 +17,7 @@ import pandas as pd
 from pydantic import Field, field_validator, model_validator
 
 from .base import BetterBase
-from .colors import ColorInput, colors
+from .color_finder import ColorInput, colors
 from .statistics import SummaryStatistic
 
 ChainName: TypeAlias = str
@@ -52,9 +52,7 @@ class ChainConfig(BetterBase):
     shade_alpha: float = Field(default=0.5, description="The alpha of the shading")
     shade_gradient: float = Field(default=1.0, description="The contrast between contour levels")
     bar_shade: bool = Field(default=True, description="Whether to shade marginalised distributions")
-    bins: int | float = Field(
-        default=1.0, description="The number of bins to use for histograms. If a float, used to scale the default bins"
-    )
+    bins: int | None = Field(default=None, description="The number of bins to use for histograms.")
     kde: int | float | bool = Field(default=False, description="The bandwidth for KDEs")
     smooth: int = Field(default=3, description="The smoothing for histograms. Set to 0 for no smoothing")
     color_param: str | None = Field(default=None, description="The parameter (column) to use for coloring")
@@ -309,6 +307,8 @@ class Chain(ChainConfig):
         for i, split in enumerate(splits):
             df = pd.DataFrame(split, columns=self.samples.columns)
             options = self.model_dump(exclude={"samples", "name"})
+            if "color" in options:
+                options.pop("color")
             chain = Chain(samples=df, name=f"{self.name} Walker {i}", **options)
             chains.append(chain)
 

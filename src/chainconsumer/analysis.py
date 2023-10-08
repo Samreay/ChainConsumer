@@ -99,7 +99,9 @@ class Analysis:
         """
         final_chains = self.parent.plotter._sanitise_chains(chains)
         final_columns = self.parent.plotter._sanitise_columns(columns, final_chains)
+        blind = self.parent.plotter._sanitise_blinds(self.parent.plotter.config.blind, final_columns)
 
+        final_columns = [c for c in final_columns if c not in blind]
         num_chains = len(final_chains)
         num_parameters = len(final_columns)
         fit_values = self.get_summary(chains=final_chains)
@@ -303,7 +305,7 @@ class Analysis:
         cs /= cs.max()
         return xs, ys, cs
 
-    def _get_2d_latex_table(self, named_matrix: Named2DMatrix, caption: str, label: str):
+    def _get_2d_latex_table(self, named_matrix: Named2DMatrix, caption: str, label: str) -> str:
         parameters = [self.parent.plotter.config.get_label(c) for c in named_matrix.columns]
         matrix = named_matrix.matrix
         latex_table = get_latex_table_frame(caption=caption, label=label)

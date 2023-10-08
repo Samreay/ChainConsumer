@@ -4,7 +4,7 @@ import pandas as pd
 from pydantic import Field, ValidationError, field_validator
 
 from .base import BetterBase
-from .colors import ColorInput
+from .color_finder import ColorInput
 
 
 class Truth(BetterBase):

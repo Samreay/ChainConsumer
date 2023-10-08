@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from chainconsumer.colors import ALL_COLOURS, colors
+from chainconsumer.color_finder import ALL_COLOURS, colors
 
 
 def test_colors_rgb2hex_1():

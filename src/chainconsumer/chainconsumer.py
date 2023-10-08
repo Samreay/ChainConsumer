@@ -5,10 +5,9 @@ import pandas as pd
 
 from .analysis import Analysis
 from .chain import Chain, ChainConfig, ChainName, ColumnName
-from .colors import ColorInput, colors
+from .color_finder import ColorInput, colors
 from .comparisons import Comparison
 from .diagnostic import Diagnostic
-from .helpers import get_bins
 from .plotter import PlotConfig, Plotter
 from .truth import Truth
 
@@ -167,9 +166,6 @@ class ChainConsumer:
         for _, chain in final_chains.items():
             # copy global config into local config
             local_config = global_config.copy()
-
-            if isinstance(chain.bins, float):
-                chain.bins = int(chain.bins * get_bins(chain))
 
             # Reduce shade alpha if we're showing contour labels
             if chain.show_contour_labels:
