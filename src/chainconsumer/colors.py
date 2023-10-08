@@ -60,17 +60,18 @@ class Colors:
             "red",
             "purple",
             "amber",
-            "grey",
+            "gray",
             "cyan",
             "teal",
             "green",
             "orange",
             "indigo",
         )
+        self.iter = self.next_colour()
 
     def next_colour(self) -> Generator[str, None, None]:
         """A generator to return a sequence of colors"""
-        for index in [4, 7, 2]:
+        for index in [4, 7, 2, 8, 3, 6, 1, 5]:
             for color in self.default_colors:
                 yield ALL_COLOURS[color][index]
 

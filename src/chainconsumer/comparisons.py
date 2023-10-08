@@ -41,10 +41,9 @@ class Comparison:
             if p is None:
                 logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
             else:
-                num_params = chain.samples.shape[1]
-                means = np.array([np.average(chain.samples[:, ii], weights=chain.weights) for ii in range(num_params)])
+                means = np.array([np.average(chain.samples[c], weights=chain.weights) for c in chain.data_columns])
                 d = -2 * p
-                d_of_mean = griddata(chain.samples, d, means, method="nearest")[0]
+                d_of_mean = griddata(chain.data_samples, d, means, method="nearest")[0]
                 mean_d = np.average(d, weights=chain.weights)
                 p_d = mean_d - d_of_mean
                 dic = mean_d + p_d
@@ -68,7 +67,7 @@ class Comparison:
         the number of independent data points used in the model fitting.
 
         Returns:
-            dict[str, float]: A dict of chain name to BIC value.
+            A dict of chain name to BIC value.
 
         """
         bics = {}

@@ -44,14 +44,14 @@ class ChainConfig(BetterBase):
     statistics: SummaryStatistic = Field(default=SummaryStatistic.MAX, description="The summary statistic to use")
     summary_area: float = Field(default=0.6827, ge=0, le=1.0, description="The area to use for summary statistics")
     sigmas: list[float] = Field(default=[0, 1, 2], description="The sigmas to use for summary statistics")
-    color: ColorInput = Field(default=None, description="The color of the chain")  # type: ignore
+    color: ColorInput | None = Field(default=None, description="The color of the chain")  # type: ignore
     linestyle: str = Field(default="-", description="The line style of the chain")
     linewidth: float = Field(default=1.0, description="The line width of the chain")
     show_contour_labels: bool = Field(default=False, description="Whether to show contour labels")
-    shade: bool = Field(default=None, description="Whether to shade the chain")  # type: ignore
-    shade_alpha: float = Field(default=None, description="The alpha of the shading")  # type: ignore
+    shade: bool = Field(default=True, description="Whether to shade the chain")
+    shade_alpha: float = Field(default=0.5, description="The alpha of the shading")
     shade_gradient: float = Field(default=1.0, description="The contrast between contour levels")
-    bar_shade: bool = Field(default=None, description="Whether to shade marginalised distributions")  # type: ignore
+    bar_shade: bool = Field(default=True, description="Whether to shade marginalised distributions")
     bins: int | float = Field(
         default=1.0, description="The number of bins to use for histograms. If a float, used to scale the default bins"
     )
@@ -63,9 +63,9 @@ class ChainConfig(BetterBase):
     plot_cloud: bool = Field(default=False, description="Whether to plot the cloud")
     plot_contour: bool = Field(default=True, description="Whether to plot contours")
     plot_point: bool = Field(default=False, description="Whether to plot points")
-    marker_style: str = Field(default=None, description="The marker style to use")  # type: ignore
+    marker_style: str = Field(default=".", description="The marker style to use")
     marker_size: int | float = Field(default=10.0, ge=1, description="The marker size to use")
-    marker_alpha: int | float = Field(default=None, description="The marker alpha to use")  # type: ignore
+    marker_alpha: int | float = Field(default=1.0, description="The marker alpha to use")
     zorder: int = Field(default=10, description="The zorder to use")
     shift_params: bool = Field(
         default=False,
@@ -79,9 +79,9 @@ class ChainConfig(BetterBase):
             return None
         return colors.format(v)
 
-    def _apply_if_none(self, **kwargs: Any) -> None:
+    def _apply_if_not_user_set(self, **kwargs: Any) -> None:
         for key, value in kwargs.items():
-            if getattr(self, key) is None:
+            if key not in self._user_specified:
                 setattr(self, key, value)
 
     def _apply(self, **kwargs: Any) -> None:
@@ -154,6 +154,11 @@ class Chain(ChainConfig):
         return results
 
     @property
+    def data_samples(self) -> pd.DataFrame:
+        """The subsection of the dataframe with data points (ie excluding weights and posterior)"""
+        return self.samples[self.data_columns]
+
+    @property
     def plotting_columns(self) -> list[str]:
         """The columns to be plotted, which are the dataframe columns
         with the weights, posterior and colour coloumns removed."""
@@ -202,6 +207,11 @@ class Chain(ChainConfig):
         if v is None:
             return None
         return colors.format(v)
+
+    @field_validator("samples")
+    @classmethod
+    def _copy_df(cls, v: pd.DataFrame) -> pd.DataFrame:
+        return v.copy()
 
     @model_validator(mode="after")
     def _validate_model(self) -> Chain:

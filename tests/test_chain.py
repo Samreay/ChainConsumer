@@ -2,10 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from pydantic import ValidationError
-from scipy.stats import norm
 
-from chainconsumer.chain import Chain, ChainConfig
-from chainconsumer.chainconsumer import ChainConsumer
+from chainconsumer.chain import Chain
 
 
 class TestChain:
@@ -44,8 +42,9 @@ class TestChain:
             df2.columns = ["A", "B", 0]
             Chain(samples=df2, name=self.n)
 
-    def test_chain_with_bad_chain_initial_success1(self):
-        Chain(samples=self.bad, name=self.n)
+    def test_chain_with_bad_chain(self):
+        with pytest.raises(ValidationError):
+            Chain(samples=self.bad, name=self.n)
 
     def test_good_grid(self):
         Chain(samples=self.df, name=self.n, grid=False)

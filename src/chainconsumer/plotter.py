@@ -38,13 +38,6 @@ class PlottingBase(BetterBase):
 
 class PlotConfig(BetterBase):
     labels: dict[ColumnName, str] = Field(default={}, description="Labels for parameters")
-    sigma2d: bool | None = Field(
-        default=None,
-        description=(
-            "Whether to use 2D sigmas for summary statistics. Ie in 2D a 1sigma contour"
-            r" does *not* encapsulate 68% of the volume, it covers 39.3% of the volume."
-        ),
-    )
     max_ticks: int = Field(default=5, ge=0, description="Maximum number of ticks to use on axes")
     plot_hists: bool = Field(default=True, description="Whether to plot the 1D histograms")
     flip: bool = Field(default=False, description="Whether to flip the 1D histograms")
@@ -55,13 +48,31 @@ class PlotConfig(BetterBase):
     tick_font_size: int = Field(default=10, ge=0, description="Font size for axis ticks")
     spacing: float = Field(default=None, ge=0, description="Spacing between subplots")
     contour_label_font_size: int = Field(default=10, ge=0, description="Font size for contour labels")
+    show_legend: bool | None = Field(
+        default=None,
+        description="Whether to show the legend. None means determine automatically",
+    )
     legend_kwargs: dict[str, Any] = Field(default={}, description="Kwargs to pass to the legend")
     legend_location: tuple[int, int] | None = Field(default=None, description="Which subplot to put the legend in")
     legend_artists: bool | None = Field(default=None, description="Whether to show artists in the legend")
     legend_color_text: bool = Field(default=True, description="Whether to color the legend text")
+    watermark: str | None = Field(default=None, description="Watermark text to add to the plot")
     watermark_text_kwargs: dict[str, Any] = Field(default={}, description="Kwargs to pass to the watermark text")
-    title_size: int = Field(default=14, ge=0, description="Font size for titles")
     summarise: bool = Field(default=True, description="Whether to annotate the plot with summary statistics")
+    summary_font_size: int = Field(default=12, ge=0, description="Font size for parameter summaries")
+    sigma2d: bool | None = Field(
+        default=None,
+        description=(
+            "Whether to use 2D sigmas for summary statistics. Ie in 2D a 1sigma contour"
+            r" does *not* encapsulate 68% of the volume, it covers 39.3% of the volume."
+        ),
+    )
+    blind: bool | list[str] = Field(default=False, description="Whether to blind some parameters")
+    log_scales: list[ColumnName] = Field(default=[], description="Whether to use log scales for some parameters")
+    extents: dict[ColumnName, tuple[float, float]] = Field(
+        default={}, description="Extents for parameters. Any you don't specify are determined automatically"
+    )
+    dpi: int = Field(default=300, ge=0, description="DPI for the figure")
 
     @property
     def legend_kwargs_final(self) -> dict[str, Any]:
@@ -83,6 +94,7 @@ class PlotConfig(BetterBase):
             "alpha": 0.7,
             "verticalalignment": "center",
             "horizontalalignment": "center",
+            "weight": "bold",
         }
         return default | self.watermark_text_kwargs
 
@@ -180,67 +192,41 @@ class Plotter:
 
     def plot(
         self,
-        figsize: FigSize | float | int | tuple[float, float] = FigSize.GROW,
-        columns: list[ColumnName] | None = None,
         chains: list[ChainName | Chain] | None = None,
-        extents: dict[ColumnName, tuple[float, float]] | None = None,
+        columns: list[ColumnName] | None = None,
         filename: list[str | Path] | str | Path | None = None,
-        show_legend: bool | None = None,
-        blind: bool | list[str] | None = None,
-        watermark: str | None = None,
-        log_scales: list[ColumnName] | None = None,
+        figsize: FigSize | float | int | tuple[float, float] = FigSize.GROW,
     ) -> Figure:  # pragma: no cover
         """Plot the chain!
 
-        Parameters
-        ----------
-        figsize : str|tuple(float)|float, optional
-            The figure size to generate. Accepts a regular two tuple of size in inches,
-            or one of several key words. The default value of ``COLUMN`` creates a figure
-            of appropriate size of insertion into an A4 LaTeX document in two-column mode.
-            ``PAGE`` creates a full page width figure. ``GROW`` creates an image that
-            scales with parameters (1.5 inches per parameter). String arguments are not
-            case sensitive. If you pass a float, it will scale the default ``GROW`` by
-            that amount, so ``2.0`` would result in a plot 3 inches per parameter.
-        columns : list[str], optional
-            If set, only creates a plot for those specific parameters (if list). If an
-            integer is given, only plots the fist so many parameters.
-        chains : int|str, list[str|int], optional
-            Used to specify which chain to show if more than one chain is loaded in.
-            Can be an integer, specifying the
-            chain index, or a str, specifying the chain name.
-        extents : list[tuple[float]] or dict[str], optional
-            Extents are given as two-tuples. You can pass in a list the same size as
-            parameters (or default parameters if you don't specify parameters),
-            or as a dictionary.
-        filename : str, optional
-            If set, saves the figure to this location
-        display : bool, optional
-            If True, shows the figure using ``plt.show()``.
-        truth : list[float] or dict[str], optional
-            A list of truth values corresponding to parameters, or a dictionary of
-            truth values indexed by key
-        legend : bool, optional
-            If true, creates a legend in your plot using the chain names.
-        blind : bool|string|list[string], optional
-            Whether to blind axes values. Can be set to `True` to blind all parameters,
-            or can pass in a string (or list of strings) which specify the parameters to blind.
-        watermark : str, optional
-            A watermark to add to the figure
-        log_scales : bool, list[ColumnName], optional
-            Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
-            names to set to true, a dictionary of param names with true/false
-            or just a bool (just `True` would set everything to log scales).
+        Args:
+            chains:
+                Used to specify which chain to show if more than one chain is loaded in.
+                Can be an integer, specifying the
+                chain index, or a str, specifying the chain name.
+            columns:
+                If set, only creates a plot for those specific parameters (if list). If an
+                integer is given, only plots the fist so many parameters.
+            filename:
+                If set, saves the figure to this location
+            figsize:
+                The figure size to generate. Accepts a regular two tuple of size in inches,
+                or one of several key words. The default value of ``COLUMN`` creates a figure
+                of appropriate size of insertion into an A4 LaTeX document in two-column mode.
+                ``PAGE`` creates a full page width figure. ``GROW`` creates an image that
+                scales with parameters (1.5 inches per parameter). String arguments are not
+                case sensitive. If you pass a float, it will scale the default ``GROW`` by
+                that amount, so ``2.0`` would result in a plot 3 inches per parameter.
 
-        Returns
-        -------
-        figure
+        Returns:
             the matplotlib figure
 
         """
+        base = self._sanitise(
+            chains, columns, self.config.extents, blind=self.config.blind, log_scales=self.config.log_scales
+        )
 
-        base = self._sanitise(chains, columns, extents, blind=blind, log_scales=log_scales)
-
+        show_legend = self.config.show_legend
         if show_legend is None:
             show_legend = len(base.chains) > 1
 
@@ -336,14 +322,6 @@ class Plotter:
                 for text, chain in zip(leg.get_texts(), base.chains):
                     text.set_fontweight("medium")
                     text.set_color(colors.format(chain.color))
-
-            # TODO: This seems like behaviour which no longer works
-            # if not legend_outside:
-            #     loc = legend_kwargs.get("loc") or ""
-            #     if isinstance(loc, str) and "right" in loc.lower():
-            #         vp = leg._legend_box._children[-1]._children[0]
-            #         vp.align = "right"
-
         fig.canvas.draw()
         for ax in axes[-1, :]:
             offset = ax.get_xaxis().get_offset_text()
@@ -354,16 +332,15 @@ class Plotter:
             ax.set_ylabel("{} {}".format(ax.get_ylabel(), f"[{offset.get_text()}]" if offset.get_text() else ""))
             offset.set_visible(False)
 
-        dpi = 300
-        if watermark:
+        if self.config.watermark is not None:
             ax_watermark = axes[-1, 0] if flip and len(base.columns) == 2 else None
-            self._add_watermark(fig, ax_watermark, fig_size, watermark, dpi=dpi)
+            self._add_watermark(fig, ax_watermark, fig_size, self.config.watermark, dpi=self.config.dpi)
 
         if filename is not None:
             if not isinstance(filename, list):
                 filename = [filename]
             for f in filename:
-                self._save_fig(fig, f, dpi)
+                self._save_fig(fig, f, self.config.dpi)
 
         return fig
 
@@ -377,7 +354,7 @@ class Plotter:
         dx, dy = fig_size
         dy, dx = dy * dpi, dx * dpi
         rotation = 180 / np.pi * np.arctan2(-dy, dx)
-        property_dict = self.config.watermark_text_kwargs
+        property_dict = self.config.watermark_text_kwargs_final
 
         keys_in_font_dict = ["family", "style", "variant", "weight", "stretch", "size"]
         fontdict = {k: property_dict[k] for k in keys_in_font_dict if k in property_dict}
@@ -392,7 +369,7 @@ class Plotter:
         bb1 = TextPath((0, 0), text, size=51, prop=font_prop, usetex=usetex).get_extents()
         dw = (bb1.width - bb0.width) * (dpi / 100)
         dh = (bb1.height - bb0.height) * (dpi / 100)
-        size = np.sqrt(dy**2 + dx**2) / (dh * abs(dy / dx) + dw) * 0.6 * scale * size_scale
+        size = np.sqrt(dy**2 + dx**2) / (dh * abs(dy / dx) + dw) * 0.7 * scale * size_scale
         if axes is not None:
             if usetex:
                 size *= 0.7
@@ -687,236 +664,164 @@ class Plotter:
 
     #     return fig
 
-    # def plot_summary(
-    #     self,
-    #     parameters=None,
-    #     truth=None,
-    #     extents=None,
-    #     display=False,
-    #     filename=None,
-    #     chains=None,
-    #     figsize=1.0,
-    #     errorbar=False,
-    #     include_truth_chain=True,
-    #     blind=None,
-    #     watermark=None,
-    #     extra_parameter_spacing=0.5,
-    #     vertical_spacing_ratio=1.0,
-    #     show_names=True,
-    #     log_scales=None,
-    # ):  # pragma: no cover
-    #     """Plots parameter summaries
+    def plot_summary(
+        self,
+        chains: list[ChainName | Chain] | None = None,
+        columns: list[ColumnName] | None = None,
+        filename: list[str | Path] | str | Path | None = None,
+        figsize: float = 1.0,
+        errorbar: bool = False,
+        extra_parameter_spacing: float = 1.0,
+        vertical_spacing_ratio: float = 1.0,
+    ):  # pragma: no cover
+        """Plots parameter summaries
 
-    #     This plot is more for a sanity or consistency check than for use with final results.
-    #     Plotting this before plotting with :func:`plot` allows you to quickly see if the
-    #     chains give well behaved distributions, or if certain parameters are suspect
-    #     or require a greater burn in period.
+        This plot is more for a sanity or consistency check than for use with final results.
+        Plotting this before plotting with :func:`plot` allows you to quickly see if the
+        chains give well behaved distributions, or if certain parameters are suspect
+        or require a greater burn in period.
 
-    #     Parameters
-    #     ----------
-    #     parameters : list[str]|int, optional
-    #         Specify a subset of parameters to plot. If not set, all parameters are plotted.
-    #         If an integer is given, only the first so many parameters are plotted.
-    #     truth : list[float]|list|list[float]|dict[str]|str, optional
-    #         A list of truth values corresponding to parameters, or a dictionary of
-    #         truth values keyed by the parameter. Each "truth value" can be either a float (will
-    #         draw a vertical line), two floats (a shaded interval) or three floats (min, mean, max),
-    #         which renders as a shaded interval with a line for the mean. Or, supply a string
-    #         which matches a chain name, and the results for that chain will be used as the 'truth'
-    #     extents : list[tuple]|dict[str], optional
-    #         A list of two-tuples for plot extents per parameter, or a dictionary of
-    #         extents keyed by the parameter.
-    #     display : bool, optional
-    #         If set, shows the plot using ``plt.show()``
-    #     filename : str, optional
-    #         If set, saves the figure to the filename
-    #     chains : int|str, list[str|int], optional
-    #         Used to specify which chain to show if more than one chain is loaded in.
-    #         Can be an integer, specifying the
-    #         chain index, or a str, specifying the chain name.
-    #     figsize : float, optional
-    #         Scale horizontal and vertical figure size.
-    #     errorbar : bool, optional
-    #         Whether to onle plot an error bar, instead of the marginalised distribution.
-    #     include_truth_chain : bool, optional
-    #         If you specify another chain as the truth chain, determine if it should still
-    #         be plotted.
-    #     blind : bool|string|list[string], optional
-    #         Whether to blind axes values. Can be set to `True` to blind all parameters,
-    #         or can pass in a string (or list of strings) which specify the parameters to blind.
-    #     watermark : str, optional
-    #         A watermark to add to the figure
-    #     extra_parameter_spacing : float, optional
-    #         Increase horizontal space for parameter values
-    #     vertical_spacing_ratio : float, optional
-    #         Increase vertical space for each model
-    #     show_names : bool, optional
-    #         Whether to show chain names or not. Defaults to `True`.
-    #     log_scales : bool, list[bool] or dict[bool], optional
-    #         Whether or not to use a log scale on any given axis. Can be a list of True/False, a list of param
-    #         names to set to true, a dictionary of param names with true/false
-    #         or just a bool (just `True` would set everything to log scales).
+        Args:
+            chains:
+                Used to specify which chain to show if more than one chain is loaded in.
+                Can be an integer, specifying the
+                chain index, or a str, specifying the chain name.
+            columns:
+                If set, only creates a plot for those specific parameters (if list). If an
+                integer is given, only plots the fist so many parameters.
+            filename:
+                If set, saves the figure to this location
+            figsize:
+                Scale horizontal and vertical figure size.
+            errorbar:
+                Whether to onle plot an error bar, instead of the marginalised distribution.
+            include_truth_chain:
+                If you specify another chain as the truth chain, determine if it should still
+                be plotted.
+            extra_parameter_spacing:
+                Increase horizontal space for parameter values
+            vertical_spacing_ratio:
+                Increase vertical space for each model
+        Returns:
+            the matplotlib figure created
 
-    #     Returns
-    #     -------
-    #     figure
-    #         the matplotlib figure created
+        """
+        wide_extents = not errorbar
+        base = self._sanitise(
+            chains,
+            columns,
+            self.config.extents,
+            blind=self.config.blind,
+            log_scales=self.config.log_scales,
+            wide_extents=wide_extents,
+        )
 
-    #     """
-    #     wide_extents = not errorbar
-    #     chains, parameters, truth, extents, blind, log_scales = self._sanitise(
-    #         chains, parameters, truth, extents, blind=blind, wide_extents=wide_extents, log_scales=log_scales
-    #     )
+        # We have a bit of fun to go from chain names to the width of the
+        # subplot used to display said names
+        max_param = self._get_size_of_texts(base.columns)
+        fid_dpi = 65  # Seriously I have no idea what value this should be
+        param_width = extra_parameter_spacing + max(0.5, max_param / fid_dpi)
+        max_model_name = self._get_size_of_texts([chain.name for chain in base.chains])
+        model_width = 0.25 + (max_model_name / fid_dpi)
+        gridspec_kw = {
+            "width_ratios": [model_width] + [param_width] * len(base.columns),
+            "height_ratios": [1] * len(base.chains),
+        }
+        ncols = 1 + len(base.columns)
+        top_spacing = 0.3
+        bottom_spacing = 0.2
+        row_height = (0.5 if errorbar else 0.8) * vertical_spacing_ratio
+        width = param_width * len(base.columns) + model_width
+        height = top_spacing + bottom_spacing + row_height * len(base.chains)
+        top_ratio = 1 - (top_spacing / height)
+        bottom_ratio = bottom_spacing / height
 
-    #     all_names = [c.name for c in self.parent.chains]
+        fig_size = (width * figsize, height * figsize)
+        fig, axes = plt.subplots(
+            nrows=len(base.chains), ncols=ncols, figsize=fig_size, squeeze=False, gridspec_kw=gridspec_kw
+        )
+        fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
+        label_font_size = self.config.label_font_size
+        legend_color_text = self.config.legend_color_text
 
-    #     # Check if we're using a chain for truth values
-    #     if isinstance(truth, str):
-    #         assert truth in all_names, f"Truth chain {truth} is not in the list of added chains {all_names}"
-    #         if not include_truth_chain:
-    #             chains = [c for c in chains if c.name != truth]
-    #         truth = self.parent.analysis.get_summary(chains=truth, parameters=parameters)
+        max_vals: dict[ColumnName, float] = {}
+        num_chains = len(base.chains)
+        for i, axes_row in enumerate(axes):
+            chain = base.chains[i]
+            colour = colors.format(chain.color)
 
-    #     max_param = self._get_size_of_texts(parameters)
-    #     fid_dpi = 65  # Seriously I have no idea what value this should be
-    #     param_width = extra_parameter_spacing + max(0.5, max_param / fid_dpi)
+            # First one put name of model
+            ax_first = axes_row[0]
+            ax_first.set_axis_off()
+            text_colour = "k" if not legend_color_text else colour
+            ax_first.text(
+                0,
+                0.5,
+                chain.name,
+                transform=ax_first.transAxes,
+                fontsize=label_font_size,
+                verticalalignment="center",
+                color=text_colour,
+                weight="medium",
+            )
+            axes_for_summaries = axes_row[1:]
 
-    #     if show_names:
-    #         max_model_name = self._get_size_of_texts([chain.name for chain in chains])
-    #         model_width = 0.25 + (max_model_name / fid_dpi)
-    #         gridspec_kw = {
-    #             "width_ratios": [model_width] + [param_width] * len(parameters),
-    #             "height_ratios": [1] * len(chains),
-    #         }
-    #         ncols = 1 + len(parameters)
-    #     else:
-    #         model_width = 0
-    #         gridspec_kw = {"width_ratios": [param_width] * len(parameters), "height_ratios": [1] * len(chains)}
-    #         ncols = len(parameters)
+            for ax, p in zip(axes_for_summaries, base.columns):
+                # Set up the frames
+                if i > 0:
+                    ax.spines["top"].set_visible(False)
+                if i < (num_chains - 1):
+                    ax.spines["bottom"].set_visible(False)
+                if i < (num_chains - 1) or p in base.blind:
+                    ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_xlim(base.extents[p])
+                if p in base.log_scales:
+                    ax.set_xscale("log")
 
-    #     top_spacing = 0.3
-    #     bottom_spacing = 0.2
-    #     row_height = (0.5 if not errorbar else 0.3) * vertical_spacing_ratio
-    #     width = param_width * len(parameters) + model_width
-    #     height = top_spacing + bottom_spacing + row_height * len(chains)
-    #     top_ratio = 1 - (top_spacing / height)
-    #     bottom_ratio = bottom_spacing / height
+                # Put title in
+                if i == 0:
+                    ax.set_title(r"$%s$" % p, fontsize=label_font_size)
 
-    #     figsize = (width * figsize, height * figsize)
-    #     fig, axes = plt.subplots(
-    #         nrows=len(chains), ncols=ncols, figsize=figsize, squeeze=False, gridspec_kw=gridspec_kw
-    #     )
-    #     fig.subplots_adjust(left=0.05, right=0.95, top=top_ratio, bottom=bottom_ratio, wspace=0.0, hspace=0.0)
-    #     label_font_size = self.parent.config["label_font_size"]
-    #     legend_color_text = self.parent.config["legend_color_text"]
+                # Add truth values
+                for truth in self.parent._truths:
+                    truth_value = truth.location.get(p)
+                    if truth_value is not None:
+                        ax.axvline(truth_value, **truth._kwargs)
 
-    #     max_vals = {}
-    #     for i, row in enumerate(axes):
-    #         chain = chains[i]
+                # Skip if this chain doesnt have the parameter
+                if p not in chain.data_columns:
+                    continue
 
-    #         (
-    #             cs,
-    #             ws,
-    #             ps,
-    #         ) = (
-    #             chain.chain,
-    #             chain.weights,
-    #             chain.parameters,
-    #         )
-    #         gs, ns = chain.grid, chain.name
+                # Plot the good stuff
+                if errorbar:
+                    fv = self.parent.analysis.get_parameter_summary(chain, p)
+                    if fv is None or fv.all_none:
+                        continue
+                    if fv.lower is not None and fv.upper is not None:
+                        diff = np.abs(np.diff(fv.array))
+                        ax.errorbar([fv.center], 0, xerr=[[diff[0]], [diff[1]]], fmt="o", color=colour)
+                else:
+                    m = self._plot_bars(ax, p, chain)
+                    if max_vals.get(p) is None or m > max_vals[p]:
+                        max_vals[p] = m
 
-    #         colour = chain.config["color"]
+        for i, axes_row in enumerate(axes):
+            for ax, p in zip(axes_row, base.columns):
+                if not errorbar:
+                    ax.set_ylim(0, 1.1 * max_vals[p])
 
-    #         # First one put name of model
-    #         if show_names:
-    #             ax_first = row[0]
-    #             ax_first.set_axis_off()
-    #             text_colour = "k" if not legend_color_text else colour
-    #             ax_first.text(
-    #                 0,
-    #                 0.5,
-    #                 ns,
-    #                 transform=ax_first.transAxes,
-    #                 fontsize=label_font_size,
-    #                 verticalalignment="center",
-    #                 color=text_colour,
-    #                 weight="medium",
-    #             )
-    #             cols = row[1:]
-    #         else:
-    #             cols = row
+        if self.config.watermark:
+            ax = None
+            self._add_watermark(fig, ax, fig_size, self.config.watermark, dpi=self.config.dpi, size_scale=0.8)
 
-    #         for ax, p in zip(cols, parameters):
-    #             # Set up the frames
-    #             if i > 0:
-    #                 ax.spines["top"].set_visible(False)
-    #             if i < (len(chains) - 1):
-    #                 ax.spines["bottom"].set_visible(False)
-    #             if i < (len(chains) - 1) or p in blind:
-    #                 ax.set_xticks([])
-    #             ax.set_yticks([])
-    #             ax.set_xlim(extents[p])
-    #             if log_scales.get(p):
-    #                 ax.set_xscale("log")
+        if filename is not None:
+            if not isinstance(filename, list):
+                filename = [filename]
+            for f in filename:
+                self._save_fig(fig, f, self.config.dpi)
 
-    #             # Put title in
-    #             if i == 0:
-    #                 ax.set_title(r"$%s$" % p, fontsize=label_font_size)
-
-    #             # Add truth values
-    #             truth_value = truth.get(p)
-    #             if truth_value is not None:
-    #                 if isinstance(truth_value, float | int):
-    #                     truth_mean = truth_value
-    #                     truth_min, truth_max = None, None
-    #                 else:
-    #                     if len(truth_value) == 1:
-    #                         truth_mean = truth_value
-    #                         truth_min, truth_max = None, None
-    #                     elif len(truth_value) == 2:
-    #                         truth_min, truth_max = truth_value
-    #                         truth_mean = None
-    #                     else:
-    #                         truth_min, truth_mean, truth_max = truth_value
-    #                 if truth_mean is not None:
-    #                     ax.axvline(truth_mean, **self.parent.config_truth)
-    #                 if truth_min is not None and truth_max is not None:
-    #                     ax.axvspan(truth_min, truth_max, color=self.parent.config_truth["color"], alpha=0.15, lw=0)
-    #             # Skip if this chain doesnt have the parameter
-    #             if p not in ps:
-    #                 continue
-
-    #             # Plot the good stuff
-    #             if errorbar:
-    #                 fv = self.parent.analysis.get_parameter_summary(chain, p)
-    #                 if fv[0] is not None and fv[2] is not None:
-    #                     diff = np.abs(np.diff(fv))
-    #                     ax.errorbar([fv[1]], 0, xerr=[[diff[0]], [diff[1]]], fmt="o", color=colour)
-    #             else:
-    #                 m = self._plot_bars(ax, p, chain)
-    #                 if max_vals.get(p) is None or m > max_vals.get(p):
-    #                     max_vals[p] = m
-
-    #     for i, row in enumerate(axes):
-    #         index = 1 if show_names else 0
-    #         for ax, p in zip(row[index:], parameters):
-    #             if not errorbar:
-    #                 ax.set_ylim(0, 1.1 * max_vals[p])
-
-    #     dpi = 300
-    #     if watermark:
-    #         ax = None
-    #         self._add_watermark(fig, ax, figsize, watermark, dpi=dpi, size_scale=0.8)
-
-    #     if filename is not None:
-    #         if isinstance(filename, str):
-    #             filename = [filename]
-    #         for f in filename:
-    #             self._save_fig(fig, f, dpi)
-    #     if display:
-    #         plt.show()
-
-    #     return fig
+        return fig
 
     def _get_size_of_texts(self, texts: list[str]) -> float:  # pragma: no cover
         usetex = self.config.usetex
@@ -926,7 +831,12 @@ class Plotter:
 
     def _sanitise_columns(self, columns: list[ColumnName] | None, chains: list[Chain]) -> list[ColumnName]:
         if columns is None:
-            return list(set([c for chain in chains for c in chain.plotting_columns]))
+            res = []  # Doing it without set to preserve order
+            for chain in chains:
+                for column in chain.plotting_columns:
+                    if column not in res:
+                        res.append(column)
+            return res
         return columns
 
     def _sanitise_logscale(self, log_scales: list[ColumnName] | None) -> list[ColumnName]:
@@ -989,13 +899,14 @@ class Plotter:
         self,
         columns: list[ColumnName],
         chains: list[Chain],
-        extents: dict[ColumnName, tuple[float, float]] | None,
+        initial_extents: dict[ColumnName, tuple[float, float]] | None,
         wide_extents: bool = True,
     ) -> dict[ColumnName, tuple[float, float]]:  # pragma: no cover
-        if extents is None:
-            extents = {}
+        if initial_extents is None:
+            initial_extents = {}
+        extents = {} | initial_extents
         for p in columns:
-            if p not in extents:
+            if p not in initial_extents:
                 extents[p] = self._get_parameter_extents(p, chains, wide_extents=wide_extents)
         return extents
 
@@ -1155,7 +1066,7 @@ class Plotter:
         # Determine if we need to darken the point
         c = colors.format(chain.color)
         if chain.plot_contour:
-            c = colors.scale_colour(chain.color, 0.5)
+            c = colors.scale_colour(colors.format(chain.color), 0.5)
         h = ax.scatter(
             [point.coordinate[px]],
             [point.coordinate[py]],
@@ -1216,7 +1127,7 @@ class Plotter:
         x = chain.get_data(py)
         y = chain.get_data(px)
 
-        contour_colours = self._scale_colours(chain.color, len(levels), chain.shade_gradient)
+        contour_colours = self._scale_colours(colors.format(chain.color), len(levels), chain.shade_gradient)
         sub = max(0.1, 1 - 0.2 * chain.shade_gradient)
         paths = None
 
@@ -1343,9 +1254,11 @@ class Plotter:
                     if summary:
                         t = self.parent.analysis.get_parameter_text(fit_values)
                         if isinstance(column, str):
-                            ax.set_title(r"${} = {}$".format(column.strip("$"), t), fontsize=self.config.title_size)
+                            ax.set_title(
+                                r"${} = {}$".format(column.strip("$"), t), fontsize=self.config.summary_font_size
+                            )
                         else:
-                            ax.set_title(r"$%s$" % t, fontsize=self.config.title_size)
+                            ax.set_title(r"$%s$" % t, fontsize=self.config.summary_font_size)
         return ys.max()
 
     def _plot_walk(

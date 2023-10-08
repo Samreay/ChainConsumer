@@ -162,6 +162,8 @@ class ChainConsumer:
         global_config["shade"] = num_chains < 5
         global_config["shade_alpha"] = 1.0 / np.sqrt(num_chains)
 
+        color_iter = colors.next_colour()
+
         for _, chain in final_chains.items():
             # copy global config into local config
             local_config = global_config.copy()
@@ -175,9 +177,9 @@ class ChainConsumer:
 
             # Check to see if the color is set
             if chain.color is None:
-                local_config["color"] = next(colors.next_colour())
+                local_config["color"] = next(color_iter)
 
-            chain._apply_if_none(**local_config)
+            chain._apply_if_not_user_set(**local_config)
 
             # Apply user overrides
             if self._global_chain_override is not None:

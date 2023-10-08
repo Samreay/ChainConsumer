@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -21,13 +22,33 @@ class Bound(BetterBase):
     center: float | None = Field(default=None)
     upper: float | None = Field(default=None)
 
+    @property
+    def array(self) -> np.ndarray:
+        return np.array(
+            [
+                self.lower if self.lower is not None else np.NaN,
+                self.center if self.center is not None else np.NaN,
+                self.upper if self.upper is not None else np.NaN,
+            ]
+        )
+
+    @property
+    def all_none(self) -> bool:
+        return self.lower is None and self.center is None and self.upper is None
+
+    @classmethod
+    def from_array(cls, array: np.ndarray | list[float]) -> Bound:
+        assert len(array) == 3, "Array must have 3 elements"
+        lower, center, upper = array
+        return cls(lower=lower, center=center, upper=upper)
+
 
 class Analysis:
     def __init__(self, parent: ChainConsumer):
         self.parent = parent
         self._logger = logging.getLogger("chainconsumer")
 
-        self._summaries = {
+        self._summaries: dict[SummaryStatistic, Callable[[Chain, ColumnName], Bound | None]] = {
             SummaryStatistic.MAX: self.get_parameter_summary_max,
             SummaryStatistic.MEAN: self.get_parameter_summary_mean,
             SummaryStatistic.CUMULATIVE: self.get_parameter_summary_cumulative,
@@ -151,7 +172,7 @@ class Analysis:
 
         for name, chain in chains.items():
             res = {}
-            params_to_find = columns if columns is not None else chain.samples.columns
+            params_to_find = columns if columns is not None else chain.data_columns
             for p in params_to_find:
                 if p not in chain.samples:
                     continue
@@ -187,7 +208,7 @@ class Analysis:
 
         return results
 
-    def get_parameter_summary(self, chain: Chain, column: ColumnName):
+    def get_parameter_summary(self, chain: Chain, column: ColumnName) -> Bound | None:
         callback = self._summaries[chain.statistics]
         return callback(chain, column)
 
