@@ -1,26 +1,35 @@
-name: Python package
+name: CICD
 
-on: [push]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          # Optional - x64 or x86 architecture, defaults to x64
           architecture: 'x64'
+          cache: 'poetry'
+      - run: make install
+      - run: make precommit
 
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
-
-      - name: Install
-        run: make install
-
-      - name: Verify formatting and tests
-        run: make precommit
+  build_docs:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+          cache: 'poetry'
+      - run: make install

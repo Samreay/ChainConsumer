@@ -13,8 +13,14 @@ test:
 	poetry run pytest
 
 serve:
-	# rm -rf docs/generated/gallery;
+	rm -rf docs/generated/gallery;
 	poetry run mkdocs serve --clean
+
+docs:
+	poetry run mkdocs build
+
+deploy:
+	poetry run mkdocs gh-deploy --force
 
 tests: test
 
