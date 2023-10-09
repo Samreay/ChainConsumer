@@ -13,13 +13,13 @@ version = "0.35.0"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-numpy = "^1.26.0"
-scipy = "^1.11.3"
-matplotlib = "^3.8.0"
+numpy = "^1.23.0"
+scipy = "^1.8.0"
+matplotlib = "^3.6.0"
 statsmodels = "^0.14.0"
 pandas = "^2.1.1"
 pillow = "^10.0.1"
-pydantic = "^2.4.2"
+pydantic = "^2.2.0"
 
 
 [tool.poetry.group.test.dependencies]

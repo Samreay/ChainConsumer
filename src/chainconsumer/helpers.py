@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.ndimage import gaussian_filter
 
 from .chain import Chain
+from .kde import MegKDE
 
 
 def get_extents(
@@ -69,6 +71,56 @@ def get_smoothed_bins(
         return np.linspace(minv, maxv, int(bins)), 0
     else:
         return np.linspace(minv, maxv, 2 * smooth * bins), smooth
+
+
+def get_smoothed_histogram2d(
+    chain: Chain,
+    col1: str,
+    col2: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # pragma: no cover
+    """Returns a smoothed 2D histogram of two parameters.
+
+    Args:
+        chain (Chain): The chain to plot
+        col1 (str): The first parameter
+        col2 (str): The second parameter
+
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray]: The histogram, x bin enters, y bin centers
+    """
+    x = chain.get_data(col1)
+    y = chain.get_data(col2)
+    w = chain.weights
+
+    if chain.grid:
+        binsx = get_grid_bins(x)
+        binsy = get_grid_bins(y)
+        hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
+    else:
+        binsx, smooth = get_smoothed_bins(chain.smooth, get_bins(chain), x, w)
+        binsy, _ = get_smoothed_bins(smooth, get_bins(chain), y, w)
+        hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
+
+    if chain.power is not None:
+        hist = hist**chain.power
+
+    x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
+    y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
+
+    if chain.kde:
+        nn = x_centers.size * 2  # Double samples for KDE because smooth
+        x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
+        y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
+        xx, yy = np.meshgrid(x_centers, y_centers, indexing="ij")
+        coords = np.vstack((xx.flatten(), yy.flatten())).T
+        data = np.vstack((x, y)).T
+        hist = MegKDE(data, w, chain.kde).evaluate(coords).reshape((nn, nn))
+        if chain.power is not None:
+            hist = hist**chain.power
+    elif chain.smooth:
+        hist = gaussian_filter(hist, chain.smooth, mode="reflect")
+
+    return hist, x_centers, y_centers
 
 
 def get_grid_bins(data: pd.Series[float]) -> np.ndarray:

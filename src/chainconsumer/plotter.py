@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.figure import Figure
@@ -13,10 +14,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.lines import Line2D
 from matplotlib.textpath import TextPath
 from matplotlib.ticker import LogLocator, MaxNLocator, ScalarFormatter
-from numpy import meshgrid
 from pydantic import Field
 from scipy.interpolate import interp1d  # type: ignore
-from scipy.ndimage import gaussian_filter  # type: ignore
 from scipy.stats import norm  # type: ignore
 
 from chainconsumer.truth import Truth
@@ -24,8 +23,7 @@ from chainconsumer.truth import Truth
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName
 from .color_finder import ColorInput, colors
-from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins
-from .kde import MegKDE
+from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins, get_smoothed_histogram2d
 
 
 class PlottingBase(BetterBase):
@@ -46,7 +44,7 @@ class PlotConfig(BetterBase):
     diagonal_tick_labels: bool = Field(default=True, description="Whether to show tick labels on the diagonal")
     label_font_size: int = Field(default=12, ge=0, description="Font size for axis labels")
     tick_font_size: int = Field(default=10, ge=0, description="Font size for axis ticks")
-    spacing: float = Field(default=None, ge=0, description="Spacing between subplots")
+    spacing: float | None = Field(default=None, ge=0, description="Spacing between subplots")
     contour_label_font_size: int = Field(default=10, ge=0, description="Font size for contour labels")
     show_legend: bool | None = Field(
         default=None,
@@ -129,8 +127,8 @@ class FigSize(Enum):
         return 3 + grow_factor * 2 * num_columns + (1 if has_cax else 0), 3 + grow_factor * 2 * num_columns
 
 
-def get_artists_from_chains(chains: list[Chain]):
-    artists = []
+def get_artists_from_chains(chains: list[Chain]) -> list[Artist]:
+    artists: list[Artist] = []
     for chain in chains:
         if chain.plot_contour and not chain.plot_point:
             artists.append(
@@ -234,7 +232,7 @@ class Plotter:
         fig_size = FigSize.get_size(figsize, len(base.columns), num_cax > 0)
         plot_hists = self.config.plot_hists
         flip = len(base.columns) == 2 and plot_hists and self.config.flip
-        fig, axes, params_x, params_y = self._get_figure(base, figsize=fig_size)
+        fig, axes, params_x, params_y = self._get_triangle_figure(base, figsize=fig_size)
 
         axl = axes.ravel().tolist()
         summarise = self.config.summarise and len(base.chains) == 1
@@ -348,7 +346,13 @@ class Plotter:
         fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
 
     def _add_watermark(
-        self, fig: Figure, axes: Axes | None, fig_size: tuple[float, float], text: str, dpi=300, size_scale: float = 1.0
+        self,
+        fig: Figure,
+        axes: Axes | None,
+        fig_size: tuple[float, float],
+        text: str,
+        dpi: int = 300,
+        size_scale: float = 1.0,
     ) -> None:  # pragma: no cover
         # Code based off github repository https://github.com/cpadavis/preliminize
         dx, dy = fig_size
@@ -444,7 +448,7 @@ class Plotter:
         n = len(base.columns)
         extra = 0
 
-        plot_posterior = plot_posterior and np.any([c.log_posterior is not None for c in base.chains])
+        plot_posterior = plot_posterior and any([c.log_posterior is not None for c in base.chains])
         if plot_weights:
             extra += 1
         if plot_posterior:
@@ -635,7 +639,7 @@ class Plotter:
         errorbar: bool = False,
         extra_parameter_spacing: float = 1.0,
         vertical_spacing_ratio: float = 1.0,
-    ):  # pragma: no cover
+    ) -> Figure:  # pragma: no cover
         """Plots parameter summaries
 
         This plot is more for a sanity or consistency check than for use with final results.
@@ -872,7 +876,7 @@ class Plotter:
                 extents[p] = self._get_parameter_extents(p, chains, wide_extents=wide_extents)
         return extents
 
-    def _get_figure(
+    def _get_triangle_figure(
         self, base: PlottingBase, figsize: tuple[float, float]
     ) -> tuple[Figure, np.ndarray, list[ColumnName], list[ColumnName]]:
         n = len(base.columns)
@@ -1080,7 +1084,15 @@ class Plotter:
         else:
             kwargs = {"c": color, "alpha": 0.3}
 
-        h = ax.scatter(x[::skip], y[::skip], s=10, marker=".", edgecolors="none", zorder=chain.zorder - 5, **kwargs)
+        h = ax.scatter(
+            x[::skip],
+            y[::skip],
+            s=10,
+            marker=".",
+            edgecolors="none",
+            zorder=chain.zorder - 5,
+            **kwargs,  # type: ignore
+        )
         if chain.color_data is not None:
             return h
         else:
@@ -1105,7 +1117,7 @@ class Plotter:
             colors.scale_colour(c, sub) for c in contour_colours[:-1]
         ]
 
-        hist, x_centers, y_centers = self._get_smoothed_histogram2d(chain, py, px)
+        hist, x_centers, y_centers = get_smoothed_histogram2d(chain, py, px)
         hist[hist == 0] = 1e-16
         vals = self._convert_to_stdev(hist.T)
 
@@ -1279,56 +1291,6 @@ class Plotter:
         scales = np.logspace(np.log(minv), np.log(maxv), num)
         colours = [colors.scale_colour(colour, scale) for scale in scales]
         return colours
-
-    def _get_smoothed_histogram2d(
-        self,
-        chain: Chain,
-        col1: str,
-        col2: str,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # pragma: no cover
-        """Returns a smoothed 2D histogram of two parameters.
-
-        Args:
-            chain (Chain): The chain to plot
-            col1 (str): The first parameter
-            col2 (str): The second parameter
-
-        Returns:
-            tuple[np.ndarray, np.ndarray, np.ndarray]: The histogram, x bin enters, y bin centers
-        """
-        x = chain.get_data(col1)
-        y = chain.get_data(col2)
-        w = chain.weights
-
-        if chain.grid:
-            binsx = get_grid_bins(x)
-            binsy = get_grid_bins(y)
-            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
-        else:
-            binsx, smooth = get_smoothed_bins(chain.smooth, get_bins(chain), x, w)
-            binsy, _ = get_smoothed_bins(smooth, get_bins(chain), y, w)
-            hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
-
-        if chain.power is not None:
-            hist = hist**chain.power
-
-        x_centers = 0.5 * (x_bins[:-1] + x_bins[1:])
-        y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
-
-        if chain.kde:
-            nn = x_centers.size * 2  # Double samples for KDE because smooth
-            x_centers = np.linspace(x_bins.min(), x_bins.max(), nn)
-            y_centers = np.linspace(y_bins.min(), y_bins.max(), nn)
-            xx, yy = meshgrid(x_centers, y_centers, indexing="ij")
-            coords = np.vstack((xx.flatten(), yy.flatten())).T
-            data = np.vstack((x, y)).T
-            hist = MegKDE(data, w, chain.kde).evaluate(coords).reshape((nn, nn))
-            if chain.power is not None:
-                hist = hist**chain.power
-        elif chain.smooth:
-            hist = gaussian_filter(hist, chain.smooth, mode="reflect")
-
-        return hist, x_centers, y_centers
 
 
 if __name__ == "__main__":
