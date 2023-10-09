@@ -16,22 +16,22 @@ bibliography: paper.bib
 
 ChainConsumer is a python package written to consume the output chains
 of Monte-Carlo processes and fitting algorithms, such as the results
-of MCMC. 
+of MCMC.
 
-ChainConsumer's main function is to produce plots of the likelihood 
+ChainConsumer's main function is to produce plots of the likelihood
 surface inferred from the supplied chain. In addition to showing
 the two-dimensional marginalised likelihood surfaces, marginalised
 parameter distributions are given, and maximum-likelihood statistics
-are used to present parameter constraints. 
+are used to present parameter constraints.
 
 
 In addition to this, parameter constraints can be output
-in the form of a LaTeX table. Finally, ChainConsumer also provides 
-the functionality to plot the chains as a series of walks in 
-parameter values, which provides an easy visual check on chain 
+in the form of a LaTeX table. Finally, ChainConsumer also provides
+the functionality to plot the chains as a series of walks in
+parameter values, which provides an easy visual check on chain
 mixing and chain convergence.
 
-Plotting is performed via the matplotlib library [@matplotlib], and 
+Plotting is performed via the matplotlib library [@matplotlib], and
 makes use of various numpy [@numpy] and scipy [@scipy] functions. The
 optional KDE feature makes use of [@statsmodels].
 

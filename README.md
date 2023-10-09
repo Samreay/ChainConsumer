@@ -22,14 +22,19 @@ and perform some model selection!
 ### Installation
 
 Install via `pip`:
-    
+
     pip install chainconsumer
 
 ### Python Versions
 
-Due to dependencies dropping support for Python 2.7, from 0.31.0 and onwards, only Python 3 will be supported.
+Time has ticked on, and now only python 3.10 will be supported. This is because type hints are amazing.
 
-Previous versions will still be installable for Python 2.7 environments, however I'd strong recommend upgrading.
+### Developing
+
+1. Clone repo
+2. Run `make install`
+3. Ensure that you set your python interpreter to the `.venv/bin/python`
+4. Code away.
 
 ### Contributors
 
@@ -53,7 +58,7 @@ which have helped improve ChainConsumer:
 
 ### Common Issues
 
-Users on some Linux platforms have reported issues rendering plots using ChainConsumer. 
+Users on some Linux platforms have reported issues rendering plots using ChainConsumer.
 The common error states that `dvipng: not found`, and as per [StackOverflow](http://stackoverflow.com/a/32915992/3339667)
 post, it can be solved by explicitly install the `matplotlib` dependency `dvipng` via `sudo apt-get install dvipng`.
 

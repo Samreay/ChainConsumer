@@ -1,0 +1,88 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.poetry]
+authors = ["Samuel Hinton <sh@arenko.group>"]
+description = "ChainConsumer: Consumer your MCMC chains"
+name = "ChainConsumer"
+packages = [{include = "chainconsumer", from = "src"}]
+readme = "README.md"
+version = "v0.34.0"
+
+[tool.poetry-version-plugin]
+source = "git-tag"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+numpy = "^1.23.0"
+scipy = "^1.8.0"
+matplotlib = "^3.6.0"
+statsmodels = "^0.14.0"
+pandas = "^2.1.1"
+pillow = "^10.0.1"
+pydantic = "^2.2.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
+[tool.poetry.group.dev.dependencies]
+black = ">=23.3.0"
+pre-commit = ">=3.3.3"
+ruff = ">=0.0.276, <1"
+mypy = "^1.4.1"
+pandas-stubs = "^2.1.1.230928"
+
+
+[tool.poetry.group.docs.dependencies]
+jupyter = "^1.0.0"
+Markdown = "^3.3.7"
+mkdocs = "^1.1.2"
+mkdocs-material = "^9.1.19"
+pyyaml = "^6.0.1"
+mdx-include = ">=1.4.1"
+mkdocstrings-python = ">=0.8.3"
+mkdocs-gallery = ">=0.7.8"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+
+[tool.ruff]
+src = ["src"]
+select = ["E", "F", "I", "N", "W", "D207", "D208", "D300", "UP", "YTT", "ASYNC", "DTZ", "G10", "G101", "G201", "G202", "INP001", "PIE", "T20", "SIM", "PTH", "PD", "PLE", "PLR", "PLW", "TRY", "NPY", "RUF"]
+ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712"]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.extend-per-file-ignores]
+"test/***" = ["INP001"]
+"__init__.py" = ["E402", "F401"]
+"examples/***" = ["T201", "NPY002"]
+"**/plot_*" = ["T201"]
+"docs/examples/***" = ["T201"]
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin", "pydantic.mypy"]
+ignore_missing_imports = true
+disallow_untyped_defs = false
+disallow_any_unimported  = false
+disallow_any_generics = false
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = false
+implicit_reexport = false
+no_implicit_optional = false
+python_version = "3.10"
+strict_equality = true
+show_error_codes = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+addopts = "-v"
+pythonpath = ["src"]
+testpaths = ["test"]
