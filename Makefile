@@ -1,4 +1,4 @@
-.PHONY: tests docs
+.PHONY: tests docs build
 
 install:
 	pip install -U pip poetry -q
@@ -21,6 +21,12 @@ docs:
 
 pushdocs:
 	poetry run mkdocs gh-deploy --force
+
+build:
+	poetry publish --build --dry-run
+
+publish:
+	poetry publish --build
 
 tests: test
 
