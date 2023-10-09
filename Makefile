@@ -1,4 +1,5 @@
 .PHONY: tests docs build
+VERSION := $(shell git for-each-ref refs/tags --format='%(refname:short)' | grep -E "^v?[0-9]+\..*" | tail -n1)
 
 install:
 	pip install -U pip poetry -q
@@ -17,16 +18,16 @@ serve:
 	poetry run mkdocs serve --clean
 
 docs:
-	poetry run mkdocs build
+	poetry run poetry version $(VERSION) && mkdocs build
 
 pushdocs:
-	poetry run mkdocs gh-deploy --force
+	poetry run poetry version $(VERSION) && mkdocs gh-deploy --force
 
 build:
-	poetry version $$(git describe --tags --abbrev=0) && poetry publish --build --dry-run
+	rm -rf dist; poetry version $(VERSION) && poetry publish --build --dry-run
 
 publish:
-	poetry config pypi-token.pypi $PYPI_TOKEN && poetry version $$(git describe --tags --abbrev=0) && poetry publish --build
+	rm -rf dist; poetry config pypi-token.pypi $PYPI_TOKEN && poetry version $(VERSION) && poetry publish --build -y
 
 tests: test
 

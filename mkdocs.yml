@@ -1,4 +1,11 @@
 site_name: ChainConsumer
+site_url: https://samreay.github.io/chainconsumer/
+site_author: Samuel Hinton
+
+edit_uri: ""
+repo_name: samreay/chainconsumer
+repo_url: https://github.com/samreay/chainconsumer
+
 theme:
   name: material
   icon:
@@ -25,10 +32,9 @@ theme:
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
-repo_name: chainconsumer
-repo_url: https://github.com/samreay/chainconsumer
+
 plugins:
-  # autorefs: {}
+  autorefs: {}
   mkdocstrings:
     handlers:
       python:
