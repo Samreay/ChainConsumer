@@ -1,5 +1,5 @@
 .PHONY: tests docs build
-VERSION := $(shell git for-each-ref refs/tags --format='%(refname:short)' | grep -E "^v?[0-9]+\..*" | tail -n1)
+VERSION := $(shell git for-each-ref refs/tags --format='%(refname:short)' | grep -E "^v[0-9]+\..*" | tail -n1)
 
 install:
 	pip install -U pip poetry -q
