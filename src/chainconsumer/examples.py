@@ -15,7 +15,7 @@ def make_sample(
     diag = np.sqrt(np.diag(cov))
     outer = np.outer(diag, diag)
     cor = cov / outer
-    means = np.arange(num_dimensions) * 1.0
+    means = np.arange(num_dimensions) * 5.0
     if randomise_mean:
         means += gen.uniform(-1, 1, num_dimensions)
     norm = mv(mean=means, cov=cor)

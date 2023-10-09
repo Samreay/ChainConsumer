@@ -1,6 +1,5 @@
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -10,20 +9,21 @@ from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.figure import Figure
-from matplotlib.font_manager import FontProperties
 from matplotlib.lines import Line2D
 from matplotlib.textpath import TextPath
 from matplotlib.ticker import LogLocator, MaxNLocator, ScalarFormatter
-from pydantic import Field
 from scipy.interpolate import interp1d  # type: ignore
-from scipy.stats import norm  # type: ignore
 
+from chainconsumer.plotting.truth import plot_truths  # type: ignore
 from chainconsumer.truth import Truth
 
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName
-from .color_finder import ColorInput, colors
-from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins, get_smoothed_histogram2d
+from .color_finder import colors
+from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins
+from .plotting.config import PlotConfig
+from .plotting.contours import plot_surface
+from .plotting.watermark import add_watermark
 
 
 class PlottingBase(BetterBase):
@@ -32,72 +32,6 @@ class PlottingBase(BetterBase):
     extents: dict[ColumnName, tuple[float, float]]
     blind: list[ColumnName]
     log_scales: list[ColumnName]
-
-
-class PlotConfig(BetterBase):
-    labels: dict[ColumnName, str] = Field(default={}, description="Labels for parameters")
-    max_ticks: int = Field(default=5, ge=0, description="Maximum number of ticks to use on axes")
-    plot_hists: bool = Field(default=True, description="Whether to plot the 1D histograms")
-    flip: bool = Field(default=False, description="Whether to flip the 1D histograms")
-    serif: bool = Field(default=False, description="Whether to use a serif font")
-    usetex: bool = Field(default=False, description="Whether to use LaTeX for text rendering")
-    diagonal_tick_labels: bool = Field(default=True, description="Whether to show tick labels on the diagonal")
-    label_font_size: int = Field(default=12, ge=0, description="Font size for axis labels")
-    tick_font_size: int = Field(default=10, ge=0, description="Font size for axis ticks")
-    spacing: float | None = Field(default=None, ge=0, description="Spacing between subplots")
-    contour_label_font_size: int = Field(default=10, ge=0, description="Font size for contour labels")
-    show_legend: bool | None = Field(
-        default=None,
-        description="Whether to show the legend. None means determine automatically",
-    )
-    legend_kwargs: dict[str, Any] = Field(default={}, description="Kwargs to pass to the legend")
-    legend_location: tuple[int, int] | None = Field(default=None, description="Which subplot to put the legend in")
-    legend_artists: bool | None = Field(default=None, description="Whether to show artists in the legend")
-    legend_color_text: bool = Field(default=True, description="Whether to color the legend text")
-    watermark: str | None = Field(default=None, description="Watermark text to add to the plot")
-    watermark_text_kwargs: dict[str, Any] = Field(default={}, description="Kwargs to pass to the watermark text")
-    summarise: bool = Field(default=True, description="Whether to annotate the plot with summary statistics")
-    summary_font_size: int = Field(default=12, ge=0, description="Font size for parameter summaries")
-    sigma2d: bool | None = Field(
-        default=None,
-        description=(
-            "Whether to use 2D sigmas for summary statistics. Ie in 2D a 1sigma contour"
-            r" does *not* encapsulate 68% of the volume, it covers 39.3% of the volume."
-        ),
-    )
-    blind: bool | list[str] = Field(default=False, description="Whether to blind some parameters")
-    log_scales: list[ColumnName] = Field(default=[], description="Whether to use log scales for some parameters")
-    extents: dict[ColumnName, tuple[float, float]] = Field(
-        default={}, description="Extents for parameters. Any you don't specify are determined automatically"
-    )
-    dpi: int = Field(default=300, ge=0, description="DPI for the figure")
-
-    @property
-    def legend_kwargs_final(self) -> dict[str, Any]:
-        default = {
-            "labelspacing": 0.3,
-            "loc": "upper right",
-            "frameon": False,
-            "fontsize": self.label_font_size,
-            "handlelength": 1,
-            "handletextpad": 0.2,
-            "borderaxespad": 0.0,
-        }
-        return default | self.legend_kwargs
-
-    @property
-    def watermark_text_kwargs_final(self) -> dict[str, Any]:
-        default = {
-            "color": "#333333",
-            "alpha": 0.7,
-            "verticalalignment": "center",
-            "horizontalalignment": "center",
-            "weight": "bold",
-        }
-        return default | self.watermark_text_kwargs
-
-    def get_label(self, column: ColumnName) -> str:
-        return self.labels.get(column, column)
 
 
 class FigSize(Enum):
@@ -237,7 +171,7 @@ class Plotter:
         axl = axes.ravel().tolist()
         summarise = self.config.summarise and len(base.chains) == 1
 
-        cbar_done = []
+        paths_for_cbar: dict[ColumnName, PathCollection] = {}
         for i, p1 in enumerate(params_x):
             for j, p2 in enumerate(params_y):
                 if i < j:
@@ -247,11 +181,10 @@ class Plotter:
 
                 # Plot the histograms
                 if plot_hists and i == j:
-                    for truth in self.parent._truths:
-                        if do_flip:
-                            self._add_truth(ax, truth, px=p1)
-                        else:
-                            self._add_truth(ax, truth, py=p2)
+                    if do_flip:
+                        plot_truths(ax, self.parent._truths, px=p1)
+                    else:
+                        plot_truths(ax, self.parent._truths, py=p2)
                     max_val = None
 
                     # Plot each chain
@@ -272,36 +205,25 @@ class Plotter:
                             ax.set_ylim(0, 1.1 * max_val)
 
                 else:
-                    for chain in base.chains:
-                        if p1 not in chain.samples or p2 not in chain.samples:
-                            continue
+                    paths_for_cbar |= plot_surface(ax, base.chains, p2, p1, self.config)
+                    plot_truths(ax, self.parent._truths, px=p2, py=p1)
 
-                        if chain.plot_contour:
-                            h = self._plot_contour(ax, chain, p1, p2)
-                            cp = chain.color_param
-                            if h is not None and cp is not None and cp not in cbar_done:
-                                cbar_done.append(cp)
-                                aspect = fig_size[1] / 0.15
-                                fraction = 0.85 / fig_size[0]
-                                cbar = fig.colorbar(
-                                    h, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False
-                                )
-                                label = self.config.get_label(cp)
-                                if label == "weight":
-                                    label = "Weights"
-                                elif label == "log_weight":
-                                    label = "log(Weights)"
-                                elif label == "posterior":
-                                    label = "log(Posterior)"
-                                cbar.set_label(label, fontsize=self.config.label_font_size)
-                                if cbar.solids is not None:
-                                    cbar.solids.set(alpha=1)
-
-                        if chain.plot_point:
-                            self._plot_point(ax, chain, p2, p1)
-
-                    for truth in self.parent._truths:
-                        self._add_truth(ax, truth, px=p1, py=p2)
+        # Create all the colorbars we need
+        if paths_for_cbar:
+            aspect = fig_size[1] / 0.15
+            fraction = 0.85 / fig_size[0]
+            for column, path in paths_for_cbar.items():
+                cbar = fig.colorbar(path, ax=axl, aspect=aspect, pad=0.03, fraction=fraction, drawedges=False)
+                label = self.config.get_label(column)
+                if label == "weight":
+                    label = "Weights"
+                elif label == "log_weight":
+                    label = "log(Weights)"
+                elif label == "posterior":
+                    label = "log(Posterior)"
+                cbar.set_label(label, fontsize=self.config.label_font_size)
+                if cbar.solids is not None:
+                    cbar.solids.set(alpha=1)
 
         legend_location = self.config.legend_location
         if legend_location is None:
@@ -332,58 +254,18 @@ class Plotter:
 
         if self.config.watermark is not None:
             ax_watermark = axes[-1, 0] if flip and len(base.columns) == 2 else None
-            self._add_watermark(fig, ax_watermark, fig_size, self.config.watermark, dpi=self.config.dpi)
+            add_watermark(fig, ax_watermark, fig_size, self.config)
 
+        self._save_fig(fig, filename, dpi=self.config.dpi)
+
+        return fig
+
+    def _save_fig(self, fig: Figure, filename: list[str | Path] | str | Path | None = None, dpi: int = 300) -> None:
         if filename is not None:
             if not isinstance(filename, list):
                 filename = [filename]
             for f in filename:
-                self._save_fig(fig, f, self.config.dpi)
-
-        return fig
-
-    def _save_fig(self, fig: Figure, filename: str | Path, dpi: int) -> None:  # pragma: no cover
-        fig.savefig(filename, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
-
-    def _add_watermark(
-        self,
-        fig: Figure,
-        axes: Axes | None,
-        fig_size: tuple[float, float],
-        text: str,
-        dpi: int = 300,
-        size_scale: float = 1.0,
-    ) -> None:  # pragma: no cover
-        # Code based off github repository https://github.com/cpadavis/preliminize
-        dx, dy = fig_size
-        dy, dx = dy * dpi, dx * dpi
-        rotation = 180 / np.pi * np.arctan2(-dy, dx)
-        property_dict = self.config.watermark_text_kwargs_final
-
-        keys_in_font_dict = ["family", "style", "variant", "weight", "stretch", "size"]
-        fontdict = {k: property_dict[k] for k in keys_in_font_dict if k in property_dict}
-        font_prop = FontProperties(**fontdict)
-        usetex = property_dict.get("usetex", self.config.usetex)
-        if usetex:
-            px, py, scale = 0.5, 0.5, 1.0
-        else:
-            px, py, scale = 0.5, 0.5, 0.8
-
-        bb0 = TextPath((0, 0), text, size=50, prop=font_prop, usetex=usetex).get_extents()
-        bb1 = TextPath((0, 0), text, size=51, prop=font_prop, usetex=usetex).get_extents()
-        dw = (bb1.width - bb0.width) * (dpi / 100)
-        dh = (bb1.height - bb0.height) * (dpi / 100)
-        size = np.sqrt(dy**2 + dx**2) / (dh * abs(dy / dx) + dw) * 0.7 * scale * size_scale
-        if axes is not None:
-            if usetex:
-                size *= 0.7
-            else:
-                size *= 0.8
-        size = int(size)
-        if axes is None:
-            fig.text(px, py, text, fontdict=property_dict, rotation=rotation, fontsize=size)
-        else:
-            axes.text(px, py, text, transform=axes.transAxes, fontdict=property_dict, rotation=rotation, fontsize=size)
+                fig.savefig(f, bbox_inches="tight", dpi=dpi, transparent=True, pad_inches=0.05)
 
     def plot_walks(
         self,
@@ -455,9 +337,13 @@ class Plotter:
             extra += 1
 
         if figsize is None:
-            figsize = (8, 0.75 + (n + extra))
+            fig_size = (8, 0.75 + (n + extra))
+        elif isinstance(figsize, float | int):
+            fig_size = (figsize, figsize)
+        else:
+            fig_size = figsize
 
-        fig, axes = plt.subplots(figsize=figsize, nrows=n + extra, squeeze=False, sharex=True)
+        fig, axes = plt.subplots(figsize=fig_size, nrows=n + extra, squeeze=False, sharex=True)
         max_points = 100000
         for i, axes_row in enumerate(axes):
             ax = axes_row[0]
@@ -515,11 +401,8 @@ class Plotter:
                                 color=colors.format(chain.color),
                             )
 
-        if filename is not None:
-            if not isinstance(filename, list):
-                filename = [filename]
-            for f in filename:
-                self._save_fig(fig, f, self.config.dpi)
+        add_watermark(fig, None, fig_size, self.config, size_scale=0.8)
+        self._save_fig(fig, filename, dpi=self.config.dpi)
 
         return fig
 
@@ -571,7 +454,7 @@ class Plotter:
 
         if figsize is None:
             figsize = 1.0
-        if isinstance(figsize, float):
+        if isinstance(figsize, float | int):
             figsize_float = figsize
             figsize = (num_cols * 2.5 * figsize, num_rows * 2.5 * figsize)
         else:
@@ -617,17 +500,12 @@ class Plotter:
                     m = self._plot_bars(ax, p, chain, summary=param_summary)
                     if max_val is None or m > max_val:
                         max_val = m
-            for truth in self.parent._truths:
-                self._add_truth(ax, truth, py=p)
+            plot_truths(ax, self.parent._truths, py=p)
             ax.set_ylim(0, 1.1 * max_val)
             ax.set_xlabel(p, fontsize=self.config.label_font_size)
 
-        if filename is not None:
-            if not isinstance(filename, list):
-                filename = [filename]
-            for f in filename:
-                self._save_fig(fig, f, self.config.dpi)
-        fig.tight_layout()
+        add_watermark(fig, None, figsize, self.config, size_scale=0.8)
+        self._save_fig(fig, filename, dpi=self.config.dpi)
         return fig
 
     def plot_summary(
@@ -777,15 +655,8 @@ class Plotter:
                 if not errorbar:
                     ax.set_ylim(0, 1.1 * max_vals[p])
 
-        if self.config.watermark:
-            ax = None
-            self._add_watermark(fig, ax, fig_size, self.config.watermark, dpi=self.config.dpi, size_scale=0.8)
-
-        if filename is not None:
-            if not isinstance(filename, list):
-                filename = [filename]
-            for f in filename:
-                self._save_fig(fig, f, self.config.dpi)
+        add_watermark(fig, None, fig_size, self.config, size_scale=0.8)
+        self._save_fig(fig, filename, dpi=self.config.dpi)
 
         return fig
 
@@ -1017,33 +888,6 @@ class Plotter:
 
         return min_val, max_val
 
-    def _get_levels(self, sigmas: list[float]) -> np.ndarray:
-        sigma2d = self.config.sigma2d
-        if sigma2d:
-            levels: np.ndarray = 1.0 - np.exp(-0.5 * np.array(sigmas) ** 2)
-        else:
-            levels: np.ndarray = 2 * norm.cdf(sigmas) - 1.0
-        return levels
-
-    def _plot_point(self, ax: Axes, chain: Chain, px: str, py: str) -> PathCollection | None:  # pragma: no cover
-        point = chain.get_max_posterior_point()
-        if point is None or px not in point.coordinate or py not in point.coordinate:
-            return None
-        # Determine if we need to darken the point
-        c = colors.format(chain.color)
-        if chain.plot_contour:
-            c = colors.scale_colour(colors.format(chain.color), 0.5)
-        h = ax.scatter(
-            [point.coordinate[px]],
-            [point.coordinate[py]],
-            marker=chain.marker_style,
-            c=c,
-            s=chain.marker_size,
-            alpha=chain.marker_alpha,
-            zorder=chain.zorder + 1,
-        )
-        return h
-
     def _sanitise_chains(
         self, chains: list[Chain | ChainName] | dict[ChainName, Chain] | None, include_skip: bool = False
     ) -> list[Chain]:
@@ -1056,112 +900,6 @@ class Plotter:
         else:
             final_chains = list(overriden_chains.values())
         return [c for c in final_chains if include_skip or not c.skip]
-
-    def plot_contour(
-        self,
-        ax: Axes,
-        column_x: str,
-        column_y: str,
-        chains: list[Chain | ChainName] | dict[ChainName, Chain] | None = None,
-    ) -> None:
-        """A lightweight method to plot contours in an external axis given two specified parameters
-
-        Args:
-            ax (Axes): The axis to plot on
-            column_x (str): The parameter to plot on the x axis
-            column_y (str): The parameter to plot on the y axis
-            chains (list[Chain | ChainName] | dict[ChainName, str], optional): The chains to plot. Defaults to None.
-        """
-
-        final_chains = self._sanitise_chains(chains)
-        for chain in final_chains:
-            self._plot_contour(ax, chain, column_y, column_x)
-
-    def _plot_scatter(self, ax: Axes, chain: Chain, color: str, x: pd.Series, y: pd.Series) -> PathCollection | None:
-        skip = max(1, int(x.size / chain.num_cloud))
-        if chain.color_data is not None:
-            kwargs = {"c": chain.color_data[::skip], "cmap": chain.cmap}
-        else:
-            kwargs = {"c": color, "alpha": 0.3}
-
-        h = ax.scatter(
-            x[::skip],
-            y[::skip],
-            s=10,
-            marker=".",
-            edgecolors="none",
-            zorder=chain.zorder - 5,
-            **kwargs,  # type: ignore
-        )
-        if chain.color_data is not None:
-            return h
-        else:
-            return None
-
-    def _plot_contour(self, ax: Axes, chain: Chain, px: str, py: str) -> PathCollection | None:  # pragma: no cover
-        levels = self._get_levels(chain.sigmas)
-        x = chain.get_data(py)
-        y = chain.get_data(px)
-
-        contour_colours = self._scale_colours(colors.format(chain.color), len(levels), chain.shade_gradient)
-        sub = max(0.1, 1 - 0.2 * chain.shade_gradient)
-        paths = None
-
-        if chain.plot_cloud:
-            paths = self._plot_scatter(ax, chain, contour_colours[1], x, y)
-
-        # TODO: Figure out whats going on here
-        if chain.shade:
-            sub *= 0.9
-        colours2 = [colors.scale_colour(contour_colours[0], sub)] + [
-            colors.scale_colour(c, sub) for c in contour_colours[:-1]
-        ]
-
-        hist, x_centers, y_centers = get_smoothed_histogram2d(chain, py, px)
-        hist[hist == 0] = 1e-16
-        vals = self._convert_to_stdev(hist.T)
-
-        if chain.shade and chain.shade_alpha > 0:
-            ax.contourf(
-                x_centers,
-                y_centers,
-                vals,
-                levels=levels,
-                colors=contour_colours,
-                alpha=chain.shade_alpha,
-                zorder=chain.zorder - 2,
-            )
-        con = ax.contour(
-            x_centers,
-            y_centers,
-            vals,
-            levels=levels,
-            colors=colours2,
-            linestyles=chain.linestyle,
-            linewidths=chain.linewidth,
-            zorder=chain.zorder,
-        )
-
-        if chain.show_contour_labels:
-            lvls = [lvl for lvl in con.levels if lvl != 0.0]
-            fmt = {lvl: f" {lvl:0.0%} " if lvl < 0.991 else f" {lvl:0.1%} " for lvl in lvls}
-            texts = ax.clabel(con, lvls, inline=True, fmt=fmt, fontsize=self.config.contour_label_font_size)
-            for text in texts:
-                text.set_fontweight("semibold")
-
-        return paths
-
-    def _add_truth(
-        self, ax: Axes, truth: Truth, px: str | None = None, py: str | None = None
-    ) -> None:  # pragma: no cover
-        if px is not None:
-            val_x = truth.location.get(px)
-            if val_x is not None:
-                ax.axhline(val_x, **truth._kwargs)
-        if py is not None:
-            val_y = truth.location.get(py)
-            if val_y is not None:
-                ax.axvline(val_y, **truth._kwargs)
 
     def _plot_bars(
         self, ax: Axes, column: str, chain: Chain, flip: bool = False, summary: bool = False
@@ -1272,25 +1010,6 @@ class Plotter:
 
     def _plot_walk_truth(self, ax: Axes, truth: Truth, col: str) -> None:
         ax.axhline(truth.location[col], **truth._kwargs)
-
-    def _convert_to_stdev(self, sigma: np.ndarray) -> np.ndarray:  # pragma: no cover
-        # From astroML
-        shape = sigma.shape
-        sigma = sigma.ravel()
-        i_sort = np.argsort(sigma)[::-1]
-        i_unsort = np.argsort(i_sort)
-
-        sigma_cumsum = 1.0 * sigma[i_sort].cumsum()
-        sigma_cumsum /= sigma_cumsum[-1]
-
-        return sigma_cumsum[i_unsort].reshape(shape)
-
-    def _scale_colours(self, colour: ColorInput, num: int, shade_gradient: float) -> list[str]:  # pragma: no cover
-        # http://thadeusb.com/weblog/2010/10/10/python_scale_hex_color
-        minv, maxv = 1 - 0.1 * shade_gradient, 1 + 0.5 * shade_gradient
-        scales = np.logspace(np.log(minv), np.log(maxv), num)
-        colours = [colors.scale_colour(colour, scale) for scale in scales]
-        return colours
 
 
 if __name__ == "__main__":

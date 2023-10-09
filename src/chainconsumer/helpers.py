@@ -75,8 +75,8 @@ def get_smoothed_bins(
 
 def get_smoothed_histogram2d(
     chain: Chain,
-    col1: str,
-    col2: str,
+    px: str,
+    py: str,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # pragma: no cover
     """Returns a smoothed 2D histogram of two parameters.
 
@@ -88,8 +88,8 @@ def get_smoothed_histogram2d(
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray]: The histogram, x bin enters, y bin centers
     """
-    x = chain.get_data(col1)
-    y = chain.get_data(col2)
+    x = chain.get_data(px)
+    y = chain.get_data(py)
     w = chain.weights
 
     if chain.grid:

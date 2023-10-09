@@ -25,7 +25,7 @@ fig = c.plotter.plot()
 # Here's a convenience function for you
 chain2 = Chain.from_covariance(
     [3.0, 1.0],
-    [[1.0, -0.7], [-0.7, 1.5]],
+    [[1.0, -1], [-1, 2]],
     columns=["A", "B"],
     name="Another contour!",
     color="#065f46",
@@ -43,7 +43,7 @@ fig = c.plotter.plot()
 # let's add markers and truth values.
 
 c.add_marker(location={"A": 0, "B": 2}, name="A point", color="orange", marker_style="P", marker_size=50)
-c.add_truth(Truth(location={"A": 0, "B": 1}))
+c.add_truth(Truth(location={"A": 0, "B": 5}))
 fig = c.plotter.plot()
 
 
@@ -81,7 +81,7 @@ c.add_chain(chain)
 # Notice that Chain is a child of ChainConfig
 # So you could override base properties like line weights... but not samples
 c.set_override(ChainConfig(sigmas=[0, 1, 2, 3]))
-c.add_truth(Truth(location={"A": 0, "B": 1}, color="#500724"))
+c.add_truth(Truth(location={"A": 0, "B": 5}, color="#500724"))
 
 # And if we want to change the plot itself in some way, we can do that via
 c.set_plot_config(
