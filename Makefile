@@ -27,7 +27,7 @@ build:
 	rm -rf dist; poetry version $(VERSION) && poetry publish --build --dry-run
 
 publish:
-	rm -rf dist; poetry config pypi-token.pypi $PYPI_TOKEN && poetry version $(VERSION) && poetry publish --build -y
+	rm -rf dist; poetry config pypi-token.pypi $$PYPI_TOKEN && poetry version $(VERSION) && poetry publish --build
 
 tests: test
 
