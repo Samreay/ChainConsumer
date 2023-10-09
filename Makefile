@@ -1,4 +1,4 @@
-.PHONY: tests
+.PHONY: tests docs
 
 install:
 	pip install -U pip poetry -q
