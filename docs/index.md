@@ -5,7 +5,8 @@ ChainConsumer is a python package designed to do one thing - consume the chains 
 
 ## Installation
 
-The latest version of ChainConsumer requires at least Python 3.10.
+The latest version of ChainConsumer requires at least Python 3.10. If you have a version of `ChainConsumer` that is older (v0.34.0 or below)
+you will find this documentation not very useful.
 
 `pip install chainconsumer`
 

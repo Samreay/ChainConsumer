@@ -18,10 +18,10 @@ serve:
 	poetry run mkdocs serve --clean
 
 docs:
-	poetry run poetry version $(VERSION) && mkdocs build
+	poetry run poetry version $(VERSION) && poetry run mkdocs build
 
 pushdocs:
-	poetry run poetry version $(VERSION) && mkdocs gh-deploy --force
+	poetry run poetry version $(VERSION) && poetry run mkdocs gh-deploy --force
 
 build:
 	rm -rf dist; poetry version $(VERSION) && poetry publish --build --dry-run
