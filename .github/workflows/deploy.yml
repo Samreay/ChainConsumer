@@ -57,9 +57,7 @@ jobs:
       - run: make install
       - run: make build
       - name: Publish
-        run: |
-          poetry config pypi-token.pypi $PYPI_TOKEN
-          poetry publish --build
+        run: make publish
         if: github.event_name == 'release'
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

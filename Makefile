@@ -23,10 +23,10 @@ pushdocs:
 	poetry run mkdocs gh-deploy --force
 
 build:
-	poetry publish --build --dry-run
+	poetry version $(git describe --tags --abbrev=0) && poetry publish --build --dry-run
 
 publish:
-	poetry publish --build
+	poetry config pypi-token.pypi $PYPI_TOKEN && poetry version $(git describe --tags --abbrev=0) && poetry publish --build
 
 tests: test
 

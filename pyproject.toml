@@ -8,8 +8,10 @@ description = "ChainConsumer: Consumer your MCMC chains"
 name = "ChainConsumer"
 packages = [{include = "chainconsumer", from = "src"}]
 readme = "README.md"
-version = "0.35.0"
+version = "0.0.0"
 
+[tool.poetry-version-plugin]
+source = "git-tag"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
