@@ -19,7 +19,7 @@ serve:
 docs:
 	poetry run mkdocs build
 
-deploy:
+pushdocs:
 	poetry run mkdocs gh-deploy --force
 
 tests: test

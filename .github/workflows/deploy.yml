@@ -5,6 +5,8 @@ on:
   pull_request:
     types: [opened]
   workflow_dispatch:
+  release:
+    types: [created]
 
 defaults:
   run:
@@ -36,3 +38,22 @@ jobs:
           architecture: 'x64'
           cache: 'poetry'
       - run: make install
+      - run: make docs
+
+  push_docs:
+    runs-on: ubuntu-latest
+    needs: [build_docs]
+    if: |
+      github.event_name == 'release' || github.ref == 'refs/heads/master' || false
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+          cache: 'poetry'
+      - run: make install
+      - run: make docs
+      - run: make pushdocs

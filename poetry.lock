@@ -1735,22 +1735,6 @@ files = [
 ]
 
 [[package]]
-name = "mkdocs-render-swagger-plugin"
-version = "0.1.1"
-description = "MKDocs plugin for rendering swagger & openapi files."
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "mkdocs_render_swagger_plugin-0.1.1-py3-none-any.whl", hash = "sha256:1b0f4f92bf69d7e0d56b13f520fdad072ddd1f4ccf031f11706d45d831d4df7b"},
-]
-
-[package.dependencies]
-mkdocs = ">=1.4"
-
-[package.extras]
-dev = ["coverage", "flake8", "mypy", "pyyaml"]
-
-[[package]]
 name = "mkdocstrings"
 version = "0.23.0"
 description = "Automatic documentation from sources, for MkDocs."
@@ -3695,13 +3679,13 @@ files = [
 
 [[package]]
 name = "websocket-client"
-version = "1.6.3"
+version = "1.6.4"
 description = "WebSocket client for Python with low level API options"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "websocket-client-1.6.3.tar.gz", hash = "sha256:3aad25d31284266bcfcfd1fd8a743f63282305a364b8d0948a43bd606acc652f"},
-    {file = "websocket_client-1.6.3-py3-none-any.whl", hash = "sha256:6cfc30d051ebabb73a5fa246efdcc14c8fbebbd0330f8984ac3bb6d9edd2ad03"},
+    {file = "websocket-client-1.6.4.tar.gz", hash = "sha256:b3324019b3c28572086c4a319f91d1dcd44e6e11cd340232978c684a7650d0df"},
+    {file = "websocket_client-1.6.4-py3-none-any.whl", hash = "sha256:084072e0a7f5f347ef2ac3d8698a5e0b4ffbfcab607628cadabc650fc9a83a24"},
 ]
 
 [package.extras]
@@ -3723,4 +3707,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "8006b96eff435b820dd9ae4893db8bafcf39657d9167fb3bc21987162ed70c40"
+content-hash = "948e746594bb624b9047c335105a87e6f5bcd432fa8e1be0b387f14c0182cb0d"
