@@ -8,10 +8,9 @@ It is then extended by the `Chain` class, which contains the actual data.
 There are also a few helper functions and objects in here, like the `MaxPosterior` class which
 provides the log posterior and the coordinate at which it can be found for the chain."""
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import logging
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -365,12 +364,11 @@ class Chain(ChainConfig):
 
     @classmethod
     def from_emcee(
-            cls,
-            sampler: "emcee.EnsembleSampler",
-            columns: list[str],
-            name: str = 'Chain',
-            **kwargs: Any,
-
+        cls,
+        sampler: emcee.EnsembleSampler,
+        columns: list[str],
+        name: str = "Chain",
+        **kwargs: Any,
     ) -> Chain:
         """
         Constructor from an emcee sampler
@@ -382,17 +380,16 @@ class Chain(ChainConfig):
             kwargs: Any other arguments to pass to the Chain constructor.
         """
 
-        df = pd.DataFrame.from_dict({col:val for col, val in zip(columns, sampler.get_chain(flat=True).T)})
+        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, sampler.get_chain(flat=True).T)})
 
         return cls(samples=df, name=name, **kwargs)
 
     @classmethod
     def from_numpyro(
-            cls,
-            mcmc: "numpyro.infer.MCMC",
-            name: str = 'Chain',
-            **kwargs: Any,
-
+        cls,
+        mcmc: numpyro.infer.MCMC,
+        name: str = "Chain",
+        **kwargs: Any,
     ) -> Chain:
         """
         Constructor from an emcee sampler
@@ -409,11 +406,10 @@ class Chain(ChainConfig):
 
     @classmethod
     def from_arviz(
-            cls,
-            arviz_id: "arviz.InferenceData",
-            name: str = 'Chain',
-            **kwargs: Any,
-
+        cls,
+        arviz_id: arviz.InferenceData,
+        name: str = "Chain",
+        **kwargs: Any,
     ) -> Chain:
         """
         Constructor from an arviz InferenceData object

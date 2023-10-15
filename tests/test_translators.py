@@ -1,11 +1,11 @@
-import numpyro
-import numpyro.distributions as dist
-from numpyro.infer import MCMC, NUTS
-import jax.random as random
+import arviz as az
 import emcee
 import numpy as np
-import scipy.stats as stats
-import arviz as az
+import numpyro
+import numpyro.distributions as dist
+from jax import random
+from numpyro.infer import MCMC, NUTS
+from scipy import stats
 
 from chainconsumer import Chain
 
@@ -20,12 +20,12 @@ def run_numpyro_mcmc(n_steps, n_chains):
 
     def model(data=None):
         # Prior
-        mu = numpyro.sample('mu', dist.Normal(0, 10))
-        sigma = numpyro.sample('sigma', dist.HalfNormal(10))
+        mu = numpyro.sample("mu", dist.Normal(0, 10))
+        sigma = numpyro.sample("sigma", dist.HalfNormal(10))
 
         # Likelihood
-        with numpyro.plate('data', size=len(data)):
-            numpyro.sample('obs', dist.Normal(mu, sigma), obs=data)
+        with numpyro.plate("data", size=len(data)):
+            numpyro.sample("obs", dist.Normal(mu, sigma), obs=data)
 
     # Running MCMC
     kernel = NUTS(model)
@@ -72,29 +72,25 @@ def run_emcee_mcmc(n_steps, n_chains):
 
 
 class TestTranslators:
-
     n_steps: int = 2000
     n_chains: int = 4
     n_params: int = 2
 
     def test_arviz_translator(self):
-
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         arviz_id = az.from_numpyro(numpyro_mcmc)
         chain = Chain.from_arviz(arviz_id)
 
-        assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1) #+1 for weight column
+        assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)  # +1 for weight column
 
     def test_numpyro_translator(self):
-
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         chain = Chain.from_numpyro(numpyro_mcmc)
 
         assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)
 
     def test_emcee_translator(self):
-
         emcee_sampler = run_emcee_mcmc(self.n_steps, self.n_chains)
-        chain = Chain.from_emcee(emcee_sampler, ['mu', 'sigma'])
+        chain = Chain.from_emcee(emcee_sampler, ["mu", "sigma"])
 
         assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)
