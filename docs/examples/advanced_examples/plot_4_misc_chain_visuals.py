@@ -4,7 +4,8 @@
 Rather than having one example for each option, let's condense things.
 """
 # %%
-# # Shade Gradient
+# Shade Gradient
+# --------------
 #
 # Pretty simple - it controls how much visual difference there is in your contours.
 import numpy as np
@@ -22,7 +23,8 @@ c.set_plot_config(PlotConfig(flip=True))
 fig = c.plotter.plot()
 
 # %%
-# # Shade Alpha
+# Shade Alpha
+# -----------
 #
 # Controls how opaque the contours are. Like everything else, you
 # can specify this when making the chain, or apply a single override
@@ -31,7 +33,8 @@ c.set_override(ChainConfig(shade_alpha=0.1))
 fig = c.plotter.plot()
 
 # %%
-# # Contour Labels
+# Contour Labels
+# --------------
 #
 # Add labels to contours. I used to have this configurable to be either
 # sigma levels or percentages, but there was confusion over the 1D vs 2D sigma levels,
@@ -41,7 +44,8 @@ c.set_override(ChainConfig(show_contour_labels=True))
 fig = c.plotter.plot()
 
 # %%
-# # Linestyles and widths
+# Linestyles and widths
+# ---------------------
 #
 # Fairly simple to do. To show different ones, I'll remake the chains,
 # rather than having a single override. Note you *could* try something
@@ -56,7 +60,8 @@ c2.add_chain(Chain(samples=df2, name="Thick dashes", color="sky", linestyle="--"
 fig = c2.plotter.plot()
 
 # %%
-# # Marker styles and sizes
+# Marker styles and sizes
+# -----------------------
 #
 # Provided you have a posterior column, you can plot the maximum probability point.
 
@@ -64,7 +69,8 @@ c.set_override(ChainConfig(plot_point=True, marker_style="P", marker_size=100))
 fig = c.plotter.plot()
 
 # %%
-# # Cloud and Sigma Levels
+# Cloud and Sigma Levels
+# ----------------------
 #
 # Choose custom sigma levels and display point cloud.
 c.set_override(
@@ -78,7 +84,8 @@ c.set_override(
 fig = c.plotter.plot()
 
 # %%
-# # Smoothing (or not)
+# Smoothing (or not)
+# ------------------
 #
 # The histograms behind the scene in ChainConsumer are smoothed. But you can turn this off.
 # The higher the smoothing vaule, the more subidivisions of your bins there will be.

@@ -35,7 +35,8 @@ c.add_chain(chain2)
 fig = c.plotter.plot()
 
 # %% Third cell
-# # Customising Chains
+# Customising Chains
+# ------------------
 #
 # There's a lot you can configure using chains, and to make it easy, Chains are defined as pydantic
 # base models so you can easily see the default and values you can pass in. Don't worry, there will be
@@ -48,7 +49,8 @@ fig = c.plotter.plot()
 
 
 # %% Fourth cell
-# # Weights and Posteriors
+# Weights and Posteriors
+# ----------------------
 #
 # If you provide the log posteriors in the chain, you can ask for the maximum probability point
 # to be plotted as well. Similarly, if you have samples with non-uniform weights, you can

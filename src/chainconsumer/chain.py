@@ -358,7 +358,7 @@ class Chain(ChainConfig):
         """
         cov = self.get_covariance(columns)
         diag = np.sqrt(np.diag(cov.matrix))
-        divisor = diag[None, :] * diag[:, None]
+        divisor = diag[None, :] * diag[:, None]  # type: ignore
         correlations = cov.matrix / divisor
         return Named2DMatrix(columns=cov.columns, matrix=correlations)
 
@@ -367,20 +367,26 @@ class Chain(ChainConfig):
         cls,
         sampler: emcee.EnsembleSampler,
         columns: list[str],
-        name: str = "Chain",
+        name: str,
+        thin: int = 1,
+        discard: int = 0,
         **kwargs: Any,
     ) -> Chain:
-        """
-        Constructor from an emcee sampler
+        """Constructor from an emcee sampler
 
-        Args
+        Args:
             sampler: The emcee sampler
             columns: The names of the parameters
             name: The name of the chain
+            thin: The thinning to apply to the chain
+            discard: The number of steps to discard from the start of the chain
             kwargs: Any other arguments to pass to the Chain constructor.
-        """
 
-        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, sampler.get_chain(flat=True).T)})
+        Returns:
+            A ChainConsumer Chain made from the emcee samples
+        """
+        chain: np.ndarray = sampler.get_chain(flat=True, thin=thin, discard=discard)  # type: ignore
+        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, chain.T)})
 
         return cls(samples=df, name=name, **kwargs)
 
@@ -388,36 +394,38 @@ class Chain(ChainConfig):
     def from_numpyro(
         cls,
         mcmc: numpyro.infer.MCMC,
-        name: str = "Chain",
+        name: str,
         **kwargs: Any,
     ) -> Chain:
-        """
-        Constructor from an emcee sampler
+        """Constructor from numpyro samples
 
-        Args
-            sampler: The emcee sampler
+        Args:
+            mcmc: The numpyro sampler
             name: The name of the chain
             kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            A ChainConsumer Chain made from numpyro samples
         """
-
         df = pd.DataFrame.from_dict({key: np.ravel(value) for key, value in mcmc.get_samples().items()})
-
         return cls(samples=df, name=name, **kwargs)
 
     @classmethod
     def from_arviz(
         cls,
         arviz_id: arviz.InferenceData,
-        name: str = "Chain",
+        name: str,
         **kwargs: Any,
     ) -> Chain:
-        """
-        Constructor from an arviz InferenceData object
+        """Constructor from an arviz InferenceData object
 
-        Args
-            arviz_id: The arviz sampler
+        Args:
+            arviz_id: The arviz inference data
             name: The name of the chain
             kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            A ChainConsumer Chain made from the arviz chain
         """
 
         df = arviz_id.to_dataframe(groups="posterior").drop(columns=["chain", "draw"])
