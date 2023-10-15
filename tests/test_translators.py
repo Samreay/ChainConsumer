@@ -7,7 +7,7 @@ import numpy as np
 import scipy.stats as stats
 import arviz as az
 
-from chainconsumer.translator import df_from_arviz_id, df_from_numpyro_mcmc, df_from_emcee_sampler
+from chainconsumer import Chain
 
 
 def run_numpyro_mcmc(n_steps, n_chains):
@@ -79,18 +79,20 @@ class TestTranslators:
 
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         arviz_id = az.from_numpyro(numpyro_mcmc)
-        df = df_from_arviz_id(arviz_id)
+        chain = Chain.from_arviz(arviz_id)
 
-        assert df.shape == (self.n_steps * self.n_chains, self.n_params)
+        assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1) #+1 for weight column
 
     def test_numpyro_translator(self):
 
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
-        df = df_from_numpyro_mcmc(numpyro_mcmc)
-        assert df.shape == (self.n_steps * self.n_chains, self.n_params)
+        chain = Chain.from_numpyro(numpyro_mcmc)
+
+        assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)
 
     def test_emcee_translator(self):
 
         emcee_sampler = run_emcee_mcmc(self.n_steps, self.n_chains)
-        df = df_from_emcee_sampler(emcee_sampler)
-        assert df.shape == (self.n_steps * self.n_chains, self.n_params)
+        chain = Chain.from_emcee(emcee_sampler, ['mu', 'sigma'])
+
+        assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)
