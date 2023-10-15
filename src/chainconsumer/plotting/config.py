@@ -30,8 +30,8 @@ class PlotConfig(BetterBase):
     watermark_text_kwargs: dict[str, Any] = Field(default={}, description="Kwargs to pass to the watermark text")
     summarise: bool = Field(default=True, description="Whether to annotate the plot with summary statistics")
     summary_font_size: int = Field(default=12, ge=0, description="Font size for parameter summaries")
-    sigma2d: bool | None = Field(
-        default=None,
+    sigma2d: bool = Field(
+        default=False,
         description=(
             "Whether to use 2D sigmas for summary statistics. Ie in 2D a 1sigma contour"
             r" does *not* encapsulate 68% of the volume, it covers 39.3% of the volume."
