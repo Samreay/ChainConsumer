@@ -15,7 +15,8 @@ def run_numpyro_mcmc(n_steps, n_chains):
     Generate dummy data for testing using numpyro's inference process
     """
 
-    observed_data = np.random.normal(loc=0, scale=1, size=100)
+    rng = np.random.default_rng(42)
+    observed_data = rng.normal(loc=0, scale=1, size=100)
 
     def model(data=None):
         # Prior
@@ -40,7 +41,8 @@ def run_emcee_mcmc(n_steps, n_chains):
     Generate dummy data for testing using emcee's inference process
     """
 
-    observed_data = np.random.normal(loc=0, scale=1, size=100)
+    rng = np.random.default_rng(42)
+    observed_data = rng.normal(loc=0, scale=1, size=100)
 
     def log_likelihood(theta, data):
         mu, log_sigma = theta
@@ -61,7 +63,7 @@ def run_emcee_mcmc(n_steps, n_chains):
 
     nwalkers = n_chains
     ndim = 2
-    p0 = np.random.normal(size=(nwalkers, ndim))
+    p0 = rng.normal(size=(nwalkers, ndim))
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=(observed_data,))
     sampler.run_mcmc(p0, n_steps, progress=False)
