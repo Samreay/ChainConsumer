@@ -26,6 +26,9 @@ pydantic = "^2.2.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
+numpyro = "^0.13.2"
+emcee = "^3.1.4"
+arviz = "^0.16.1"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.3.0"
