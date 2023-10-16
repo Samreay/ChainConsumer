@@ -11,4 +11,4 @@ The ChainConsumer acts as manager and state holder, to which you supply configur
 
 ::: chainconsumer.truth.Truth
 
-
+::: chainconsumer.plotting.config.PlotConfig
