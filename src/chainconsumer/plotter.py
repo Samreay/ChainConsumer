@@ -21,9 +21,8 @@ from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName
 from .color_finder import colors
 from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins
+from .plotting import add_watermark, plot_surface
 from .plotting.config import PlotConfig
-from .plotting.contours import plot_surface
-from .plotting.watermark import add_watermark
 
 
 class PlottingBase(BetterBase):

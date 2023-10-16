@@ -14,13 +14,15 @@ def plot_surface(
     chains: list[Chain],
     px: ColumnName,
     py: ColumnName,
-    config: PlotConfig,
+    config: PlotConfig | None = None,
 ) -> dict[ColumnName, PathCollection]:
     """Plot the chains onto a 2D surface, using clouds, contours and points.
 
     Returns:
         A map from column name to paths to be added as colorbars.
     """
+    if config is None:
+        config = PlotConfig()
     paths: dict[ColumnName, PathCollection] = {}
     for chain in chains:
         if px not in chain.plotting_columns or py not in chain.plotting_columns:
@@ -61,7 +63,7 @@ def plot_cloud(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName) -> dict[C
     return {}
 
 
-def plot_contour(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName, config: PlotConfig) -> None:
+def plot_contour(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName, config: PlotConfig | None = None) -> None:
     """A lightweight method to plot contours in an external axis given two specified parameters
 
     Args:
@@ -70,6 +72,8 @@ def plot_contour(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName, config:
         px: The parameter to plot on the x axis
         py: The parameter to plot on the y axis
     """
+    if config is None:
+        config = PlotConfig()
     levels = _get_levels(chain.sigmas, config)
     contour_colours = _scale_colours(colors.format(chain.color), len(levels), chain.shade_gradient)
     sub = max(0.1, 1 - 0.2 * chain.shade_gradient)
