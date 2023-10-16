@@ -10,7 +10,7 @@ provides the log posterior and the coordinate at which it can be found for the c
 from __future__ import annotations
 
 import logging
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,12 @@ from pydantic import Field, field_validator, model_validator
 from .base import BetterBase
 from .color_finder import ColorInput, colors
 from .statistics import SummaryStatistic
+
+if TYPE_CHECKING:
+    # Extra packages imported for type checking
+    import arviz
+    import emcee
+    import numpyro
 
 ChainName: TypeAlias = str
 ColumnName: TypeAlias = str
@@ -352,9 +358,79 @@ class Chain(ChainConfig):
         """
         cov = self.get_covariance(columns)
         diag = np.sqrt(np.diag(cov.matrix))
-        divisor = diag[None, :] * diag[:, None]
+        divisor = diag[None, :] * diag[:, None]  # type: ignore
         correlations = cov.matrix / divisor
         return Named2DMatrix(columns=cov.columns, matrix=correlations)
+
+    @classmethod
+    def from_emcee(
+        cls,
+        sampler: emcee.EnsembleSampler,
+        columns: list[str],
+        name: str,
+        thin: int = 1,
+        discard: int = 0,
+        **kwargs: Any,
+    ) -> Chain:
+        """Constructor from an emcee sampler
+
+        Args:
+            sampler: The emcee sampler
+            columns: The names of the parameters
+            name: The name of the chain
+            thin: The thinning to apply to the chain
+            discard: The number of steps to discard from the start of the chain
+            kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            A ChainConsumer Chain made from the emcee samples
+        """
+        chain: np.ndarray = sampler.get_chain(flat=True, thin=thin, discard=discard)  # type: ignore
+        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, chain.T)})
+
+        return cls(samples=df, name=name, **kwargs)
+
+    @classmethod
+    def from_numpyro(
+        cls,
+        mcmc: numpyro.infer.MCMC,
+        name: str,
+        **kwargs: Any,
+    ) -> Chain:
+        """Constructor from numpyro samples
+
+        Args:
+            mcmc: The numpyro sampler
+            name: The name of the chain
+            kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            A ChainConsumer Chain made from numpyro samples
+        """
+        df = pd.DataFrame.from_dict({key: np.ravel(value) for key, value in mcmc.get_samples().items()})
+        return cls(samples=df, name=name, **kwargs)
+
+    @classmethod
+    def from_arviz(
+        cls,
+        arviz_id: arviz.InferenceData,
+        name: str,
+        **kwargs: Any,
+    ) -> Chain:
+        """Constructor from an arviz InferenceData object
+
+        Args:
+            arviz_id: The arviz inference data
+            name: The name of the chain
+            kwargs: Any other arguments to pass to the Chain constructor.
+
+        Returns:
+            A ChainConsumer Chain made from the arviz chain
+        """
+
+        df = arviz_id.to_dataframe(groups="posterior").drop(columns=["chain", "draw"])
+
+        return cls(samples=df, name=name, **kwargs)
 
 
 class MaxPosterior(BetterBase):
