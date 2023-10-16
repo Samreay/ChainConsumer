@@ -84,6 +84,16 @@ c.set_override(
 fig = c.plotter.plot()
 
 # %%
+#
+# Of course, you don't have to change both at once. Here's just a cloud.
+# And also note that contours include the 2D marginalised distributions,
+# hence why I am hising the histograms here (as they'll be empty).
+
+c.set_override(ChainConfig(plot_cloud=True, plot_contour=False))
+c.set_plot_config(PlotConfig(plot_hists=False))
+fig = c.plotter.plot()
+
+# %%
 # Smoothing (or not)
 # ------------------
 #
