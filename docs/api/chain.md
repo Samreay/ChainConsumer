@@ -1,1 +1,1 @@
-# ::: chainconsumer.chain.Chain
+# ::: chainconsumer.Chain

@@ -41,6 +41,7 @@ Time has ticked on, and now only python 3.10 will be supported. This is because 
 I would like to thank the following people for their contribution in issues, algorithms and code snippets
 which have helped improve ChainConsumer:
 
+* Simon Dupourqué (for his PRs and suggestions to make ChainConsumer better for all)
 * Chris Davis (check out https://github.com/cpadavis/preliminize)
 * Joe Zuntz
 * Scott Dedelson

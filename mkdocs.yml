@@ -75,10 +75,10 @@ nav:
   - Home: index.md
   - Usage: usage.md
   - Python API:
-    - api/consumer.md
-    - api/chain.md
-    - api/chainconfig.md
-    - api/plotter.md
-    - api/plotconfig.md
-    - api/truth.md
+      - ChainConsumer: api/consumer.md
+      - Chain: api/chain.md
+      - ChainConfig: api/chainconfig.md
+      - Plotter: api/plotter.md
+      - PlotConfig: api/plotconfig.md
+      - Truth: api/truth.md
   - Examples: generated/gallery

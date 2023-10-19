@@ -1,1 +1,1 @@
-# ::: chainconsumer.plotting.config.PlotConfig
+# ::: chainconsumer.PlotConfig

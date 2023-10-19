@@ -1,1 +1,1 @@
-# ::: chainconsumer.truth.Truth
+# ::: chainconsumer.Truth

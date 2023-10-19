@@ -2,4 +2,4 @@ The ChainConsumer acts as manager and state holder, to which you supply configur
 
 *****
 
-# ::: chainconsumer.chainconsumer.ChainConsumer
+# ::: chainconsumer.ChainConsumer
