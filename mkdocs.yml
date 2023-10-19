@@ -39,6 +39,9 @@ plugins:
     handlers:
       python:
         paths: [.]
+        import:
+          - https://docs.python.org/3/objects.inv
+          - https://docs.pydantic.dev/latest/objects.inv
         options:
           members_order: source
           separate_signature: true
@@ -71,5 +74,11 @@ watch:
 nav:
   - Home: index.md
   - Usage: usage.md
-  - Python API: api.md
+  - Python API:
+    - api/consumer.md
+    - api/chain.md
+    - api/chainconfig.md
+    - api/plotter.md
+    - api/plotconfig.md
+    - api/truth.md
   - Examples: generated/gallery
