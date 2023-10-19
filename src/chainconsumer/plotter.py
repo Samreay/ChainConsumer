@@ -113,6 +113,12 @@ class Plotter:
         self.serif_old = matplotlib.rcParams["font.family"]
 
     def set_config(self, config: PlotConfig) -> None:
+        """Sets the plot config to the chosen `PlotConfig` model.
+
+        Args:
+            config: The config to use
+
+        """
         self._config = config
 
     @property
