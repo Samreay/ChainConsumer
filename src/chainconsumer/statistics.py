@@ -18,3 +18,7 @@ class SummaryStatistic(Enum):
     MEAN = "mean"
     """As per the cumulative method, except the central value is placed in the midpoint between
     the upper and lower boundary. Not recommended, but was requested."""
+
+    MEDIAN = "median"
+    """The central point is set to median of the pdf, and the upper and the upper
+    and lower bounds are determined by the percentiles of the pdf."""

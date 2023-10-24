@@ -53,6 +53,7 @@ class Analysis:
             SummaryStatistic.MEAN: self.get_parameter_summary_mean,
             SummaryStatistic.CUMULATIVE: self.get_parameter_summary_cumulative,
             SummaryStatistic.MAX_CENTRAL: self.get_parameter_summary_max_central,
+            SummaryStatistic.MEDIAN: self.get_parameter_summary_median,
         }
 
     def get_latex_table(
@@ -464,6 +465,12 @@ class Analysis:
         xvals = c_to_x(vals)
 
         return Bound(lower=xvals[0], center=x, upper=xvals[1])
+
+    def get_parameter_summary_median(self, chain, parameter):
+        vals = 100 * np.array([0.5 - 0.5 * chain.summary_area, 0.5, 0.5 + 0.5 * chain.summary_area])
+        xvals = np.percentile(chain.get_data(parameter), vals)
+
+        return Bound(lower=xvals[0], center=xvals[1], upper=xvals[2])
 
 
 if __name__ == "__main__":
