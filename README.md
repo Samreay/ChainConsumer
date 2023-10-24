@@ -67,6 +67,11 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.0.1
+* Bug fix for the truth labels.
+
+##### 1.0.0
+* Huge update to make full use of type hints, pydantic v2, and mkdocs
 
 ##### 0.34.0
 * Making `usetex=False` and `serif=False` the defaults to reduce LaTeX errors.

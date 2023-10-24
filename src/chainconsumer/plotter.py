@@ -187,9 +187,9 @@ class Plotter:
                 # Plot the histograms
                 if plot_hists and i == j:
                     if do_flip:
-                        plot_truths(ax, self.parent._truths, px=p1)
+                        plot_truths(ax, self.parent._truths, py=p1)
                     else:
-                        plot_truths(ax, self.parent._truths, py=p2)
+                        plot_truths(ax, self.parent._truths, px=p1)
                     max_val = None
 
                     # Plot each chain
