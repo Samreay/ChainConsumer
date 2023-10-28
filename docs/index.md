@@ -3,6 +3,14 @@
 
 ChainConsumer is a python package designed to do one thing - consume the chains output from Monte Carlo processes like MCMC. ChainConsumer can utilise these chains to produce plots of the posterior surface inferred from the chain distributions, to plot the chains as walks (to check for mixing and convergence), and to output parameter summaries in the form of LaTeX tables. On top of all of this, if you have multiple models (chains), you can load them all in and perform some model comparison using AIC, BIC or DIC metrics.
 
+## Older Versions
+
+For those using older versions of ChainConsumer, you can find a copy of the old documentation using the wayback machine.
+
+* [Link 1](https://web.archive.org/web/20220616191528/https://samreay.github.io/ChainConsumer/)
+* [Link 2](https://web.archive.org/web/20220327090418/https://samreay.github.io/ChainConsumer/)
+* [Link 3](https://web.archive.org/web/20220816010459/https://samreay.github.io/ChainConsumer/)
+
 ## Installation
 
 The latest version of ChainConsumer requires at least Python 3.10. If you have a version of `ChainConsumer` that is older (v0.34.0 or below)
