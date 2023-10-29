@@ -58,6 +58,11 @@ ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "
 line-length = 120
 target-version = "py310"
 
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+line-ending = "auto"
+
 [tool.ruff.extend-per-file-ignores]
 "test/***" = ["INP001"]
 "__init__.py" = ["E402", "F401"]
