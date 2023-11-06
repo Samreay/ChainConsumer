@@ -67,6 +67,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.0.2 (to be released)
+* Bug fix for chain divisions.
+
 ##### 1.0.1
 * Bug fix for the truth labels.
 
