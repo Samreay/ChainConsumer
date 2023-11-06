@@ -97,3 +97,9 @@ class TestChain:
         color_data = chain.color_data
         assert color_data is not None
         assert np.allclose(self.df["a"].to_numpy(), color_data)
+
+    def test_divide(self):
+
+        n_walkers = 10
+        result = Chain(samples=self.df, name=self.n, walkers=n_walkers).divide()
+        assert len(result) == n_walkers
