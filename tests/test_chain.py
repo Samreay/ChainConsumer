@@ -99,7 +99,9 @@ class TestChain:
         assert np.allclose(self.df["a"].to_numpy(), color_data)
 
     def test_divide(self):
-
         n_walkers = 10
         result = Chain(samples=self.df, name=self.n, walkers=n_walkers).divide()
         assert len(result) == n_walkers
+
+        for chain in result:
+            assert chain.walkers == 1
