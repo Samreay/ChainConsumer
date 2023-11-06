@@ -312,7 +312,7 @@ class Chain(ChainConfig):
         chains = []
         for i, split in enumerate(splits):
             df = pd.DataFrame(split, columns=self.samples.columns)
-            options = self.model_dump(exclude={"samples", "name"})
+            options = self.model_dump(exclude={"samples", "name", "walkers"})
             if "color" in options:
                 options.pop("color")
             chain = Chain(samples=df, name=f"{self.name} Walker {i}", **options)

@@ -8,7 +8,7 @@ description = "ChainConsumer: Consumer your MCMC chains"
 name = "ChainConsumer"
 packages = [{include = "chainconsumer", from = "src"}]
 readme = "README.md"
-version = "v0.34.0"
+version = "v1.0.2"
 
 [tool.poetry-version-plugin]
 source = "git-tag"
