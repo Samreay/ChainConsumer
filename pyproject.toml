@@ -3,12 +3,12 @@ build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
 [tool.poetry]
-authors = ["Samuel Hinton <sh@arenko.group>"]
+authors = ["Samuel Hinton <samuelreay@gmail.com>"]
 description = "ChainConsumer: Consumer your MCMC chains"
 name = "ChainConsumer"
 packages = [{include = "chainconsumer", from = "src"}]
 readme = "README.md"
-version = "v1.0.2"
+version = "v0.0.0"
 
 [tool.poetry-version-plugin]
 source = "git-tag"
@@ -23,7 +23,6 @@ pandas = "^2.1.1"
 pillow = "^10.0.1"
 pydantic = "^2.2.0"
 
-
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
 numpyro = ">=0.13.2, <1"
@@ -31,9 +30,8 @@ emcee = "^3.1.4"
 arviz = ">=0.16.1, <1"
 
 [tool.poetry.group.dev.dependencies]
-black = ">=23.3.0"
 pre-commit = ">=3.3.3"
-ruff = ">=0.0.276, <1"
+ruff = ">=0.1.4, <1"
 mypy = "^1.4.1"
 pandas-stubs = "^2.1.1.230928"
 
@@ -47,9 +45,6 @@ mdx-include = ">=1.4.1"
 mkdocstrings-python = ">=0.8.3"
 mkdocs-gallery = ">=0.7.8"
 
-[tool.black]
-line-length = 120
-target-version = ['py310']
 
 [tool.ruff]
 src = ["src"]
