@@ -972,9 +972,10 @@ class Plotter:
                         )
                     if summary:
                         t = self.parent.analysis.get_parameter_text(fit_values)
+                        label = self.config.get_label(column)
                         if isinstance(column, str):
                             ax.set_title(
-                                r"${} = {}$".format(column.strip("$"), t), fontsize=self.config.summary_font_size
+                                r"${} = {}$".format(label.strip("$"), t), fontsize=self.config.summary_font_size
                             )
                         else:
                             ax.set_title(r"$%s$" % t, fontsize=self.config.summary_font_size)
