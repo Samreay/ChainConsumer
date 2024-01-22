@@ -67,6 +67,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.0.3
+* Bug fix not using labels instead of column names for parameter title summaries.
+
 ##### 1.0.2
 * Bug fix for chain divisions.
 
