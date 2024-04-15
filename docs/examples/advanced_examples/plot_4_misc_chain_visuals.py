@@ -3,6 +3,7 @@
 
 Rather than having one example for each option, let's condense things.
 """
+
 # %%
 # Shade Gradient
 # --------------

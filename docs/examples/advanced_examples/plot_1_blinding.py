@@ -8,6 +8,7 @@ Just give ChainConsumer the `blind` parameter when plotting. You can specify `Tr
 or give it a string (or list of strings) detailing the specific parameters you want blinded!
 
 """
+
 from chainconsumer import Chain, ChainConsumer, PlotConfig, make_sample
 
 df = make_sample(num_dimensions=4, seed=1)

@@ -15,6 +15,7 @@ Notice how the KDE, unless its perfectly matched to your distribution,
 increses the width of the marginal distributions.
 
 """
+
 from chainconsumer import Chain, ChainConsumer, PlotConfig, make_sample
 
 df = make_sample(num_dimensions=2, seed=3, num_points=1000)

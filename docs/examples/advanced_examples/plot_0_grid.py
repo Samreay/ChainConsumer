@@ -15,6 +15,7 @@ flattened array. This is because we cannot construct the meshgrid from a diction
 the order of the parameters is not preserved in the dictionary.
 
 """
+
 import numpy as np
 import pandas as pd
 

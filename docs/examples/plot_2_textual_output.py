@@ -4,6 +4,7 @@
 Because typing those things out is a **massive pain in the ass.**
 
 """
+
 from chainconsumer import Chain, ChainConsumer, Truth, make_sample
 
 # Here's a sample dataset
