@@ -83,11 +83,28 @@ class TestTranslators:
 
         assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)  # +1 for weight column
 
+    def test_drop_on_arviz_translator(self):
+        numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
+        arviz_id = az.from_numpyro(numpyro_mcmc)
+        chain = Chain.from_arviz(arviz_id, "Arviz", var_names=["mu"])
+        assert ("mu" in chain.samples.columns) and "sigma" not in chain.samples.columns
+
+        chain = Chain.from_arviz(arviz_id, "Arviz", var_names=["~mu"])
+        assert ("mu" not in chain.samples.columns) and ("sigma" in chain.samples.columns)
+
     def test_numpyro_translator(self):
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         chain = Chain.from_numpyro(numpyro_mcmc, "numpyro")
 
         assert chain.samples.shape == (self.n_steps * self.n_chains, self.n_params + 1)
+
+    def test_drop_on_numpyro_translator(self):
+        numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
+        chain = Chain.from_numpyro(numpyro_mcmc, "numpyro", var_names=["mu"])
+        assert ("mu" in chain.samples.columns) and "sigma" not in chain.samples.columns
+
+        chain = Chain.from_numpyro(numpyro_mcmc, "numpyro", var_names=["~mu"])
+        assert ("mu" not in chain.samples.columns) and ("sigma" in chain.samples.columns)
 
     def test_emcee_translator(self):
         emcee_sampler = run_emcee_mcmc(self.n_steps, self.n_chains)
