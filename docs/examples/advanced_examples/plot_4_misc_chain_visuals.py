@@ -112,3 +112,19 @@ fig = c.plotter.plot()
 # It's beautiful. And it's hard to find a nice balance.
 c.set_override(ChainConfig(smooth=0, bins=100))
 fig = c.plotter.plot()
+
+
+# %%
+# Controlling the legend
+# ----------------------
+#
+# Sometimes we have a bunch of things we want to show, whether they are
+# chains, markers, truth values, or something else. By default, ChainConsumer
+# will try to show everything, but you specifically tell it to hide items on
+# the legend.
+
+
+c = ChainConsumer()
+c.add_chain(Chain(samples=df1, name="I'm in the legend!"))
+c.add_chain(Chain(samples=df2, name="I'm not!", show_label_in_legend=False))
+fig = c.plotter.plot()

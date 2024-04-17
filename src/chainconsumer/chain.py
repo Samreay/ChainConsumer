@@ -137,6 +137,10 @@ class Chain(ChainConfig):
         default=1.0,
         description="Raise the posterior surface to this. Useful for inflating or deflating uncertainty for debugging.",
     )
+    show_label_in_legend: bool = Field(
+        default=True,
+        description="Whether to show the label in the legend",
+    )
 
     @property
     def data_columns(self) -> list[str]:
@@ -218,7 +222,7 @@ class Chain(ChainConfig):
     def _copy_df(cls, v: pd.DataFrame) -> pd.DataFrame:
         return v.copy()
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore
     def _validate_model(self) -> Chain:
         assert not self.samples.empty, "Your chain is empty. This is not ideal."
 
