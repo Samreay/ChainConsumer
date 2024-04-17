@@ -63,6 +63,8 @@ class FigSize(Enum):
 def get_artists_from_chains(chains: list[Chain]) -> list[Artist]:
     artists: list[Artist] = []
     for chain in chains:
+        if not chain.show_label_in_legend:
+            continue
         if chain.plot_contour and not chain.plot_point:
             artists.append(
                 Line2D(
@@ -241,10 +243,11 @@ class Plotter:
             if "markerfirst" not in legend_kwargs:
                 legend_kwargs["markerfirst"] = legend_outside or not self.config.legend_artists
 
-            artists = get_artists_from_chains(base.chains)
+            chains_to_show_on_legend = [c for c in base.chains if c.show_label_in_legend]
+            artists = get_artists_from_chains(chains_to_show_on_legend)
             leg = ax.legend(handles=artists, **legend_kwargs)
             if self.config.legend_color_text:
-                for text, chain in zip(leg.get_texts(), base.chains):
+                for text, chain in zip(leg.get_texts(), chains_to_show_on_legend):
                     text.set_fontweight("medium")
                     text.set_color(colors.format(chain.color))
         fig.canvas.draw()
