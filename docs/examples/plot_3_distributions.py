@@ -7,6 +7,7 @@ each other, you probably want a summary plot.
 To show you how they work, let's make some sample data that all
 has the same average.
 """
+
 from chainconsumer import Chain, ChainConsumer, Truth, make_sample
 
 # Here's what you might start with

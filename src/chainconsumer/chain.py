@@ -7,6 +7,7 @@ It is then extended by the `Chain` class, which contains the actual data.
 
 There are also a few helper functions and objects in here, like the `MaxPosterior` class which
 provides the log posterior and the coordinate at which it can be found for the chain."""
+
 from __future__ import annotations
 
 import logging

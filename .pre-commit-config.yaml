@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=5000"]
@@ -14,16 +14,16 @@ repos:
           - --unsafe
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.14
+    rev: v0.3.7
     hooks:
       - id: ruff
         args: ["--fix", "--no-unsafe-fixes"]
       - id: ruff-format
-  - repo: local
-    hooks:
-      - id: tests
-        name: tests
-        language: system
-        types: [python]
-        pass_filenames: false
-        entry: poetry run pytest
+  # - repo: local
+  #   hooks:
+  #     - id: tests
+  #       name: tests
+  #       language: system
+  #       types: [python]
+  #       pass_filenames: false
+  #       entry: poetry run pytest

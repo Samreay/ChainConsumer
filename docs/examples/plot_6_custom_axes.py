@@ -8,6 +8,7 @@ In this case, you can manually invoke ChainConsumer's plotting functions.
 Here's an example, noting that there are also `plot_point`, `plot_surface` available
 that I haven't explicitly shown.
 """
+
 import matplotlib.pyplot as plt
 
 from chainconsumer import Chain, Truth, make_sample

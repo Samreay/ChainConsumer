@@ -12,6 +12,7 @@ But, if your final samples are made up for four walkers each contributing
 In this toy example, all the chains are from the same random generator,
 so they're on top of each other. Except MCMC chains to not be as perfect.
 """
+
 from chainconsumer import Chain, ChainConsumer, PlotConfig, make_sample
 
 df = make_sample(num_dimensions=2, seed=3, num_points=40000)

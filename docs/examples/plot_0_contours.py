@@ -5,6 +5,7 @@ At the most basic, we take a contour as a pandas DataFrame and let ChainConsumer
 handle the defaults and display.
 
 """
+
 from chainconsumer import Chain, ChainConfig, ChainConsumer, PlotConfig, Truth, make_sample
 
 # Here's what you might start with

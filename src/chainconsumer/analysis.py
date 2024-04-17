@@ -26,9 +26,9 @@ class Bound(BetterBase):
     def array(self) -> np.ndarray:
         return np.array(
             [
-                self.lower if self.lower is not None else np.NaN,
-                self.center if self.center is not None else np.NaN,
-                self.upper if self.upper is not None else np.NaN,
+                self.lower if self.lower is not None else np.nan,
+                self.center if self.center is not None else np.nan,
+                self.upper if self.upper is not None else np.nan,
             ]
         )
 

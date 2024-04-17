@@ -3,6 +3,7 @@
 
 Want to see if your chain is behaving nicely? Use a walk!
 """
+
 from chainconsumer import Chain, ChainConsumer, Truth, make_sample
 
 # Here's a sample dataset

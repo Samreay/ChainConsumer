@@ -30,9 +30,9 @@ emcee = "^3.1.4"
 arviz = ">=0.16.1, <1"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = ">=3.3.3"
-ruff = ">=0.1.4, <1"
-mypy = "^1.4.1"
+pre-commit = ">=3.7.0"
+ruff = ">=0.3.7, <1"
+mypy = "^1.9.0"
 pandas-stubs = "^2.1.1.230928"
 
 
@@ -48,17 +48,20 @@ mkdocs-gallery = ">=0.7.8"
 
 [tool.ruff]
 src = ["src"]
-select = ["E", "F", "I", "N", "W", "D207", "D208", "D300", "UP", "YTT", "ASYNC", "DTZ", "G10", "G101", "G201", "G202", "INP001", "PIE", "T20", "SIM", "PTH", "PD", "PLE", "PLR", "PLW", "TRY", "NPY", "RUF"]
-ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712"]
 line-length = 120
 target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "D207", "D208", "D300", "UP", "YTT", "ASYNC", "DTZ", "G10", "G101", "G201", "G202", "INP001", "PIE", "T20", "SIM", "PTH", "PD", "PLE", "PLR", "PLW", "TRY", "NPY", "RUF"]
+ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712"]
+
 
 [tool.ruff.format]
 indent-style = "space"
 quote-style = "double"
 line-ending = "auto"
 
-[tool.ruff.extend-per-file-ignores]
+[tool.ruff.lint.extend-per-file-ignores]
 "test/***" = ["INP001"]
 "__init__.py" = ["E402", "F401"]
 "examples/***" = ["T201", "NPY002"]
