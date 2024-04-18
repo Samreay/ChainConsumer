@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, TypeAlias
 
-import arviz as az
 import numpy as np
 import pandas as pd
 from pydantic import Field, field_validator, model_validator
@@ -397,7 +396,7 @@ class Chain(ChainConfig):
         cls,
         mcmc: numpyro.infer.MCMC,
         name: str,
-        var_names: list[str] = [],
+        var_names: list[str] | None = None,
         **kwargs: Any,
     ) -> Chain:
         """Constructor from numpyro samples
@@ -424,7 +423,7 @@ class Chain(ChainConfig):
         cls,
         arviz_id: arviz.InferenceData,
         name: str,
-        var_names: list[str] = [],
+        var_names: list[str] | None = None,
         **kwargs: Any,
     ) -> Chain:
         """Constructor from an arviz InferenceData object
@@ -439,6 +438,8 @@ class Chain(ChainConfig):
         Returns:
             A ChainConsumer Chain made from the arviz chain
         """
+
+        import arviz as az
 
         var_names = _filter_var_names(var_names, list(arviz_id.posterior.keys()))
         reduced_id = az.extract(arviz_id, var_names=var_names, group="posterior")
@@ -460,28 +461,29 @@ class MaxPosterior(BetterBase):
         return np.array(list(self.coordinate.values()))
 
 
-def _filter_var_names(var_names: list[str], all_vars: list[str]):
+def _filter_var_names(var_names: list[str] | None, all_vars: list[str]) -> list[str]:
     """
     Helper function to return the var_names to allows filtering parameters names.
     """
 
-    if not var_names:
+    if var_names is None:
         return all_vars
 
-    elif var_names:
-        if not (all([var.startswith("~") for var in var_names]) or all([not var.startswith("~") for var in var_names])):
-            raise ValueError(
-                "all values in var_names must start with ~ to exclude a subset OR none of them to keep a subset"
-            )
+    negations = set([var.startswith("~") for var in var_names])
 
-        if all([var.startswith("~") for var in var_names]):
-            # remove the ~ from the var names
-            var_names = [var[1:] for var in var_names]
-            var_names = [var for var in all_vars if var not in var_names]
+    if len(negations) != 1:
+        raise ValueError(
+            "all values in var_names must start with ~ to exclude a subset OR none of them to keep a subset"
+        )
 
-            return var_names
+    if True in negations:
+        # remove the ~ from the var names
+        var_names = [var[1:] for var in var_names]
+        var_names = [var for var in all_vars if var not in var_names]
 
-        else:
-            # keep var_names as is but check if var is in all_vars
-            var_names = [var for var in all_vars if var in var_names]
-            return var_names
+        return var_names
+
+    else:
+        # keep var_names as is but check if var is in all_vars
+        var_names = [var for var in all_vars if var in var_names]
+        return var_names
