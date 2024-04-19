@@ -87,10 +87,12 @@ class TestTranslators:
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         arviz_id = az.from_numpyro(numpyro_mcmc)
         chain = Chain.from_arviz(arviz_id, "Arviz", var_names=["mu"])
-        assert ("mu" in chain.samples.columns) and "sigma" not in chain.samples.columns
+        assert "mu" in chain.samples.columns
+        assert "sigma" not in chain.samples.columns
 
         chain = Chain.from_arviz(arviz_id, "Arviz", var_names=["~mu"])
-        assert ("mu" not in chain.samples.columns) and ("sigma" in chain.samples.columns)
+        assert "mu" not in chain.samples.columns
+        assert "sigma" in chain.samples.columns
 
     def test_numpyro_translator(self):
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
@@ -101,10 +103,12 @@ class TestTranslators:
     def test_drop_on_numpyro_translator(self):
         numpyro_mcmc = run_numpyro_mcmc(self.n_steps, self.n_chains)
         chain = Chain.from_numpyro(numpyro_mcmc, "numpyro", var_names=["mu"])
-        assert ("mu" in chain.samples.columns) and "sigma" not in chain.samples.columns
+        assert "mu" in chain.samples.columns
+        assert "sigma" not in chain.samples.columns
 
         chain = Chain.from_numpyro(numpyro_mcmc, "numpyro", var_names=["~mu"])
-        assert ("mu" not in chain.samples.columns) and ("sigma" in chain.samples.columns)
+        assert "mu" not in chain.samples.columns
+        assert "sigma" in chain.samples.columns
 
     def test_emcee_translator(self):
         emcee_sampler = run_emcee_mcmc(self.n_steps, self.n_chains)
