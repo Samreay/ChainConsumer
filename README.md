@@ -67,6 +67,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.1.1
+* Adding general `kwargs` to `add_marker` so one can pass `show_label_in_legend` and other customisations through.
+
 ##### 1.1.0
 * Updating numpyro and arviz translators so you can specify variable names (`var_names`) to include or exclude.
 * Adding `histogram_relative_height` property to chains to control histogram height.
