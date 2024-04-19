@@ -141,6 +141,11 @@ class Chain(ChainConfig):
         default=True,
         description="Whether to show the label in the legend",
     )
+    histogram_relative_height: float = Field(
+        default=1.0,
+        description="The relative height to plot the marginalised histogram. 1.0 will ensure a normalised histogram.",
+        ge=0.0,
+    )
 
     @property
     def data_columns(self) -> list[str]:

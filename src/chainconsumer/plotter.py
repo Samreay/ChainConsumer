@@ -916,6 +916,7 @@ class Plotter:
         data = chain.get_data(column)
         if chain.smooth or chain.kde:
             xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain, column, pad=True)
+            ys *= chain.histogram_relative_height
             if flip:
                 ax.plot(ys, xs, color=chain.color, ls=chain.linestyle, lw=chain.linewidth, zorder=chain.zorder)
             else:
@@ -930,6 +931,7 @@ class Plotter:
                 hist = hist**chain.power
             edge_center = 0.5 * (edges[:-1] + edges[1:])
             xs, ys = edge_center, hist
+            ys *= chain.histogram_relative_height
             ax.hist(
                 xs,
                 weights=ys,
