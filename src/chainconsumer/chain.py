@@ -400,6 +400,7 @@ class Chain(ChainConfig):
         cls,
         mcmc: numpyro.infer.MCMC,
         name: str,
+        var_names: list[str] | None = None,
         **kwargs: Any,
     ) -> Chain:
         """Constructor from numpyro samples
@@ -407,12 +408,18 @@ class Chain(ChainConfig):
         Args:
             mcmc: The numpyro sampler
             name: The name of the chain
+            var_names: The names of the parameters to include in the chain. If the entries of var_names start with ~,
+            they are excluded from the variables. If empty, all parameters are included.
             kwargs: Any other arguments to pass to the Chain constructor.
 
         Returns:
             A ChainConsumer Chain made from numpyro samples
         """
-        df = pd.DataFrame.from_dict({key: np.ravel(value) for key, value in mcmc.get_samples().items()})
+
+        var_names = _filter_var_names(var_names, list(mcmc.get_samples().keys()))
+        df = pd.DataFrame.from_dict(
+            {key: np.ravel(value) for key, value in mcmc.get_samples().items() if key in var_names}
+        )
         return cls(samples=df, name=name, **kwargs)
 
     @classmethod
@@ -420,6 +427,7 @@ class Chain(ChainConfig):
         cls,
         arviz_id: arviz.InferenceData,
         name: str,
+        var_names: list[str] | None = None,
         **kwargs: Any,
     ) -> Chain:
         """Constructor from an arviz InferenceData object
@@ -427,13 +435,19 @@ class Chain(ChainConfig):
         Args:
             arviz_id: The arviz inference data
             name: The name of the chain
+            var_names: The names of the parameters to include in the chain. If the entries of var_names start with ~,
+            they are excluded from the variables. If empty, all parameters are included.
             kwargs: Any other arguments to pass to the Chain constructor.
 
         Returns:
             A ChainConsumer Chain made from the arviz chain
         """
 
-        df = arviz_id.to_dataframe(groups="posterior").drop(columns=["chain", "draw"])
+        import arviz as az
+
+        var_names = _filter_var_names(var_names, list(arviz_id.posterior.keys()))
+        reduced_id = az.extract(arviz_id, var_names=var_names, group="posterior")
+        df = reduced_id.to_dataframe().drop(columns=["chain", "draw"])
 
         return cls(samples=df, name=name, **kwargs)
 
@@ -449,3 +463,31 @@ class MaxPosterior(BetterBase):
     def vec_coordinate(self) -> np.ndarray:
         """The coordinate as a numpy array, in the order the columns were given."""
         return np.array(list(self.coordinate.values()))
+
+
+def _filter_var_names(var_names: list[str] | None, all_vars: list[str]) -> list[str]:
+    """
+    Helper function to return the var_names to allows filtering parameters names.
+    """
+
+    if var_names is None:
+        return all_vars
+
+    negations = set([var.startswith("~") for var in var_names])
+
+    if len(negations) != 1:
+        raise ValueError(
+            "all values in var_names must start with ~ to exclude a subset OR none of them to keep a subset"
+        )
+
+    if True in negations:
+        # remove the ~ from the var names
+        var_names = [var[1:] for var in var_names]
+        var_names = [var for var in all_vars if var not in var_names]
+
+        return var_names
+
+    else:
+        # keep var_names as is but check if var is in all_vars
+        var_names = [var for var in all_vars if var in var_names]
+        return var_names
