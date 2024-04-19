@@ -127,6 +127,8 @@ fig = c.plotter.plot()
 c = ChainConsumer()
 c.add_chain(Chain(samples=df1, name="I'm in the legend!"))
 c.add_chain(Chain(samples=df2, name="I'm not!", show_label_in_legend=False))
+c.add_marker(location={"A": 2.5, "B": 7.5}, marker_size=100, name="Marker in legend!")
+c.add_marker(location={"A": 2.5, "B": 1}, marker_size=100, name="Marker not in legend", show_label_in_legend=False)
 fig = c.plotter.plot()
 
 # %%

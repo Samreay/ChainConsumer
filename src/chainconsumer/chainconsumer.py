@@ -83,6 +83,7 @@ class ChainConsumer:
         marker_size: float = 20.0,
         marker_style: str = ".",
         marker_alpha: float = 1.0,
+        **kwargs,
     ) -> "ChainConsumer":
         r"""Add a marker to the plot at the given location.
 
@@ -93,6 +94,7 @@ class ChainConsumer:
             marker_size: The size of the marker. Defaults to 20.0.
             marker_style: The style of the marker. Defaults to ".".
             marker_alpha: The alpha of the marker. Defaults to 1.0.
+            kwargs: Any other properties to pass into the chain.
 
 
         Returns:
@@ -102,7 +104,6 @@ class ChainConsumer:
         samples = pd.DataFrame(location, index=[0])
         samples["weight"] = 1.0
         samples["log_posterior"] = 1.0
-        kwargs = {}
         if color is not None:
             kwargs["color"] = color
         chain = Chain(
