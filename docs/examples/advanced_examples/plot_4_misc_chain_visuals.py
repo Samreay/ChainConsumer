@@ -128,3 +128,19 @@ c = ChainConsumer()
 c.add_chain(Chain(samples=df1, name="I'm in the legend!"))
 c.add_chain(Chain(samples=df2, name="I'm not!", show_label_in_legend=False))
 fig = c.plotter.plot()
+
+# %%
+# Changing the height of the histogram
+# ------------------------------------
+#
+# For *very* niche reasons, you may want to change the defaults so that the
+# marginalised histograms on the diagonal are not normalised to unit area.
+# You can set the `histogram_relative_height` value to change this, such
+# that a value of 0.5 would mean "Make the histogram half as tall" and thus
+# result in a normalised area of 0.5 instead of 1.0.
+
+c = ChainConsumer()
+c.add_chain(Chain(samples=df1, name="Normal histogram"))
+c.add_chain(Chain(samples=df2, name="Small histogram", histogram_relative_height=0.2))
+c.set_plot_config(PlotConfig(flip=False))
+fig = c.plotter.plot()
