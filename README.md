@@ -67,6 +67,11 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.1.0
+* Updating numpyro and arviz translators so you can specify variable names (`var_names`) to include or exclude.
+* Adding `histogram_relative_height` property to chains to control histogram height.
+* Adding `show_label_in_legend` so you can decide to give a chain a label but not have it pollute the legend.
+
 ##### 1.0.3
 * Bug fix not using labels instead of column names for parameter title summaries.
 
