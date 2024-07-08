@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from pydantic import Field
-from scipy.integrate import simps
+from scipy.integrate import simpson as simps
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
 
