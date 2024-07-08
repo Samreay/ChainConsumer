@@ -29,7 +29,7 @@ def _sanitise_chains(
 
 class Diagnostic:
     def __init__(self, parent: "ChainConsumer"):
-        self.parent: "ChainConsumer" = parent
+        self.parent: ChainConsumer = parent
 
     def gelman_rubin(
         self, chains: list[Chain | ChainName] | Chain | ChainName | None = None, threshold: float = 0.05
@@ -87,7 +87,7 @@ class Diagnostic:
         r: float = np.sqrt(v / w)
 
         passed = np.abs(r - 1) < threshold
-        logger.info("Gelman-Rubin Statistic values for chain %s" % name)
+        logger.info(f"Gelman-Rubin Statistic values for chain {name}")
         for p, v, pas in zip(parameters, r, passed):
             param = "Param %d" % p if isinstance(p, int) else p
             logger.info(f"{param}: {v:7.5f} ({'Passed' if pas else 'Failed'})")

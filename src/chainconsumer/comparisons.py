@@ -39,7 +39,7 @@ class Comparison:
         for name, chain in self.parent._chains.items():
             p = chain.log_posterior
             if p is None:
-                logger.warning("You need to set the posterior for chain %s to get the DIC" % chain.name)
+                logger.warning(f"You need to set the posterior for chain {chain.name} to get the DIC")
             else:
                 means = np.array([np.average(chain.samples[c], weights=chain.weights) for c in chain.data_columns])
                 d = -2 * p
