@@ -320,7 +320,7 @@ class Analysis:
         for p, row in zip(parameters, matrix):
             table += format_string % p
             for r in row:
-                table += " & %5.2f" % r
+                table += f" & {r:5.2f}"
             table += " \\\\ \n"
         table += hline_text
         return latex_table % (column_def, table)
@@ -396,7 +396,7 @@ class Analysis:
         if factor != 0:
             text = r"\left( %s \right) \times 10^{%d}" % (text, -factor)
         if wrap:
-            text = "$%s$" % text
+            text = f"${text}$"
         return text
 
     def get_parameter_summary_mean(self, chain: Chain, column: ColumnName) -> Bound | None:

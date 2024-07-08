@@ -107,7 +107,7 @@ def get_artists_from_chains(chains: list[Chain]) -> list[Artist]:
 
 class Plotter:
     def __init__(self, parent: "ChainConsumer") -> None:
-        self.parent: "ChainConsumer" = parent
+        self.parent: ChainConsumer = parent
         self._config: PlotConfig | None = None
         self._default_config = PlotConfig()
 
@@ -983,7 +983,7 @@ class Plotter:
                                 r"${} = {}$".format(label.strip("$"), t), fontsize=self.config.summary_font_size
                             )
                         else:
-                            ax.set_title(r"$%s$" % t, fontsize=self.config.summary_font_size)
+                            ax.set_title(rf"${t}$", fontsize=self.config.summary_font_size)
         return float(ys.max())
 
     def _plot_walk(
