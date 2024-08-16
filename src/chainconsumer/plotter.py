@@ -889,10 +889,8 @@ class Plotter:
                     min_prop = point.coordinate[column]
                     max_prop = min_prop
 
-            if min_prop < min_val:
-                min_val = min_prop
-            if max_prop > max_val:
-                max_val = max_prop
+            min_val = min(min_prop, min_val)
+            max_val = max(max_prop, max_val)
 
         return min_val, max_val
 
@@ -952,10 +950,8 @@ class Plotter:
                 lower = fit_values.lower
                 upper = fit_values.upper
                 if lower is not None and upper is not None:
-                    if lower < xs.min():
-                        lower = xs.min()
-                    if upper > xs.max():
-                        upper = xs.max()
+                    lower = max(lower, xs.min())
+                    upper = min(upper, xs.max())
                     x = np.linspace(lower, upper, 1000)  # type: ignore
                     if flip:
                         ax.fill_betweenx(
