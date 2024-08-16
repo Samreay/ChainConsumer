@@ -68,7 +68,7 @@ If you are running on HPC or clusters where you can't install things yourself, u
 ### Update History
 
 ##### 1.1.2
-* Switch `scipy.integrate.simps` to `scipy.integrate.simpsons` for compatibility with new releases 
+* Switch `scipy.integrate.simps` to `scipy.integrate.simpsons` for compatibility with new releases
 
 ##### 1.1.1
 * Adding general `kwargs` to `add_marker` so one can pass `show_label_in_legend` and other customisations through.
