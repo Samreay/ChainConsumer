@@ -233,9 +233,9 @@ class Chain(ChainConfig):
 
         # If weights aren't set, add them all as one
         if self.weight_column not in self.samples:
-            assert (
-                self.weight_column == "weight"
-            ), f"weight column has been changed to {self.weight_column}, but its not in the dataframe"
+            assert self.weight_column == "weight", (
+                f"weight column has been changed to {self.weight_column}, but its not in the dataframe"
+            )
 
             self.samples[self.weight_column] = 1.0
         else:
@@ -258,9 +258,9 @@ class Chain(ChainConfig):
 
         # And if the color_params are set, ensure they're in the dataframe
         if self.color_param is not None:
-            assert (
-                self.color_param in self.samples.columns
-            ), f"Chain {self.name} does not have color parameter {self.color_param}"
+            assert self.color_param in self.samples.columns, (
+                f"Chain {self.name} does not have color parameter {self.color_param}"
+            )
 
         # more nan checks
         if self.num_eff_data_points is not None:

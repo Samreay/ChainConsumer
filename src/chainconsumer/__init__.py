@@ -8,6 +8,6 @@ from .examples import make_sample
 from .plotting.config import PlotConfig
 from .truth import Truth
 
-__all__ = ["ChainConsumer", "Chain", "ChainConfig", "Truth", "PlotConfig", "make_sample", "Bound", "colors"]
+__all__ = ["Bound", "Chain", "ChainConfig", "ChainConsumer", "PlotConfig", "Truth", "colors", "make_sample"]
 
 __version__ = importlib_metadata.version(__name__)

@@ -29,7 +29,7 @@ def insert_at_top(path: str, api_link: str) -> str:
     first_section = content[: second_heading.start()]
 
     if f"[{api_link}]" not in first_section:
-        file_path.write_text('??? api "API Documentation"\n' f"    [`{api_link}`][{api_link}]<br>\n\n" f"{content}")
+        file_path.write_text(f'??? api "API Documentation"\n    [`{api_link}`][{api_link}]<br>\n\n{content}')
 
     heading = file_path.stem.replace("_", " ").title()
     return f'!!! abstract "Usage Documentation"\n    [{heading}](../{rel_file})\n'

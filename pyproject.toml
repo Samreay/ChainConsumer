@@ -53,7 +53,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "D207", "D208", "D300", "UP", "YTT", "ASYNC", "DTZ", "G10", "G101", "G201", "G202", "INP001", "PIE", "T20", "SIM", "PTH", "PD", "PLE", "PLR", "PLW", "TRY", "NPY", "RUF"]
-ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712"]
+ignore = ["PD010", "PD901", "PLR2004", "UP017", "PLR0915", "TRY003", "INP001", "PLR0912", "PLR0913", "TRY300", "E712", "UP031"]
 
 
 [tool.ruff.format]

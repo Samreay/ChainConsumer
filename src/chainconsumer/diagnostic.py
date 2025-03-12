@@ -123,9 +123,9 @@ class Diagnostic:
         chain = final_chains[0]
 
         num_walkers = chain.walkers
-        assert (
-            num_walkers is not None and num_walkers > 0
-        ), "You need to specify the number of walkers to use the Geweke diagnostic."
+        assert num_walkers is not None and num_walkers > 0, (
+            "You need to specify the number of walkers to use the Geweke diagnostic."
+        )
         name = chain.name
         data = chain.data_samples
         split_samples = np.split(data.to_numpy(), num_walkers)
