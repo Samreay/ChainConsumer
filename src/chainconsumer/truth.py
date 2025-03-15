@@ -18,7 +18,9 @@ class Truth(BetterBase):
     line_style: str = Field(default="--", description="The style of the truth line")
     alpha: float = Field(default=1.0, description="The alpha of the truth line")
     zorder: int = Field(default=100, description="The zorder of the truth line")
-
+    off_diagonal_marker: str | None = Field(default=None, description="The truth marker style for the off-diagonal plots")
+    off_diagonal_marker_size: float = Field(default=100.0, description="The truth marker size for the off-diagonal plots")
+    
     @field_validator("location")
     @classmethod
     def _ensure_dict(cls, v):
