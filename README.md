@@ -67,6 +67,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.2.0
+* Adding truth marker values. Thanks @CaseyMcGrath for [#147](https://github.com/Samreay/ChainConsumer/pull/147)
+
 ##### 1.1.2
 * Switch `scipy.integrate.simps` to `scipy.integrate.simpsons` for compatibility with new releases
 

@@ -450,7 +450,7 @@ class Chain(ChainConfig):
 
         import arviz as az
 
-        var_names = _filter_var_names(var_names, list(arviz_id.posterior.keys()))
+        var_names = _filter_var_names(var_names, list(arviz_id.posterior.keys()))  # type: ignore
         reduced_id = az.extract(arviz_id, var_names=var_names, group="posterior")
         df = reduced_id.to_dataframe().drop(columns=["chain", "draw"])
 

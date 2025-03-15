@@ -88,6 +88,6 @@ warn_return_any = true
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-addopts = "-v"
+addopts = ["-v"]
 pythonpath = ["src"]
 testpaths = ["test"]
