@@ -282,7 +282,7 @@ class Analysis:
         if chain.grid:
             bins = get_grid_bins(data)
         else:
-            bins, _ = get_smoothed_bins(chain.smooth, get_bins(chain), data, chain.weights, pad=pad)
+            bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=pad)
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
@@ -290,8 +290,8 @@ class Analysis:
         edge_centers = 0.5 * (edges[1:] + edges[:-1])
         xs = np.linspace(edge_centers[0], edge_centers[-1], 10000)
 
-        if chain.smooth:
-            hist = gaussian_filter(hist, chain.smooth, mode="reflect")
+        if chain.smooth_value:
+            hist = gaussian_filter(hist, chain.smooth_value, mode="reflect")
         if chain.kde:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
             factor = chain.kde if isinstance(chain.kde, int | float) else 1.0

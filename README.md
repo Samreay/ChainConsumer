@@ -67,6 +67,9 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.2.1
+* Fixing regression so gridded data has a default smooth of 0. Thanks Rick Kessler for helping debug this.
+
 ##### 1.2.0
 * Adding truth marker values. Thanks @CaseyMcGrath for [#147](https://github.com/Samreay/ChainConsumer/pull/147)
 

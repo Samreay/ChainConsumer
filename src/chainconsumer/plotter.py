@@ -912,7 +912,7 @@ class Plotter:
     ) -> float:  # pragma: no cover
         # Get values from config
         data = chain.get_data(column)
-        if chain.smooth or chain.kde:
+        if chain.smooth_value or chain.kde:
             xs, ys, _ = self.parent.analysis._get_smoothed_histogram(chain, column, pad=True)
             ys *= chain.histogram_relative_height
             if flip:
@@ -923,7 +923,7 @@ class Plotter:
             if chain.grid:
                 bins = get_grid_bins(data)
             else:
-                bins, _ = get_smoothed_bins(chain.smooth, get_bins(chain), data, chain.weights)
+                bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights)
             hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
             if chain.power is not None:
                 hist = hist**chain.power
@@ -941,7 +941,7 @@ class Plotter:
                 lw=chain.linewidth,
                 zorder=chain.zorder,
             )
-        interp_type = "linear" if chain.smooth else "nearest"
+        interp_type = "linear" if chain.smooth_value else "nearest"
         interpolator = interp1d(xs, ys, kind=interp_type)
 
         if chain.bar_shade:

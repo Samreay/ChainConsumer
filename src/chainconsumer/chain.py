@@ -61,7 +61,9 @@ class ChainConfig(BetterBase):
     bar_shade: bool = Field(default=True, description="Whether to shade marginalised distributions")
     bins: int | None = Field(default=None, description="The number of bins to use for histograms.")
     kde: int | float | bool = Field(default=False, description="The bandwidth for KDEs")
-    smooth: int = Field(default=3, description="The smoothing for histograms. Set to 0 for no smoothing")
+    smooth: int | None = Field(
+        default=None, description="The smoothing for histograms. Set to 0 for no smoothing. Defaults to 3."
+    )
     color_param: str | None = Field(default=None, description="The parameter (column) to use for coloring")
     cmap: str = Field(default="viridis", description="The colormap to use for shading cloud points")
     num_cloud: int | float = Field(default=10000, description="The number of points in the cloud")
@@ -214,6 +216,16 @@ class Chain(ChainConfig):
         if self.color_param is None:
             return None
         return self.samples[self.color_param].to_numpy()
+
+    @property
+    def smooth_value(self) -> int:
+        """The smoothing value to use for the histogram. If smooth is set, this is the value.
+        If not, it is 0 for gridded data, and 3 for non-gridded data."""
+        if self.smooth is not None:
+            return self.smooth
+        if self.grid:
+            return 0
+        return 3
 
     @field_validator("color")
     @classmethod

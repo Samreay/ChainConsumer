@@ -8,7 +8,7 @@ Just flatten your grid, set the weights to the grid evaluation, and set the grid
 a nice diamond that you get from modifying a simple multivariate normal distribution.
 
 Note that by default, grid data is not smoothed, though you can explicitly set the smooth
-parameter in ``configure_general`` if you do want smoothing.
+parameter when you make the Chain object if you want.
 
 Note that you *cannot* use dictionary input with the grid method and not specify the full
 flattened array. This is because we cannot construct the meshgrid from a dictionary, as

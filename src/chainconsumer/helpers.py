@@ -42,7 +42,7 @@ def get_extents(
 def get_bins(chain: Chain) -> int:
     if chain.bins is not None:
         return chain.bins
-    max_v = 35 if chain.smooth > 0 else 100
+    max_v = 35 if chain.smooth_value > 0 else 100
     return max((max_v, int(np.floor(1.0 * np.power(chain.samples.shape[0] / chain.samples.shape[1], 0.25)))))
 
 
@@ -97,7 +97,7 @@ def get_smoothed_histogram2d(
         binsy = get_grid_bins(y)
         hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
     else:
-        binsx, smooth = get_smoothed_bins(chain.smooth, get_bins(chain), x, w)
+        binsx, smooth = get_smoothed_bins(chain.smooth_value, get_bins(chain), x, w)
         binsy, _ = get_smoothed_bins(smooth, get_bins(chain), y, w)
         hist, x_bins, y_bins = np.histogram2d(x, y, bins=[binsx, binsy], weights=w)
 
@@ -117,8 +117,8 @@ def get_smoothed_histogram2d(
         hist = MegKDE(data, w, chain.kde).evaluate(coords).reshape((nn, nn))
         if chain.power is not None:
             hist = hist**chain.power
-    elif chain.smooth:
-        hist = gaussian_filter(hist, chain.smooth, mode="reflect")
+    elif chain.smooth_value:
+        hist = gaussian_filter(hist, chain.smooth_value, mode="reflect")
 
     return hist, x_centers, y_centers
 
