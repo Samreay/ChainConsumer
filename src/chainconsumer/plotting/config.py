@@ -11,8 +11,12 @@ class PlotConfig(BetterBase):
     max_ticks: int = Field(default=5, ge=0, description="Maximum number of ticks to use on axes")
     plot_hists: bool = Field(default=True, description="Whether to plot the 1D histograms")
     flip: bool = Field(default=False, description="Whether to flip the 1D histograms")
-    serif: bool = Field(default=False, description="Whether to use a serif font")
-    usetex: bool = Field(default=False, description="Whether to use LaTeX for text rendering")
+    serif: bool | None = Field(
+        default=False, description="Whether to use a serif font. None to not override the rc param."
+    )
+    usetex: bool | None = Field(
+        default=False, description="Whether to use LaTeX for text rendering. None to not override the rc param."
+    )
     diagonal_tick_labels: bool = Field(default=True, description="Whether to show tick labels on the diagonal")
     label_font_size: int = Field(default=12, ge=0, description="Font size for axis labels")
     tick_font_size: int = Field(default=10, ge=0, description="Font size for axis ticks")

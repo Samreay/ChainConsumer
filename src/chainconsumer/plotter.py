@@ -671,7 +671,7 @@ class Plotter:
     def _get_size_of_texts(self, texts: list[str]) -> float:  # pragma: no cover
         usetex = self.config.usetex
         size = self.config.label_font_size
-        widths = [TextPath((0, 0), text, usetex=usetex, size=size).get_extents().width for text in texts]
+        widths = [TextPath((0, 0), text, usetex=usetex, size=size).get_extents().width for text in texts]  # type: ignore
         return max(widths)
 
     def _sanitise_columns(self, columns: list[ColumnName] | None, chains: list[Chain]) -> list[ColumnName]:
@@ -721,14 +721,10 @@ class Plotter:
         )
 
     def set_rc_params(self) -> None:
-        if self.config.usetex:
-            plt.rc("text", usetex=True)
-        else:
-            plt.rc("text", usetex=False)
-        if self.config.serif:
-            plt.rc("font", family="serif")
-        else:
-            plt.rc("font", family="sans-serif")
+        if self.config.usetex is not None:
+            plt.rc("text", usetex=self.config.usetex)
+        if self.config.serif is not None:
+            plt.rc("font", family=("serif" if self.config.serif else "sans-serif"))
 
     def restore_rc_params(self):
         """Restores the matplotlib rc parameters modified by usetex and serif.
