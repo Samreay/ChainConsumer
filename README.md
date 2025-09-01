@@ -67,6 +67,12 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.2.3
+* Fixes #152 by ensuring markers do not cause summary text to be hidden.
+
+##### 1.2.2
+* Fixes #148 by allowing None to be passed in for serif and usetex
+
 ##### 1.2.1
 * Fixing regression so gridded data has a default smooth of 0. Thanks Rick Kessler for helping debug this.
 
