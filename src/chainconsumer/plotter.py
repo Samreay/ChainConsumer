@@ -176,7 +176,8 @@ class Plotter:
         fig, axes, params_x, params_y = self._get_triangle_figure(base, figsize=fig_size)
 
         axl = axes.ravel().tolist()
-        summarise = self.config.summarise and len(base.chains) == 1
+        num_summary_chains = len([c for c in base.chains if c.plot_contour])
+        summarise = self.config.summarise and num_summary_chains == 1
 
         paths_for_cbar: dict[ColumnName, PathCollection] = {}
         for i, p1 in enumerate(params_x):

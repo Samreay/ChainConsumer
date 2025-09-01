@@ -152,7 +152,7 @@ class ChainConsumer:
     def _get_final_chains(self) -> dict[ChainName, Chain]:
         # Copy the original chain list
         final_chains = {k: v.model_copy() for k, v in self._chains.items()}
-        num_chains = len(self._chains)
+        num_chains = len([x for x in self._chains.values() if x.plot_contour])
 
         # Note we only have to override things without a default
         # and things which should change as the number of chains change

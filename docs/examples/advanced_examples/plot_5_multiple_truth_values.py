@@ -48,3 +48,29 @@ c.add_chain(chain2)
 c.add_truth(Truth(location={"A": 0, "B": 0}, color="#fb7185", marker="o"))
 c.add_truth(Truth(location={"A": 3, "B": 3}, color="#1f2937", marker="X"))
 fig = c.plotter.plot()
+
+# %%
+# The above example will give you points on the subplots showing 2D slices
+# of the marginalised posterior, and vertical lines in the 1D marginalised
+# histograms. If this makes the histograms too noisy and you only want to
+# see the points in the contour plots, consider swapping over to simply
+# putting in markers.
+#
+# I also apologise for the inconsistent naming here - marker becomes
+# marker_style. Sorry.
+#
+c = ChainConsumer()
+c.add_chain(chain1)
+c.add_marker(
+    location={"A": 0, "B": 0},
+    name="Truth1",
+    color="#fb7185",
+    marker_style="o",
+)
+c.add_marker(
+    location={"A": 3, "B": 3},
+    name="Truth2",
+    color="#1f2937",
+    marker_style="X",
+)
+fig = c.plotter.plot()
