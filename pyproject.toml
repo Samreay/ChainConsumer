@@ -45,12 +45,8 @@ docs = [
 [tool.uv]
 default-groups = ["test", "dev", "docs"]
 
-[tool.poetry-version-plugin]
-source = "git-tag"
-
 [tool.ruff]
 line-length = 120
-target-version = "py310"
 
 [tool.ruff.lint]
 select = [
