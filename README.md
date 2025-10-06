@@ -1,6 +1,5 @@
 # [ChainConsumer](https://samreay.github.io/ChainConsumer)
 
-[![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg)](https://travis-ci.org/Samreay/ChainConsumer)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json)](https://github.com/astral-sh/ruff)
 ![Build](https://github.com/samreay/chainconsumer/actions/workflows/deploy.yml/badge.svg)
