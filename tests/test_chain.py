@@ -15,9 +15,9 @@ class TestChain:
     dfw = df.assign(weight=1)
     dfp = df.assign(log_posterior=1)
     dfp_bad = dfp.copy()
-    dfp_bad["log_posterior"][0] = np.nan
+    dfp_bad.iloc[0, dfp_bad.columns.get_loc("log_posterior")] = np.nan  # type: ignore
     bad = df.copy()
-    bad["a"][0] = np.nan
+    bad.iloc[0, bad.columns.get_loc("a")] = np.nan  # type: ignore
     n = "A"
 
     def test_good_chain(self):

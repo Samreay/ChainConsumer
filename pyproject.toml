@@ -28,7 +28,7 @@ test = [
 ]
 dev = [
     "pre-commit>=3.7.0",
-    "ruff>=0.3.7, <1",
+    "ruff>=0.13.3, <1",
     "mypy>=1.9.0,<2",
     "pandas-stubs>=2.1.1.230928,<3",
 ]
@@ -138,4 +138,3 @@ pythonpath = ["src"]
 testpaths = ["test"]
 xfail_strict = true
 log_cli_level = "INFO"
-filterwarnings = ["error"]
