@@ -39,10 +39,10 @@ pushdocs:
 	uv version $(VERSION) && uv run mkdocs gh-deploy --force
 
 build:
-	rm -rf dist; uv version $(VERSION) && uv publish --dry-run
+	rm -rf dist; uv version $(VERSION) && uv build && uv publish --dry-run
 
 publish:
-	rm -rf dist; uv version $(VERSION) && uv publish
+	rm -rf dist; uv version $(VERSION) && uv build && uv publish
 
 tests: test
 
