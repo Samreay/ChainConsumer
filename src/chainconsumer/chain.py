@@ -177,7 +177,7 @@ class Chain(ChainConfig):
     @property
     def plotting_columns(self) -> list[str]:
         """The columns to be plotted, which are the dataframe columns
-        with the weights, posterior and colour coloumns removed."""
+        with the weights, posterior and colour columns removed."""
         cols = self.data_columns
         if not self.plot_cloud:
             return cols
@@ -408,7 +408,7 @@ class Chain(ChainConfig):
             A ChainConsumer Chain made from the emcee samples
         """
         chain: np.ndarray = sampler.get_chain(flat=True, thin=thin, discard=discard)  # type: ignore
-        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, chain.T)})
+        df = pd.DataFrame.from_dict({col: val for col, val in zip(columns, chain.T, strict=False)})
 
         return cls(samples=df, name=name, **kwargs)
 

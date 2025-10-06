@@ -1,33 +1,48 @@
 .PHONY: tests docs build
 VERSION := $(shell git for-each-ref refs/tags --format='%(refname:short)' | grep -E "^v[0-9]+\..*" | tail -n1)
 
-install:
-	pip install -U pip poetry -q
-	poetry install --with=dev,test --all-extras
-	poetry run pre-commit install
-	poetry run pre-commit autoupdate
+install_uv:
+	@if [ -f "uv" ]; then echo "Downloading uv" && curl -LsSf https://astral.sh/uv/install.sh | sh; else echo "uv already installed"; fi
+	uv self update
+
+install_python:
+	uv python install
+
+install_deps:
+	uv sync --all-extras
+
+install_precommit:
+	uv run pre-commit install
+	uv run pre-commit gc
+
+update_precommit:
+	uv run pre-commit autoupdate
+	uv run pre-commit gc
 
 precommit:
-	poetry run pre-commit run --all-files
+	uv run pre-commit run --all-files
 
 test:
-	poetry run pytest
+	uv run pytest tests
+
+tests: test
+install: install_uv install_python install_deps install_precommit
 
 serve:
 	rm -rf docs/generated/gallery;
-	poetry run mkdocs serve --clean
+	uv run mkdocs serve --clean
 
 docs:
-	poetry run poetry version $(VERSION) && poetry run mkdocs build
+	uv version $(VERSION) && uv run mkdocs build
 
 pushdocs:
-	poetry run poetry version $(VERSION) && poetry run mkdocs gh-deploy --force
+	uv version $(VERSION) && uv run mkdocs gh-deploy --force
 
 build:
-	rm -rf dist; poetry version $(VERSION) && poetry publish --build --dry-run
+	rm -rf dist; uv version $(VERSION) && uv publish --dry-run
 
 publish:
-	rm -rf dist; poetry config pypi-token.pypi $$PYPI_TOKEN && poetry version $(VERSION) && poetry publish --build
+	rm -rf dist; uv version $(VERSION) && uv publish
 
 tests: test
 

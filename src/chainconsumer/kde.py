@@ -48,7 +48,7 @@ class MegKDE:
         self.sigma = 2.0 * factor * np.power(self.num_points, -1.0 / (4 + self.num_dim))  # Starting sigma (bw) of Gauss
         self.sigma_fact = -0.5 / (self.sigma * self.sigma)
 
-        # Cant get normed probs to work atm, turning off for now as I don't need normed pdfs for contours
+        # Can't get normed probs to work atm, turning off for now as I don't need normed pdfs for contours
         # self.norm = np.product(np.diagonal(self.A)) * (2 * np.pi) ** (-0.5 * self.num_dim)  # prob norm
         # self.scaling = np.power(self.norm * self.sigma, -self.num_dim)
 
@@ -76,7 +76,7 @@ class MegKDE:
                 distsq = np.sum(diff * diff, axis=1)
             else:
                 # If too few points get nmin closest
-                dist, n = self.tree.query(_d[i], k=self.nmin)  # noqa: PLW2901 # TODO: I assume this isnt an error
+                dist, n = self.tree.query(_d[i], k=self.nmin)  # noqa: PLW2901 # TODO: I assume this isn't an error
                 distsq = dist * dist
             out.append(np.sum(self.weights[n] * np.exp(self.sigma_fact * distsq)))
         return np.array(out)  # * self.scaling

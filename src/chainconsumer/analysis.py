@@ -317,7 +317,7 @@ class Analysis:
         table += hline_text
         max_len = max([len(s) for s in parameters])
         format_string = "        %%%ds" % max_len
-        for p, row in zip(parameters, matrix):
+        for p, row in zip(parameters, matrix, strict=False):
             table += format_string % p
             for r in row:
                 table += f" & {r:5.2f}"

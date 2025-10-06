@@ -88,7 +88,7 @@ class Diagnostic:
 
         passed = np.abs(r - 1) < threshold
         logger.info(f"Gelman-Rubin Statistic values for chain {name}")
-        for p, v, pas in zip(parameters, r, passed):
+        for p, v, pas in zip(parameters, r, passed, strict=False):
             param = "Param %d" % p if isinstance(p, int) else p
             logger.info(f"{param}: {v:7.5f} ({'Passed' if pas else 'Failed'})")
         all_passed: bool = np.all(passed)

@@ -3,14 +3,12 @@
 In general, this is the flow:
 
 1. Get your samples into a pandas dataframe. If you have another format and want to contribute a translation function, that would be amazing.
-2. Turn those samples into a `Chain`. At this point, you can specify a ton of visual and statistical choices.
-3. Give those chains to `ChainConsumer`
-4. If you know the truth value of the chains, you can call `c.add_truth(Truth(...))` to add this to your plots. Note you can have as many truth lines as you want, not just one.
-5. If you want to change plotting specific options (but not chain specific options), you can `set_plot_config(PlotConfig(...))` to control things like the number of ticks, font size, etc.
-6. Optionally, use the diagnostics available to see if your chains are stable, or do this via using `plot_walks`
-7. Make your contours via `plot`, or your summaries, or your LaTeX tables.
-
-
+1. Turn those samples into a `Chain`. At this point, you can specify a ton of visual and statistical choices.
+1. Give those chains to `ChainConsumer`
+1. If you know the truth value of the chains, you can call `c.add_truth(Truth(...))` to add this to your plots. Note you can have as many truth lines as you want, not just one.
+1. If you want to change plotting specific options (but not chain specific options), you can `set_plot_config(PlotConfig(...))` to control things like the number of ticks, font size, etc.
+1. Optionally, use the diagnostics available to see if your chains are stable, or do this via using `plot_walks`
+1. Make your contours via `plot`, or your summaries, or your LaTeX tables.
 
 ## Statistics
 

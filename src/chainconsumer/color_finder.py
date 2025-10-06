@@ -104,7 +104,7 @@ class Colors:
     def get_colormap(self, num: int, cmap_name: str, scale: float = 0.7) -> list[str]:  # pragma: no cover
         color_list = self.get_formatted(plt.get_cmap(cmap_name)(np.linspace(0.05, 0.9, num)))
         scales = scale + (1 - scale) * np.abs(1 - np.linspace(0, 2, num))
-        scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales)]
+        scaled = [self.scale_colour(c, s) for c, s in zip(color_list, scales, strict=False)]
         return scaled
 
     def scale_colour(self, color: ColorInput, scalefactor: float) -> str:  # pragma: no cover

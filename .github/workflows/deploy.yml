@@ -1,64 +1,78 @@
-name: CICD
+name: "CICD"
 
 on:
   push:
-  pull_request:
-    types: [opened]
-  workflow_dispatch:
-  release:
-    types: [created]
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
     steps:
-      - uses: actions/checkout@v4
-      - run: pip install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v5
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.10'
-          architecture: 'x64'
-          cache: 'poetry'
-      - run: make install
-      - run: make precommit
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run tests
+        run: uv run pytest tests
 
   docs:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
-      - uses: actions/checkout@v4
-      - run: pip install poetry
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          architecture: 'x64'
-          cache: 'poetry'
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
       - run: make install
       - run: make docs
       - run: make pushdocs
-        if: |
-          github.event_name == 'release' || github.ref == 'refs/heads/master'
+        if: github.event_name == 'release' || github.ref == 'refs/heads/master'
 
-  build_and_publish:
+
+  publish:
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+      contents: read
     needs: [test]
+    if: startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
-      - run: pip install poetry
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          architecture: 'x64'
-          cache: 'poetry'
-      - run: make install
-      - run: make build
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Build
+        run: make build
+
       - name: Publish
         run: make publish
-        if: github.event_name == 'release'
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-

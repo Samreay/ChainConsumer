@@ -79,7 +79,7 @@ def plot_contour(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName, config:
     sub = max(0.1, 1 - 0.2 * chain.shade_gradient)
     paths = None
 
-    # TODO: Figure out whats going on here
+    # TODO: Figure out what's going on here
     if chain.shade:
         sub *= 0.9
     colours2 = [colors.scale_colour(contour_colours[0], sub)] + [

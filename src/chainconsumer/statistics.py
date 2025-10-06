@@ -4,7 +4,7 @@ from enum import Enum
 class SummaryStatistic(Enum):
     MAX = "max"
     """The max value summary statistic is the default. The central point is set
-    to your maxmimum likelihood, and the upper and lower bounds are determined by
+    to your maximum likelihood, and the upper and lower bounds are determined by
     finding an iso-likelihood surface which encapsulates the required volume."""
 
     MAX_CENTRAL = "max_central"

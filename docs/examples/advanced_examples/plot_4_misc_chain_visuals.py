@@ -1,5 +1,5 @@
 """
-# Miscellanous Visual Options
+# Miscellaneous Visual Options
 
 Rather than having one example for each option, let's condense things.
 """
@@ -99,7 +99,7 @@ fig = c.plotter.plot()
 # ------------------
 #
 # The histograms behind the scene in ChainConsumer are smoothed. But you can turn this off.
-# The higher the smoothing vaule, the more subidivisions of your bins there will be.
+# The higher the smoothing value, the more subidivisions of your bins there will be.
 c.set_override(ChainConfig(smooth=0))
 fig = c.plotter.plot()
 

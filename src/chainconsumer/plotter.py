@@ -248,7 +248,7 @@ class Plotter:
             artists = get_artists_from_chains(chains_to_show_on_legend)
             leg = ax.legend(handles=artists, **legend_kwargs)
             if self.config.legend_color_text:
-                for text, chain in zip(leg.get_texts(), chains_to_show_on_legend):
+                for text, chain in zip(leg.get_texts(), chains_to_show_on_legend, strict=False):
                     text.set_fontweight("medium")
                     text.set_color(colors.format(chain.color))
         fig.canvas.draw()
@@ -619,7 +619,7 @@ class Plotter:
             )
             axes_for_summaries = axes_row[1:]
 
-            for ax, p in zip(axes_for_summaries, base.columns):
+            for ax, p in zip(axes_for_summaries, base.columns, strict=False):
                 # Set up the frames
                 if i > 0:
                     ax.spines["top"].set_visible(False)
@@ -642,7 +642,7 @@ class Plotter:
                     if truth_value is not None:
                         ax.axvline(truth_value, **truth._kwargs)
 
-                # Skip if this chain doesnt have the parameter
+                # Skip if this chain doesn't have the parameter
                 if p not in chain.data_columns:
                     continue
 
@@ -659,8 +659,8 @@ class Plotter:
                     if max_vals.get(p) is None or m > max_vals[p]:
                         max_vals[p] = m
 
-        for i, axes_row in enumerate(axes):
-            for ax, p in zip(axes_row, base.columns):
+        for axes_row in axes:
+            for ax, p in zip(axes_row, base.columns, strict=False):
                 if not errorbar:
                     ax.set_ylim(0, 1.1 * max_vals[p])
 
@@ -686,7 +686,7 @@ class Plotter:
         return columns
 
     def _sanitise_logscale(self, log_scales: list[ColumnName] | None) -> list[ColumnName]:
-        # We could at some point determine if something should be a log scale by analyising
+        # We could at some point determine if something should be a log scale by analysing
         # its distribution, but for now assume its all linear
         if log_scales is None:
             return []

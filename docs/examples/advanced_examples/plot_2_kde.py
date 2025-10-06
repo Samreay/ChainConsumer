@@ -12,7 +12,7 @@ a lack of data with some extra smoothing.
 But, if there's no other way, here's how you can do it.
 
 Notice how the KDE, unless its perfectly matched to your distribution,
-increses the width of the marginal distributions.
+increases the width of the marginal distributions.
 
 """
 
