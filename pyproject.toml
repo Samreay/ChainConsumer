@@ -4,8 +4,10 @@ build-backend = "uv_build"
 
 [project]
 name = "ChainConsumer"
-version = "v0.0.0"
-description = "ChainConsumer: Consumer your MCMC chains"
+version = "v0.0.0" # The version is set via v* tags and replaced via `uv version`, do not edit manually
+description = "ChainConsumer: Consume your MCMC chains"
+license = "MIT"
+license-files = ["LICEN[CS]E.*"]
 authors = [{ name = "Samuel Hinton", email = "samuelreay@gmail.com" }]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -18,6 +20,10 @@ dependencies = [
     "pillow>=10.0.1",
     "pydantic>=2.2.0,<3",
 ]
+
+[project.urls]
+Documentation = "https://samreay.github.io/ChainConsumer"
+Repository = "https://github.com/samreay/ChainConsumer"
 
 [dependency-groups]
 test = [

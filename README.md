@@ -1,10 +1,9 @@
 # [ChainConsumer](https://samreay.github.io/ChainConsumer)
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/eefe9aa7d4904306877be1e17b952f39)](https://www.codacy.com/app/samuelreay/ChainConsumer?utm_source=github.com&utm_medium=referral&utm_content=Samreay/ChainConsumer&utm_campaign=badger)
 [![Build Status](https://img.shields.io/travis/Samreay/ChainConsumer.svg)](https://travis-ci.org/Samreay/ChainConsumer)
-[![Coverage Status](https://codecov.io/gh/Samreay/ChainConsumer/branch/master/graph/badge.svg)](https://codecov.io/gh/Samreay/ChainConsumer)
-[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/dessn/abc/blob/master/LICENSE)
-
+![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json)](https://github.com/astral-sh/ruff)
+![Build](https://github.com/samreay/chainconsumer/actions/workflows/deploy.yml/badge.svg)
 [![PyPi](https://img.shields.io/pypi/v/ChainConsumer)](https://pypi.python.org/pypi/ChainConsumer)
 [![Conda](https://anaconda.org/samreay/chainconsumer/badges/version.svg)](https://anaconda.org/samreay/chainconsumer)
 [![DOI](https://zenodo.org/badge/23430/Samreay/ChainConsumer.svg)](https://zenodo.org/badge/latestdoi/23430/Samreay/ChainConsumer)
@@ -22,13 +21,13 @@ and perform some model selection!
 
 Install via `pip`:
 
-```
+```bash
 pip install chainconsumer
 ```
 
 ### Python Versions
 
-Time has ticked on, and now only python 3.10 will be supported. This is because type hints are amazing.
+Time has ticked on, and now only python 3.10+ will be supported. This is because type hints are amazing.
 
 ### Developing
 
@@ -66,6 +65,11 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 If you are running on HPC or clusters where you can't install things yourself, users may run into issues where LaTeX or other optional dependencies aren't installed. In this case, set `usetex=False` in `configure` to request matplotlib not try to use TeX. If this does not work, also set `serif=False`, which has helped some uses.
 
 ### Update History
+
+##### 1.2.4
+
+- Fixing issue with Arviz columns changing in their to_dataframe example.
+- Converting from poetry to uv
 
 ##### 1.2.3
 
