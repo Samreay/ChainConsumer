@@ -3,7 +3,7 @@ VERSION := $(shell git for-each-ref refs/tags --format='%(refname:short)' | grep
 
 install_uv:
 	@if [ -f "uv" ]; then echo "Downloading uv" && curl -LsSf https://astral.sh/uv/install.sh | sh; else echo "uv already installed"; fi
-	uv self update
+	uv self update || true
 
 install_python:
 	uv python install
