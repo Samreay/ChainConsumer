@@ -35,6 +35,8 @@ Time has ticked on, and now only python 3.10+ will be supported. This is because
 1. Ensure that you set your python interpreter to the `.venv/bin/python`
 1. Code away.
 
+For convenience, you can also run `make tests` to run tests, `make serve` to build and serve documentation to your browser, and `make precommit` to run all the pre-commit checks before going to commit.
+
 ### Contributors
 
 I would like to thank the following people for their contribution in issues, algorithms and code snippets
