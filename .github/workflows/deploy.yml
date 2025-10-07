@@ -10,10 +10,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install and update precommit
+        run: make install_precommit && make update_precommit
+
+      - name: Run pre-commit
+        run: make precommit
+
   test:
     name: Tests
+    needs: [pre-commit]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version:
           - "3.10"
