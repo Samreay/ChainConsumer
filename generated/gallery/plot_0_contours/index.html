@@ -1143,11 +1143,11 @@ handle the defaults and display.</p>
 </code></pre></div>
 <p class="mkd-glr-script-out">Out:</p>
 <div class="mkd-glr-script-out-disp highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w">          </span>A<span class="w">         </span>B<span class="w">  </span>log_posterior
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="m">0</span><span class="w"> </span>-1.892929<span class="w">  </span><span class="m">2</span>.517269<span class="w">      </span>-4.476447
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="m">1</span><span class="w"> </span>-0.686176<span class="w">  </span><span class="m">5</span>.464487<span class="w">      </span>-2.821375
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="m">2</span><span class="w"> </span>-0.131864<span class="w">  </span><span class="m">4</span>.183901<span class="w">      </span>-2.023618
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="m">3</span><span class="w">  </span><span class="m">0</span>.414956<span class="w">  </span><span class="m">5</span>.587764<span class="w">      </span>-1.568612
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="m">4</span><span class="w"> </span>-0.361057<span class="w">  </span><span class="m">5</span>.580749<span class="w">      </span>-2.352511
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="m">0</span><span class="w"> </span>-0.287949<span class="w">  </span><span class="m">4</span>.706430<span class="w">      </span>-1.442203
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="m">1</span><span class="w">  </span><span class="m">0</span>.210699<span class="w">  </span><span class="m">5</span>.429497<span class="w">      </span>-1.503658
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="m">2</span><span class="w"> </span>-0.120023<span class="w">  </span><span class="m">4</span>.938213<span class="w">      </span>-1.402637
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="m">3</span><span class="w">  </span><span class="m">0</span>.651150<span class="w">  </span><span class="m">5</span>.404737<span class="w">      </span>-1.617194
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="m">4</span><span class="w"> </span>-0.523341<span class="w">  </span><span class="m">4</span>.666844<span class="w">      </span>-1.536912
 </code></pre></div>
 <!-- GENERATED FROM PYTHON SOURCE LINES 16-22 -->
 
@@ -1156,7 +1156,7 @@ handle the defaults and display.</p>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">c</span><span class="o">.</span><span class="n">add_chain</span><span class="p">(</span><span class="n">Chain</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;An Example Contour&quot;</span><span class="p">))</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">fig</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="$A = 0.01^{+1.00}_{-1.02}$, $B = 5.0\pm 1.0$" class="mkd-glr-single-img" src="../images/mkd_glr_plot_0_contours_001.png" srcset="../images/mkd_glr_plot_0_contours_001.png, ../images/mkd_glr_plot_0_contours_001_2_0x.png 2.0x" /></p>
+<p><img alt="$A = 0.0\pm 1.0$, $B = 4.97^{+1.03}_{-0.97}$" class="mkd-glr-single-img" src="../images/mkd_glr_plot_0_contours_001.png" srcset="../images/mkd_glr_plot_0_contours_001.png, ../images/mkd_glr_plot_0_contours_001_2_0x.png 2.0x" /></p>
 <!-- GENERATED FROM PYTHON SOURCE LINES 23-24 -->
 
 <p>If we wanted to customise the chain, that's easy enough to do.</p>
@@ -1235,7 +1235,7 @@ dataframe. You'll see what they do</p>
 <a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a><span class="p">)</span>
 <a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a><span class="n">fig</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="$A = 0.01^{+1.00}_{-1.02}$, $B = 5.0\pm 1.0$" class="mkd-glr-single-img" src="../images/mkd_glr_plot_0_contours_004.png" srcset="../images/mkd_glr_plot_0_contours_004.png, ../images/mkd_glr_plot_0_contours_004_2_0x.png 2.0x" /></p>
+<p><img alt="$A = 0.0\pm 1.0$, $B = 4.97^{+1.03}_{-0.97}$" class="mkd-glr-single-img" src="../images/mkd_glr_plot_0_contours_004.png" srcset="../images/mkd_glr_plot_0_contours_004.png, ../images/mkd_glr_plot_0_contours_004_2_0x.png 2.0x" /></p>
 <!-- GENERATED FROM PYTHON SOURCE LINES 100-115 -->
 
 <p>Here the maximum posterior value is used to plot the star-shaped
@@ -1250,7 +1250,7 @@ in one line before, instead of all these objects."</p>
 type hints impossible, and extensibility poor. By trying to separate
 things out into appropriate dataclasses, I am hoping it is a lot easier
 for people to contribute to this code base in the future.</p>
-<p><strong>Total running time of the script:</strong> ( 0 minutes  5.918 seconds)</p>
+<p><strong>Total running time of the script:</strong> ( 0 minutes  5.652 seconds)</p>
 <div id="download_links"></div>
 
 <p><a class="md-button center" href="../plot_0_contours.py"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 242.7zM64 320c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-46.9l-56.6 56.6c-31.2 31.2-81.9 31.2-113.1 0L110.9 320zm304 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48"/></svg></span> Download Python source code: plot_0_contours.py</a></p>
