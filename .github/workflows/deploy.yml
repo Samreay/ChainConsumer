@@ -28,7 +28,15 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Install and update precommit
-        run: make install_precommit && make update_precommit
+        run: make install_precommit
+
+      - name: cache
+        uses: actions/cache@v4
+        with:
+          path:
+            - ~/.cache/pre-commit/
+            - ~/.cache/uv/
+          key: pre-commit-4|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit
         run: make precommit
