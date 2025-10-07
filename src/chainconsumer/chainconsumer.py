@@ -5,8 +5,8 @@ import pandas as pd
 
 from .analysis import Analysis
 from .chain import Chain, ChainConfig, ChainName, ColumnName
-from .color_finder import ColorInput, colors
 from .comparisons import Comparison
+from .color_finder import ColorInput, colors
 from .diagnostic import Diagnostic
 from .plotter import PlotConfig, Plotter
 from .truth import Truth
@@ -15,8 +15,7 @@ __all__ = ["ChainConsumer"]
 
 
 class ChainConsumer:
-    """A class for consuming chains produced by an MCMC walk. Or grid searches. To make plots,
-    figures, tables, diagnostics, you name it."""
+    """A class for consuming chains produced by an MCMC sampling algorithm or grid searches."""
 
     def __init__(self) -> None:
         self._chains: dict[ChainName, Chain] = {}
