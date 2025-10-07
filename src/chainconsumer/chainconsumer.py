@@ -5,8 +5,8 @@ import pandas as pd
 
 from .analysis import Analysis
 from .chain import Chain, ChainConfig, ChainName, ColumnName
-from .comparisons import Comparison
 from .color_finder import ColorInput, colors
+from .comparisons import Comparison
 from .diagnostic import Diagnostic
 from .plotter import PlotConfig, Plotter
 from .truth import Truth
