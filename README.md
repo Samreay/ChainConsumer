@@ -67,6 +67,10 @@ If you are running on HPC or clusters where you can't install things yourself, u
 
 ### Update History
 
+##### 1.2.5
+
+- Fixing bug and allowing truth values to have their edge colour specified as per #153
+
 ##### 1.2.4
 
 - Fixing issue with Arviz columns changing in their to_dataframe example.

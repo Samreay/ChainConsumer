@@ -17,6 +17,9 @@ class Truth(BetterBase):
     )
     name: str | None = Field(default=None, description="The name of the truth line")
     color: ColorInput = Field(default="black", description="The color of the truth line")
+    edge_color: ColorInput | None = Field(
+        default=None, description="The edge color of the truth marker if the marker is filled. If None, uses `color`"
+    )
     line_width: float = Field(default=1.0, description="The width of the truth line")
     line_style: str = Field(default="--", description="The style of the truth line")
     alpha: float = Field(default=1.0, description="The alpha of the truth line")
@@ -38,7 +41,7 @@ class Truth(BetterBase):
 
     @model_validator(mode="after")
     def validate_model(self):
-        if self.marker is not None and self.is_filled_marker and self.marker_edge_width > _DEFAULT_EDGE_WIDTH:
+        if self.marker is not None and not self.is_filled_marker and self.marker_edge_width > _DEFAULT_EDGE_WIDTH:
             msg = (
                 f"It seems you are trying to make the marker {self.marker} thicker. "
                 "Alas, this is not possible. Matplotlib only lets you make the marker "
@@ -73,7 +76,7 @@ class Truth(BetterBase):
             "zorder": self.zorder,
         }
         if self.is_filled_marker:
-            result["edgecolor"] = self.color
+            result["edgecolor"] = self.edge_color if self.edge_color is not None else self.color
             result["facecolor"] = self.color
             result["linewidth"] = self.marker_edge_width
         return result

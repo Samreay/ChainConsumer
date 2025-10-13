@@ -45,7 +45,7 @@ fig = c.plotter.plot()
 c = ChainConsumer()
 c.add_chain(chain1)
 c.add_chain(chain2)
-c.add_truth(Truth(location={"A": 0, "B": 0}, color="#fb7185", marker="o"))
+c.add_truth(Truth(location={"A": 0, "B": 0}, color="#fb7185", edge_color="#7a1a28", marker="o"))
 c.add_truth(Truth(location={"A": 3, "B": 3}, color="#1f2937", marker="X"))
 fig = c.plotter.plot()
 
