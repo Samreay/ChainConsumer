@@ -36,7 +36,7 @@ docs:
 	uv version $(VERSION) && uv run mkdocs build
 
 pushdocs:
-	uv version $(VERSION) && uv run mkdocs gh-deploy --force
+	uv version $(VERSION) && uv run mkdocs gh-deploy --force --no-history
 
 build:
 	rm -rf dist; uv version $(VERSION) && uv build && uv publish --dry-run
