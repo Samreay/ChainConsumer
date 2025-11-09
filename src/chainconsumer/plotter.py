@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -17,12 +20,16 @@ from scipy.interpolate import interp1d  # type: ignore
 from chainconsumer.plotting.truth import plot_truths  # type: ignore
 from chainconsumer.truth import Truth
 
+from .analysis import Bound
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName
 from .color_finder import colors
 from .helpers import get_bins, get_extents, get_grid_bins, get_smoothed_bins
 from .plotting import add_watermark, plot_surface
 from .plotting.config import PlotConfig
+
+if TYPE_CHECKING:
+    from .chainconsumer import ChainConsumer
 
 
 class PlottingBase(BetterBase):
@@ -42,7 +49,7 @@ class FigSize(Enum):
 
     @classmethod
     def get_size(
-        cls, input: "FigSize | float | int | tuple[float, float]", num_columns: int, has_cax: bool
+        cls, input: FigSize | float | int | tuple[float, float], num_columns: int, has_cax: bool
     ) -> tuple[float, float]:
         if input == FigSize.PAGE:
             return 10, 10
@@ -106,7 +113,7 @@ def get_artists_from_chains(chains: list[Chain]) -> list[Artist]:
 
 
 class Plotter:
-    def __init__(self, parent: "ChainConsumer") -> None:
+    def __init__(self, parent: ChainConsumer) -> None:
         self.parent: ChainConsumer = parent
         self._config: PlotConfig | None = None
         self._default_config = PlotConfig()
@@ -201,7 +208,13 @@ class Plotter:
                             continue
 
                         do_summary = summarise and p1 not in base.blind
-                        max_hist_val = self._plot_bars(ax, p1, chain, flip=do_flip, summary=do_summary)
+                        max_hist_val = self._plot_bars(
+                            ax,
+                            p1,
+                            chain,
+                            flip=do_flip,
+                            summary=do_summary,
+                        )
 
                         if max_val is None or max_hist_val > max_val:
                             max_val = max_hist_val
@@ -905,7 +918,12 @@ class Plotter:
         return [c for c in final_chains if include_skip or not c.skip]
 
     def _plot_bars(
-        self, ax: Axes, column: str, chain: Chain, flip: bool = False, summary: bool = False
+        self,
+        ax: Axes,
+        column: str,
+        chain: Chain,
+        flip: bool = False,
+        summary: bool = False,
     ) -> float:  # pragma: no cover
         # Get values from config
         data = chain.get_data(column)
@@ -942,41 +960,73 @@ class Plotter:
         interpolator = interp1d(xs, ys, kind=interp_type)
 
         if chain.bar_shade:
-            fit_values = self.parent.analysis.get_parameter_summary(chain, column)
-            if fit_values is not None:
-                lower = fit_values.lower
-                upper = fit_values.upper
-                if lower is not None and upper is not None:
-                    lower = max(lower, xs.min())
-                    upper = min(upper, xs.max())
-                    x = np.linspace(lower, upper, 1000)  # type: ignore
-                    if flip:
-                        ax.fill_betweenx(
-                            x,
-                            np.zeros(x.shape),
-                            interpolator(x),
-                            color=chain.color,
-                            alpha=0.2,
-                            zorder=chain.zorder,
-                        )
+            intervals = []
+
+            if chain.multimodal:
+                bound = self.parent.analysis.get_parameter_summary_hdi(chain, column)
+                intervals = self.parent.analysis.get_parameter_hdi_intervals(chain, column)
+                if not intervals and bound is not None and bound.lower is not None and bound.upper is not None:
+                    intervals = [(bound.lower, bound.upper)]
+            else:
+                bound = self.parent.analysis.get_parameter_summary(chain, column)
+                if bound is not None and bound.lower is not None and bound.upper is not None:
+                    intervals = [(bound.lower, bound.upper)]
+
+            interval_bounds: list[Bound] = []
+            for lower_raw, upper_raw in intervals:
+                lower_clipped = max(lower_raw, float(xs.min()))
+                upper_clipped = min(upper_raw, float(xs.max()))
+                if upper_clipped <= lower_clipped:
+                    continue
+                if chain.multimodal:
+                    mask = (xs >= lower_clipped) & (xs <= upper_clipped)
+                    if np.any(mask):
+                        idx = np.argmax(ys[mask])
+                        center_val = float(xs[mask][idx])
                     else:
-                        ax.fill_between(
-                            x,
-                            np.zeros(x.shape),
-                            interpolator(x),
-                            color=chain.color,
-                            alpha=0.2,
-                            zorder=chain.zorder,
-                        )
-                    if summary:
-                        t = self.parent.analysis.get_parameter_text(fit_values)
-                        label = self.config.get_label(column)
-                        if isinstance(column, str):
-                            ax.set_title(
-                                r"${} = {}$".format(label.strip("$"), t), fontsize=self.config.summary_font_size
-                            )
-                        else:
-                            ax.set_title(rf"${t}$", fontsize=self.config.summary_font_size)
+                        center_val = float(0.5 * (lower_clipped + upper_clipped))
+                    interval_bounds.append(Bound(lower=lower_clipped, center=center_val, upper=upper_clipped))
+
+                x = np.linspace(lower_clipped, upper_clipped, 1000)
+                if flip:
+                    ax.fill_betweenx(
+                        x,
+                        np.zeros(x.shape),
+                        interpolator(x),
+                        color=chain.color,
+                        alpha=0.2,
+                        zorder=chain.zorder,
+                    )
+                else:
+                    ax.fill_between(
+                        x,
+                        np.zeros(x.shape),
+                        interpolator(x),
+                        color=chain.color,
+                        alpha=0.2,
+                        zorder=chain.zorder,
+                    )
+
+            if summary and bound is not None:
+                label = self.config.get_label(column)
+                label_core = label.strip("$") if isinstance(column, str) else None
+                label_text = label_core or None
+
+                if chain.multimodal and len(interval_bounds) > 1:
+                    title = self.parent.analysis.get_parameter_text(
+                        interval_bounds,
+                        wrap=True,
+                        label=label_text,
+                    )
+                else:
+                    title = self.parent.analysis.get_parameter_text(
+                        bound,
+                        wrap=True,
+                        label=label_text,
+                    )
+
+                if title:
+                    ax.set_title(title, fontsize=self.config.summary_font_size)
         return float(ys.max())
 
     def _plot_walk(
