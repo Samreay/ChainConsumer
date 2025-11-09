@@ -18,3 +18,6 @@ class SummaryStatistic(Enum):
     MEAN = "mean"
     """As per the cumulative method, except the central value is placed in the midpoint between
     the upper and lower boundary. Not recommended, but was requested."""
+
+    HDI = "hdi"
+    """Use the highest density interval. Finds the narrowest interval covering the requested mass."""

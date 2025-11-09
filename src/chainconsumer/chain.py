@@ -59,6 +59,7 @@ class ChainConfig(BetterBase):
     shade_alpha: float = Field(default=0.5, description="The alpha of the shading")
     shade_gradient: float = Field(default=1.0, description="The contrast between contour levels")
     bar_shade: bool = Field(default=True, description="Whether to shade marginalised distributions")
+    multimodal: bool = Field(default=False, description="Mark the chain as multimodal to enable HDI band splitting.")
     bins: int | None = Field(default=None, description="The number of bins to use for histograms.")
     kde: int | float | bool = Field(default=False, description="The bandwidth for KDEs")
     smooth: int | None = Field(
@@ -280,6 +281,12 @@ class Chain(ChainConfig):
 
         if self.num_free_params is not None:
             assert np.isfinite(self.num_free_params), "num_free_params is not finite"
+
+        if self.multimodal and self.statistics is not SummaryStatistic.HDI:
+            raise ValueError(
+                f"Chain {self.name} is marked as multimodal but uses {self.statistics.value}; "
+                "set statistics=SummaryStatistic.HDI."
+            )
 
         return self
 

@@ -1,5 +1,5 @@
 """
-# Using external samples easily
+# Using external samples
 
 `emcee`, `arviz`, and `numpyro` are all popular MCMC packages. ChainConsumer
 provides class methods to turn results from these packages into chains efficiently.
