@@ -62,6 +62,143 @@ def plot_cloud(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName) -> dict[C
         return {chain.color_param: h}
     return {}
 
+def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None = None, summary: bool = False) -> None:
+    """A lightweight method to plot a 1D distribution in an external axis given one specified parameter
+
+    Args:
+        ax: The axis to plot on
+        chain: The chain to plot
+        px: The parameter to plot on the x axis
+        config: The plot configuration
+        summary: If True, add parameter summary text above the plot
+    """
+    from ..helpers import get_bins, get_smoothed_bins, get_grid_bins
+    from scipy.interpolate import interp1d
+
+    if config is None:
+        config = PlotConfig()
+
+    # Get the data for the parameter
+    data = chain.get_data(px)
+
+    # Create histogram based on chain settings (following _plot_bars logic from plotter.py)
+    if chain.smooth_value or chain.kde:
+        # Use KDE or smoothed histogram
+        from ..analysis import Analysis
+        # We need to create a temporary analysis object to use its method
+        # This is a workaround since plot_dist doesn't have access to ChainConsumer
+        from ..helpers import get_extents, get_smoothed_bins, get_bins
+
+        if chain.kde:
+            from ..kde import MegKDE
+            bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=True)
+            kde = MegKDE(data.values.reshape(-1, 1), chain.weights, chain.kde)
+            xs = np.linspace(bins.min(), bins.max(), 1000)
+            ys = kde.evaluate(xs.reshape(-1, 1)).flatten()
+            if chain.power is not None:
+                ys = ys ** chain.power
+        else:
+            # Smoothed histogram
+            bins, smooth = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=True)
+            hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
+            if chain.power is not None:
+                hist = hist ** chain.power
+            from scipy.ndimage import gaussian_filter
+            hist = gaussian_filter(hist, chain.smooth_value, mode='reflect')
+            xs = 0.5 * (edges[:-1] + edges[1:])
+            ys = hist
+
+        ys *= chain.histogram_relative_height
+        ax.plot(xs, ys, color=chain.color, ls=chain.linestyle, lw=chain.linewidth, zorder=chain.zorder)
+    else:
+        # Regular histogram
+        if chain.grid:
+            bins = get_grid_bins(data)
+        else:
+            bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights)
+
+        hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
+        if chain.power is not None:
+            hist = hist ** chain.power
+
+        edge_center = 0.5 * (edges[:-1] + edges[1:])
+        xs, ys = edge_center, hist
+        ys *= chain.histogram_relative_height
+
+        ax.hist(
+            xs,
+            weights=ys,
+            bins=bins,
+            histtype="step",
+            color=chain.color,
+            orientation="vertical",
+            ls=chain.linestyle,
+            lw=chain.linewidth,
+            zorder=chain.zorder,
+        )
+
+    # Add shading for confidence interval (e.g., 1-sigma) if requested
+    fit_values = None
+    if chain.shade and chain.shade_alpha > 0:
+        from ..analysis import Analysis
+        analysis = Analysis(None)  # type: ignore
+        fit_values = analysis.get_parameter_summary(chain, px)
+
+        if fit_values is not None:
+            lower = fit_values.lower
+            upper = fit_values.upper
+            if lower is not None and upper is not None:
+                interp_type = "linear" if chain.smooth_value else "nearest"
+                interpolator = interp1d(xs, ys, kind=interp_type)
+                lower = max(lower, xs.min())
+                upper = min(upper, xs.max())
+                x = np.linspace(lower, upper, 1000)
+
+                # Use shade_gradient to control the opacity of the confidence interval shading
+                # shade_gradient scales the alpha value (higher = more opaque)
+                effective_alpha = chain.shade_alpha * (0.2 + 0.8 * chain.shade_gradient)
+
+                ax.fill_between(
+                    x,
+                    np.zeros(x.shape),
+                    interpolator(x),
+                    color=chain.color,
+                    alpha=effective_alpha,
+                    zorder=chain.zorder - 1,
+                )
+
+    # Add parameter summary text above the plot if requested
+    if summary:
+        if fit_values is None:
+            from ..analysis import Analysis
+            analysis = Analysis(None)  # type: ignore
+            fit_values = analysis.get_parameter_summary(chain, px)
+
+        if fit_values is not None:
+            # Format the parameter text (e.g., "param = value +upper -lower")
+            def format_value(v):
+                """Format a value with appropriate precision"""
+                if abs(v) >= 100:
+                    return f"{v:.1f}"
+                elif abs(v) >= 10:
+                    return f"{v:.2f}"
+                elif abs(v) >= 1:
+                    return f"{v:.2f}"
+                else:
+                    return f"{v:.3f}"
+
+            center_str = format_value(fit_values.center)
+            if fit_values.lower is not None and fit_values.upper is not None:
+                lower_err = fit_values.center - fit_values.lower
+                upper_err = fit_values.upper - fit_values.center
+                lower_str = format_value(lower_err)
+                upper_str = format_value(upper_err)
+                text = rf"${px} = {center_str}^{{+{upper_str}}}_{{-{lower_str}}}$"
+            else:
+                text = rf"${px} = {center_str}$"
+
+            ax.set_title(text, fontsize=config.summary_font_size, pad=10)
+
 
 def plot_contour(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName, config: PlotConfig | None = None) -> None:
     """A lightweight method to plot contours in an external axis given two specified parameters
