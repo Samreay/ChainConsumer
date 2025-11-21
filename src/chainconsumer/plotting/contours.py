@@ -84,9 +84,6 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
     # Create histogram based on chain settings (following _plot_bars logic from plotter.py)
     if chain.smooth_value or chain.kde:
         # Use KDE or smoothed histogram
-        from ..analysis import Analysis
-        # We need to create a temporary analysis object to use its method
-        # This is a workaround since plot_dist doesn't have access to ChainConsumer
         from ..helpers import get_extents, get_smoothed_bins, get_bins
 
         if chain.kde:
