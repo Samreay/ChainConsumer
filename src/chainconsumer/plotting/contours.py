@@ -134,14 +134,15 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
             zorder=chain.zorder,
         )
 
-    # Add shading for confidence interval (e.g., 1-sigma) if requested
+    # shading and summary text with get_parameter_summary
     fit_values = None
-    if chain.shade and chain.shade_alpha > 0:
+    if chain.shade and chain.shade_alpha > 0 or summary:
         from ..analysis import Analysis
         analysis = Analysis(None)  # type: ignore
         fit_values = analysis.get_parameter_summary(chain, px)
 
-        if fit_values is not None:
+        # Add shading for confidence interval (e.g., 1-sigma) if requested
+        if chain.shade and chain.shade_alpha > 0 and fit_values is not None:
             lower = fit_values.lower
             upper = fit_values.upper
             if lower is not None and upper is not None:
@@ -164,35 +165,14 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
                     zorder=chain.zorder - 1,
                 )
 
-    # Add parameter summary text above the plot if requested
-    if summary:
-        if fit_values is None:
-            from ..analysis import Analysis
-            analysis = Analysis(None)  # type: ignore
-            fit_values = analysis.get_parameter_summary(chain, px)
-
-        if fit_values is not None:
-            # Format the parameter text (e.g., "param = value +upper -lower")
-            def format_value(v):
-                """Format a value with appropriate precision"""
-                if abs(v) >= 100:
-                    return f"{v:.1f}"
-                elif abs(v) >= 10:
-                    return f"{v:.2f}"
-                elif abs(v) >= 1:
-                    return f"{v:.2f}"
-                else:
-                    return f"{v:.3f}"
-
-            center_str = format_value(fit_values.center)
-            if fit_values.lower is not None and fit_values.upper is not None:
-                lower_err = fit_values.center - fit_values.lower
-                upper_err = fit_values.upper - fit_values.center
-                lower_str = format_value(lower_err)
-                upper_str = format_value(upper_err)
-                text = rf"${px} = {center_str}^{{+{upper_str}}}_{{-{lower_str}}}$"
+        # Add parameter summary text above the plot if requested
+        if summary and fit_values is not None:
+            parameter_text = analysis.get_parameter_text(fit_values, wrap=False)
+            if parameter_text:
+                text = rf"${px} = {parameter_text}$"
             else:
-                text = rf"${px} = {center_str}$"
+                # Fallback if get_parameter_text returns empty string
+                text = rf"${px} = {fit_values.center}$"
 
             ax.set_title(text, fontsize=config.summary_font_size, pad=10)
 
