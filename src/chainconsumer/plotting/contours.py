@@ -1,6 +1,8 @@
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
+from scipy.interpolate import interp1d
+from scipy.ndimage import gaussian_filter
 from scipy.stats import norm
 
 from ..chain import Chain, ColumnName
@@ -73,7 +75,6 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
         summary: If True, add parameter summary text above the plot
     """
     from ..helpers import get_bins, get_smoothed_bins, get_grid_bins
-    from scipy.interpolate import interp1d
 
     if config is None:
         config = PlotConfig()
@@ -100,7 +101,6 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
             hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
             if chain.power is not None:
                 hist = hist ** chain.power
-            from scipy.ndimage import gaussian_filter
             hist = gaussian_filter(hist, chain.smooth_value, mode='reflect')
             xs = 0.5 * (edges[:-1] + edges[1:])
             ys = hist
