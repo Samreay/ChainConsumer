@@ -64,6 +64,7 @@ def plot_cloud(ax: Axes, chain: Chain, px: ColumnName, py: ColumnName) -> dict[C
         return {chain.color_param: h}
     return {}
 
+
 def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None = None, summary: bool = False) -> None:
     """A lightweight method to plot a 1D distribution in an external axis given one specified parameter
 
@@ -74,7 +75,8 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
         config: The plot configuration
         summary: If True, add parameter summary text above the plot
     """
-    from ..helpers import get_bins, get_smoothed_bins, get_grid_bins
+
+    from ..helpers import get_bins, get_grid_bins, get_smoothed_bins
 
     if config is None:
         config = PlotConfig()
@@ -85,23 +87,24 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
     # Create histogram based on chain settings (following _plot_bars logic from plotter.py)
     if chain.smooth_value or chain.kde:
         # Use KDE or smoothed histogram
-        from ..helpers import get_extents, get_smoothed_bins, get_bins
+        from ..helpers import get_bins, get_smoothed_bins
 
         if chain.kde:
             from ..kde import MegKDE
+
             bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=True)
             kde = MegKDE(data.values.reshape(-1, 1), chain.weights, chain.kde)
             xs = np.linspace(bins.min(), bins.max(), 1000)
             ys = kde.evaluate(xs.reshape(-1, 1)).flatten()
             if chain.power is not None:
-                ys = ys ** chain.power
+                ys = ys**chain.power
         else:
             # Smoothed histogram
-            bins, smooth = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=True)
+            bins, _ = get_smoothed_bins(chain.smooth_value, get_bins(chain), data, chain.weights, pad=True)
             hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
             if chain.power is not None:
-                hist = hist ** chain.power
-            hist = gaussian_filter(hist, chain.smooth_value, mode='reflect')
+                hist = hist**chain.power
+            hist = gaussian_filter(hist, chain.smooth_value, mode="reflect")
             xs = 0.5 * (edges[:-1] + edges[1:])
             ys = hist
 
@@ -116,7 +119,7 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
 
         hist, edges = np.histogram(data, bins=bins, density=True, weights=chain.weights)
         if chain.power is not None:
-            hist = hist ** chain.power
+            hist = hist**chain.power
 
         edge_center = 0.5 * (edges[:-1] + edges[1:])
         xs, ys = edge_center, hist
@@ -136,8 +139,9 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
 
     # shading and summary text with get_parameter_summary
     fit_values = None
-    if chain.shade and chain.shade_alpha > 0 or summary:
+    if (chain.shade and chain.shade_alpha > 0) or summary:
         from ..analysis import Analysis
+
         analysis = Analysis(None)  # type: ignore
         fit_values = analysis.get_parameter_summary(chain, px)
 
@@ -168,11 +172,8 @@ def plot_dist(ax: Axes, chain: Chain, px: ColumnName, config: PlotConfig | None 
         # Add parameter summary text above the plot if requested
         if summary and fit_values is not None:
             parameter_text = analysis.get_parameter_text(fit_values, wrap=False)
-            if parameter_text:
-                text = rf"${px} = {parameter_text}$"
-            else:
-                # Fallback if get_parameter_text returns empty string
-                text = rf"${px} = {fit_values.center}$"
+
+            text = rf"${px} = {parameter_text}$" if parameter_text else rf"${px} = {fit_values.center}$"
 
             ax.set_title(text, fontsize=config.summary_font_size, pad=10)
 
