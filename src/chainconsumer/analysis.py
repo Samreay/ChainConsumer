@@ -586,7 +586,7 @@ class Analysis:
         """
         summary = self.get_parameter_summary_hdi(chain, column)
         default_interval = [(summary.lower, summary.upper)]
-        xs, ys, _ = self._get_smoothed_histogram(chain, column, pad=True, use_kde=chain.use_kde)
+        xs, ys, _ = self._get_smoothed_histogram(chain, column, pad=True)
 
         # We look for the threshold that is the root of this function
         def mass_diff(threshold, density, xs, target):
@@ -626,7 +626,6 @@ class Analysis:
             chain,
             column,
             pad=True,
-            use_kde=None,  # Use default KDE setting for both unimodal and multimodal chains for consistency
         )
 
         lower_limit, upper_limit = float(xs.min()), float(xs.max())
