@@ -977,7 +977,7 @@ class Plotter:
                 else:
                     display_bounds = base_bound
                     intervals = [(display_bounds.lower, display_bounds.upper)]
-                    intervals = np.clip(intervals, a_min=xs.min(), a_max=xs.max())
+                    intervals = [(max(lower, xs.min()), min(upper, xs.max())) for lower, upper in intervals]
 
                 for lower, upper_ in intervals:
                     x = np.linspace(lower, upper_, 1000)
