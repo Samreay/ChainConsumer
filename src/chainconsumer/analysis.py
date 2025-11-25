@@ -626,7 +626,7 @@ class Analysis:
             chain,
             column,
             pad=True,
-            use_kde=False if chain.multimodal else None,
+            use_kde=None,  # Use default KDE setting for both unimodal and multimodal chains for consistency
         )
 
         lower_limit, upper_limit = float(xs.min()), float(xs.max())
