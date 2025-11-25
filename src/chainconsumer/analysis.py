@@ -39,7 +39,7 @@ def _mask_to_intervals(
 
     # If we end inside an interval, append last index
     if mask[-1]:
-        ends = np.concatenate((ends, len(mask) - 1))
+        ends = np.concatenate((ends, [len(mask) - 1]))
 
     intervals = [(float(x[s]), float(x[e])) for s, e in zip(starts, ends, strict=True) if x[e] > x[s]]
 
