@@ -46,7 +46,7 @@ fig = cc.plotter.plot()
 
 # %%
 # Let's compare with what would happen if you don't use a multimodal chain. We use the same data as before but don't
-# warn `ChainConsumer` that we expect the chains to be multimodal.
+# tell `ChainConsumer` that we expect the chains to be multimodal.
 
 chain_unimodal = Chain(samples=df.copy(), name="posterior-unimodal", statistics=SummaryStatistic.HDI, multimodal=False)
 
