@@ -586,7 +586,7 @@ class Analysis:
         """
         summary = self.get_parameter_summary_hdi(chain, column)
         default_interval = [(summary.lower, summary.upper)]
-        xs, ys, _ = self._get_smoothed_histogram(chain, column, pad=True, use_kde=False)
+        xs, ys, _ = self._get_smoothed_histogram(chain, column, pad=True, use_kde=chain.use_kde)
 
         # We look for the threshold that is the root of this function
         def mass_diff(threshold, density, xs, target):
