@@ -408,7 +408,7 @@ class Analysis:
         if bound is None:
             return ""
 
-        # Fallback to single bound behavior is there is only one mode identified
+        # Fallback to single bound behavior if there is only one mode identified
         if isinstance(bound, Sequence) and len(bound) < 2:
             bound = bound[0]
 
