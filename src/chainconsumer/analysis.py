@@ -197,7 +197,7 @@ class Analysis:
             chains (dict[str, Chain] | list[str], optional): A list of chains to generate summaries for.
 
         Returns:
-            dict[ChainName, dict[ColumnName, Bound]]: A map from chain name to column name to bound.
+            dict[ChainName, dict[ColumnName, Bound | list[Bound]]]: A map from chain name to column name to bound.
         """
         results = {}
         if chains is None:
@@ -216,22 +216,19 @@ class Analysis:
 
                 if chain.multimodal:
                     intervals = self.get_parameter_hdi_intervals(chain, p)
-
                     # If there is a single interval, we skip
-                    if len(intervals) < 2:
-                        continue
-
-                    multimodal_bounds = self.get_parameter_multimodal_bounds(
-                        chain,
-                        p,
-                        intervals=intervals,
-                    )
-
-                    if multimodal_bounds is not None:
-                        res[p] = multimodal_bounds
-                        continue
+                    if len(intervals) >= 2:
+                        multimodal_bounds = self.get_parameter_multimodal_bounds(
+                            chain,
+                            p,
+                            intervals=intervals,
+                        )
+                        if multimodal_bounds is not None:
+                            res[p] = multimodal_bounds
+                            continue
 
                 res[p] = summary
+
             results[chain.name] = res
 
         return results

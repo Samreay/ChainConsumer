@@ -1004,8 +1004,7 @@ class Plotter:
 
                 if summary:
                     label = self.config.get_label(column)
-                    label_core = label.strip("$") if isinstance(column, str) else None
-                    label_text = label_core or None
+                    label_text = label.strip("$") if isinstance(column, str) else None
 
                     title = self.parent.analysis.get_parameter_text(
                         display_bounds,
