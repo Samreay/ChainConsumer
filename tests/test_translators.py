@@ -29,7 +29,9 @@ def run_numpyro_mcmc(n_steps, n_chains):
 
     # Running MCMC
     kernel = NUTS(model)
-    mcmc = MCMC(kernel, num_warmup=500, num_samples=n_steps, num_chains=n_chains, progress_bar=False)
+    mcmc = MCMC(
+        kernel, num_warmup=500, num_samples=n_steps, num_chains=n_chains, progress_bar=False, chain_method="sequential"
+    )
     rng_key = random.PRNGKey(0)
     mcmc.run(rng_key, data=observed_data)
 
