@@ -48,7 +48,7 @@ class ChainConfig(BetterBase):
     if you have two chains, you probably want them to be different colors.
     """
 
-    statistics: SummaryStatistic = Field(default=SummaryStatistic.MAX, description="The summary statistic to use")
+    statistics: SummaryStatistic | None = Field(default=None, description="The summary statistic to use")
     summary_area: float = Field(default=0.6827, ge=0, le=1.0, description="The area to use for summary statistics")
     sigmas: list[float] = Field(default=[0, 1, 2], description="The sigmas to use for summary statistics")
     color: ColorInput | None = Field(default=None, description="The color of the chain")  # type: ignore
@@ -281,6 +281,12 @@ class Chain(ChainConfig):
 
         if self.num_free_params is not None:
             assert np.isfinite(self.num_free_params), "num_free_params is not finite"
+
+        if self.statistics is None:
+            if self.multimodal:
+                self.statistics = SummaryStatistic.HDI
+            else:
+                self.statistics = SummaryStatistic.MAX
 
         if self.multimodal and self.statistics is not SummaryStatistic.HDI:
             raise ValueError(

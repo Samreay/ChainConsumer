@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from chainconsumer.chain import Chain
+from chainconsumer.statistics import SummaryStatistic
 
 
 class TestChain:
@@ -105,3 +106,13 @@ class TestChain:
 
         for chain in result:
             assert chain.walkers == 1
+
+    def test_default_stat(self):
+        chain = Chain(samples=self.df, name=self.n)
+        assert chain.statistics is SummaryStatistic.MAX
+
+        chain = Chain(samples=self.df, name=self.n, multimodal=True)
+        assert chain.statistics is SummaryStatistic.HDI
+
+        with pytest.raises(ValueError):
+            Chain(samples=self.df, name=self.n, multimodal=True, statistics=SummaryStatistic.MAX)
