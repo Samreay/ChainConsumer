@@ -12,7 +12,7 @@ In general, this is the flow:
 
 ## Statistics
 
-When summarising chains, ChainConsumer offers several different methods. The below image shows the upper and lower bounds and central points for the "MEAN", "CUMULATIVE", and "MAX" methods respectively. The "MAX_CENTRAL" method is the blue central value and the red bounds.
+When summarising chains, ChainConsumer offers several different methods. The below image shows the upper and lower bounds and central points for the `MAX`, `CUMULATIVE`, `MEAN` and `HDI` methods respectively, with their associated bounds.
 
 ![](resources/stats.png)
 

@@ -1,8 +1,14 @@
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
 from chainconsumer import Chain, ChainConsumer
+from chainconsumer.statistics import SummaryStatistic
 
 
 class TestChain:
@@ -69,3 +75,60 @@ class TestChain:
         minv, maxv = c.plotter._get_parameter_extents("x", list(c._chains.values()))
         assert np.isclose(minv, -1, atol=0.01)
         assert np.isclose(maxv, 1, atol=0.01)
+
+    def test_plotter_multimodal_fill(self):
+        samples = np.concatenate(
+            [
+                self.rng.normal(loc=-1.5, scale=0.2, size=5000),
+                self.rng.normal(loc=1.7, scale=0.25, size=5000),
+            ]
+        )
+        df = pd.DataFrame({"x": samples})
+        chain = Chain(samples=df, name="bimodal", statistics=SummaryStatistic.HDI, kde=True, multimodal=True)
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        fig, ax = plt.subplots()
+        consumer.plotter._plot_bars(ax, "x", chain)
+
+        intervals_drawn: list[tuple[float, float]] = []
+        for collection in ax.collections:
+            if not collection.get_paths():
+                continue
+            path = collection.get_paths()[0]
+            xs = path.vertices[:, 0]
+            xmin, xmax = xs.min(), xs.max()
+            if xmax - xmin <= 0:
+                continue
+            intervals_drawn.append((xmin, xmax))
+
+        plt.close(fig)
+
+        intervals_drawn.sort()
+        assert len(intervals_drawn) == 2
+        first, second = intervals_drawn
+        assert first[1] < 0.0
+        assert second[0] > 0.0
+
+    def test_plotter_multimodal_title(self):
+        samples = np.concatenate(
+            [
+                self.rng.normal(loc=-1.0, scale=0.15, size=4000),
+                self.rng.normal(loc=1.0, scale=0.15, size=4000),
+            ]
+        )
+        df = pd.DataFrame({"x": samples})
+        chain = Chain(samples=df, name="bimodal", statistics=SummaryStatistic.HDI, kde=True, multimodal=True)
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        fig, ax = plt.subplots()
+        consumer.plotter._plot_bars(ax, "x", chain, summary=True)
+        title = ax.get_title()
+        plt.close(fig)
+
+        assert "I1:" in title
+        assert "I2:" in title
+        assert "\n" in title
+        assert "\\pm" not in title
+        assert "^{+" in title and "}_{-" in title

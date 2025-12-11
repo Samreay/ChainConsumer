@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+import warnings
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import numpy as np
@@ -9,12 +10,40 @@ from pydantic import Field
 from scipy.integrate import simpson as simps
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter
+from scipy.optimize import root_scalar
 
 from .base import BetterBase
 from .chain import Chain, ChainName, ColumnName, MaxPosterior, Named2DMatrix
 from .helpers import get_bins, get_grid_bins, get_latex_table_frame, get_smoothed_bins
 from .kde import MegKDE
 from .statistics import SummaryStatistic
+
+
+def _mask_to_intervals(
+    x: np.ndarray,
+    mask: np.ndarray,
+) -> list[tuple[float, float]]:
+    """
+    Turn a mask indexed on x to a list of intervals
+    """
+    if mask.size == 0:
+        return []
+
+    change = np.diff(mask.astype(int))
+    starts = np.where(change == 1)[0] + 1  # False -> True
+    ends = np.where(change == -1)[0]  # True  -> False
+
+    # If we start inside an interval, prepend 0
+    if mask[0]:
+        starts = np.concatenate(([0], starts))
+
+    # If we end inside an interval, append last index
+    if mask[-1]:
+        ends = np.concatenate((ends, [len(mask) - 1]))
+
+    intervals = [(float(x[s]), float(x[e])) for s, e in zip(starts, ends, strict=True) if x[e] > x[s]]
+
+    return intervals
 
 
 class Bound(BetterBase):
@@ -53,6 +82,7 @@ class Analysis:
             SummaryStatistic.MEAN: self.get_parameter_summary_mean,
             SummaryStatistic.CUMULATIVE: self.get_parameter_summary_cumulative,
             SummaryStatistic.MAX_CENTRAL: self.get_parameter_summary_max_central,
+            SummaryStatistic.HDI: self.get_parameter_summary_hdi,
         }
 
     def get_latex_table(
@@ -163,11 +193,11 @@ class Analysis:
         """Gets a summary of the marginalised parameter distributions.
 
         Args:
-            parameters (list[str], optional): A list of parameters which to generate summaries for.
+            columns (list[str], optional): A list of parameters which to generate summaries for.
             chains (dict[str, Chain] | list[str], optional): A list of chains to generate summaries for.
 
         Returns:
-            dict[ChainName, dict[ColumnName, Bound]]: A map from chain name to column name to bound.
+            dict[ChainName, dict[ColumnName, Bound | list[Bound]]]: A map from chain name to column name to bound.
         """
         results = {}
         if chains is None:
@@ -183,6 +213,22 @@ class Analysis:
                     continue
                 summary = self.get_parameter_summary(chain, p)
                 res[p] = summary
+
+                if chain.multimodal:
+                    intervals = self.get_parameter_hdi_intervals(chain, p)
+                    # If there is a single interval, we skip
+                    if len(intervals) >= 2:
+                        multimodal_bounds = self.get_parameter_multimodal_bounds(
+                            chain,
+                            p,
+                            intervals=intervals,
+                        )
+                        if multimodal_bounds is not None:
+                            res[p] = multimodal_bounds
+                            continue
+
+                res[p] = summary
+
             results[chain.name] = res
 
         return results
@@ -276,7 +322,12 @@ class Analysis:
         return self._get_2d_latex_table(covariance, caption, label)
 
     def _get_smoothed_histogram(
-        self, chain: Chain, column: ColumnName, pad: bool = False
+        self,
+        chain: Chain,
+        column: ColumnName,
+        pad: bool = False,
+        *,
+        use_kde: bool | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         data = chain.get_data(column)
         if chain.grid:
@@ -292,7 +343,10 @@ class Analysis:
 
         if chain.smooth_value:
             hist = gaussian_filter(hist, chain.smooth_value, mode="reflect")
-        if chain.kde:
+        if use_kde is None:
+            use_kde = bool(chain.kde)
+
+        if use_kde:
             kde_xs = np.linspace(edge_centers[0], edge_centers[-1], max(200, int(bins.max())))
             factor = chain.kde if isinstance(chain.kde, int | float) else 1.0
             ys = MegKDE(data.to_numpy(), chain.weights, factor=factor).evaluate(kde_xs)
@@ -325,27 +379,69 @@ class Analysis:
         table += hline_text
         return latex_table % (column_def, table)
 
-    def get_parameter_text(self, bound: Bound, wrap: bool = False):
-        """Generates LaTeX appropriate text from marginalised parameter bounds.
+    def get_parameter_text(
+        self,
+        bound: Bound | Sequence[Bound],
+        wrap: bool = False,
+        *,
+        label: str | None = None,
+    ) -> str:
+        """Format marginal parameter bounds for display.
 
-        Parameters
-        ----------
-        lower : float
-            The lower bound on the parameter
-        maximum : float
-            The value of the parameter with maximum probability
-        upper : float
-            The upper bound on the parameter
-        wrap : bool
-            Wrap output text in dollar signs for LaTeX
+        Args:
+            bound:
+                The bound (or list of bounds) to format.
+            wrap:
+                Wrap each formatted expression in LaTeX dollar signs.
+            label:
+                Optional parameter label to prepend. For multimodal results the
+                label is placed on its own line.
 
-        Returns
-        -------
-        str
-            The formatted text given the parameter bounds
+        Returns:
+            The formatted string. Returns an empty string when the input contains
+            no finite limits.
         """
+
+        if bound is None:
+            return ""
+
+        # Fallback to single bound behavior if there is only one mode identified
+        if isinstance(bound, Sequence) and len(bound) < 2:
+            bound = bound[0]
+
+        if isinstance(bound, Sequence) and not isinstance(bound, Bound):
+            bounds = [b for b in bound if isinstance(b, Bound) and not b.all_none]
+            if not bounds:
+                return ""
+
+            lines: list[str] = []
+            if label:
+                lines.append(f"${label}$" if wrap else label)
+
+            for index, sub_bound in enumerate(bounds, start=1):
+                entry = Analysis._format_single_bound(sub_bound, use_pm=False)
+                if not entry:
+                    continue
+                if wrap:
+                    entry = f"${entry}$"
+                lines.append(f"I{index}: {entry}")
+
+            return "\n".join(lines)
+
         if bound.lower is None or bound.upper is None or bound.center is None:
             return ""
+
+        text = self._format_single_bound(bound, use_pm=True)
+
+        if label:
+            text = f"{label} = {text}"
+
+        if wrap:
+            return f"${text}$"
+        return text
+
+    @staticmethod
+    def _format_single_bound(bound: Bound, *, use_pm: bool) -> str:
         upper_error = bound.upper - bound.center
         lower_error = bound.center - bound.lower
         if upper_error != 0 and lower_error != 0:
@@ -389,14 +485,12 @@ class Analysis:
             fmt = "%0.0f"
         upper_error_text = fmt % upper_error
         lower_error_text = fmt % lower_error
-        if upper_error_text == lower_error_text:
+        if use_pm and upper_error_text == lower_error_text:
             text = r"{}\pm {}".format(fmt, "%s") % (maximum, lower_error_text)
         else:
             text = r"{}^{{+{}}}_{{-{}}}".format(fmt, "%s", "%s") % (maximum, upper_error_text, lower_error_text)
         if factor != 0:
             text = r"\left( %s \right) \times 10^{%d}" % (text, -factor)
-        if wrap:
-            text = f"${text}$"
         return text
 
     def get_parameter_summary_mean(self, chain: Chain, column: ColumnName) -> Bound | None:
@@ -411,6 +505,144 @@ class Analysis:
         vals = [0.5 - chain.summary_area / 2, 0.5, 0.5 + chain.summary_area / 2]
         bounds = interp1d(cs, xs)(vals)
         return Bound(lower=bounds[0], center=bounds[1], upper=bounds[2])
+
+    def get_parameter_summary_hdi(self, chain: Chain, column: ColumnName) -> Bound:
+        data = chain.get_data(column).to_numpy()
+        n_samples = data.size
+
+        if n_samples <= 512:  # Arbitrary low sample warning
+            warnings.warn(
+                (
+                    f"Only {n_samples} samples available to compute an HDI for column '{column}' "
+                    f"in chain '{chain.name}'. Results may be unreliable; consider enabling KDE or "
+                    "providing more samples."
+                ),
+                UserWarning,
+                stacklevel=2,
+            )
+
+        xs, _, cs = self._get_smoothed_histogram(chain, column, pad=True)
+
+        cdf_points = np.concatenate(([0.0], cs))
+        x_points = np.concatenate(([xs[0]], xs))
+
+        eps = 1e-12
+        best_width = float("inf")
+        best_lower = float(x_points[0])
+        best_upper = float(x_points[-1])
+        best_start_mass = 0.0
+        best_end_mass = 1.0
+
+        for start_idx, start_mass in enumerate(cdf_points[:-1]):
+            required = start_mass + chain.summary_area
+            if required > 1.0 + eps:
+                break
+
+            # Smallest index with cdf_points[end_idx] >= required
+            end_idx = np.searchsorted(cdf_points, required, side="left")
+
+            # Ensure at least one point is in the interval
+            if end_idx <= start_idx:
+                end_idx = start_idx + 1
+            if end_idx >= cdf_points.size:
+                break
+
+            # If still slightly under target, move one step right if possible
+            if cdf_points[end_idx] - start_mass < chain.summary_area - eps and end_idx + 1 < cdf_points.size:
+                end_idx += 1
+
+            lower = float(x_points[start_idx])
+            upper = float(x_points[end_idx])
+            width = upper - lower
+            if width <= eps:
+                continue
+
+            if width < best_width - eps:
+                best_width = width
+                best_lower = lower
+                best_upper = upper
+                best_start_mass = float(start_mass)
+                best_end_mass = float(cdf_points[end_idx])
+
+        interval_mass = best_end_mass - best_start_mass
+
+        if interval_mass <= eps:
+            center = 0.5 * (best_lower + best_upper)
+
+        else:
+            center_mass = best_start_mass + 0.5 * interval_mass
+            center = float(np.interp(center_mass, cdf_points, x_points, left=best_lower, right=best_upper))
+
+        return Bound(lower=best_lower, center=center, upper=best_upper)
+
+    def get_parameter_hdi_intervals(self, chain: Chain, column: ColumnName) -> list[tuple[float, float]]:
+        """Return highest-density intervals for a marginal distribution.
+
+        Multimodal chains yield one interval per disjoint density band, whereas unimodal chains
+        return a single contiguous interval.
+        """
+        summary = self.get_parameter_summary_hdi(chain, column)
+        default_interval = [(summary.lower, summary.upper)]
+        xs, ys, _ = self._get_smoothed_histogram(chain, column, pad=True)
+
+        # We look for the threshold that is the root of this function
+        def mass_diff(threshold, density, xs, target):
+            mask = density >= threshold
+            mass_above_threshold = float(simps(np.where(mask, density, 0.0), x=xs))
+            return mass_above_threshold - target
+
+        area = simps(ys, x=xs)
+        density = ys / area
+
+        sol = root_scalar(
+            mass_diff,
+            bracket=(0.0, float(np.max(density))),
+            args=(density, xs, chain.summary_area),
+            method="bisect",
+            xtol=5e-4,
+        )
+
+        threshold = sol.root
+        mask = density >= threshold
+
+        intervals = _mask_to_intervals(xs, mask)
+
+        return intervals if intervals else default_interval
+
+    def get_parameter_multimodal_bounds(
+        self,
+        chain: Chain,
+        column: ColumnName,
+        intervals: list[tuple[float, float]],
+    ) -> list[Bound]:
+        """
+        Convert multimodal HDI bands into `Bound` instances.
+        """
+
+        xs, ys, _ = self._get_smoothed_histogram(
+            chain,
+            column,
+            pad=True,
+        )
+
+        lower_limit, upper_limit = float(xs.min()), float(xs.max())
+
+        bounds = []
+
+        for lower_raw, upper_raw in intervals:
+            lower, upper = max(lower_raw, lower_limit), min(upper_raw, upper_limit)
+            mask = (xs >= lower) & (xs <= upper)
+
+            if np.any(mask):
+                idx = int(np.argmax(ys[mask]))
+                center = float(xs[mask][idx])
+
+            else:
+                center = float(0.5 * (lower + upper))
+
+            bounds.append(Bound(lower=float(lower), center=center, upper=float(upper)))
+
+        return bounds
 
     def get_parameter_summary_max(self, chain: Chain, column: ColumnName) -> Bound | None:
         xs, ys, cs = self._get_smoothed_histogram(chain, column)

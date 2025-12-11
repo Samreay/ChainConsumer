@@ -1,8 +1,11 @@
+import arviz as az
 import numpy as np
 import pandas as pd
+import pytest
 from scipy.stats import skewnorm
 
 from chainconsumer import Bound, Chain, ChainConfig, ChainConsumer
+from chainconsumer.statistics import SummaryStatistic
 
 
 class TestChain:
@@ -12,6 +15,9 @@ class TestChain:
     data2 = rng.normal(loc=3, scale=1.0, size=n)
     data_combined = np.vstack((data, data2)).T
     data_skew = skewnorm.rvs(5, loc=1, scale=1.5, size=n)
+    data_bimodal = np.concatenate(
+        [rng.normal(loc=-1.5, scale=0.3, size=n // 2), rng.normal(loc=1.5, scale=0.3, size=n // 2)]
+    )
 
     chain = Chain(samples=pd.DataFrame(data, columns=["x"]), name="a")
     chain2 = Chain(samples=pd.DataFrame(data2, columns=["x"]), name="b")
@@ -139,6 +145,107 @@ class TestChain:
         text = consumer.analysis.get_parameter_text(Bound.from_array(p1), wrap=True)
         assert text == r"$0.020^{+0.015}_{-0.010}$"
 
+    def test_output_multimodal_text(self):
+        intervals = [
+            Bound(lower=-2.0, center=-1.5, upper=-1.0),
+            Bound(lower=1.0, center=1.4, upper=2.0),
+        ]
+        consumer = ChainConsumer()
+        text = consumer.analysis.get_parameter_text(intervals, wrap=True, label="x")
+
+        assert text.startswith("$x$")
+        assert text.count("I1:") == 1 and text.count("I2:") == 1
+        assert "\\pm" not in text
+        assert "\n" in text
+
+    def test_summary_multimodal_returns_intervals(self):
+        rng = np.random.default_rng(42)
+        samples = np.concatenate(
+            [
+                rng.normal(loc=-1.5, scale=0.2, size=5000),
+                rng.normal(loc=1.6, scale=0.25, size=5000),
+            ]
+        )
+        df = pd.DataFrame({"x": samples})
+        chain = Chain(
+            samples=df,
+            name="bimodal",
+            statistics=SummaryStatistic.HDI,
+            kde=True,
+            multimodal=True,
+            summary_area=0.5,
+        )
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        summary = consumer.analysis.get_summary()
+        result = summary["bimodal"]["x"]
+
+        assert isinstance(result, list)
+        assert len(result) > 1
+        assert all(isinstance(bound, Bound) for bound in result)
+        assert result[0].upper < 0
+        assert result[-1].lower > 0
+
+    def test_hdi_weighted_interval(self):
+        samples = np.array([0.0, 1.0, 2.0, 2.5, 3.0])
+        weights = np.array([0.05, 0.10, 0.50, 0.20, 0.15])
+        df = pd.DataFrame({"x": samples, "weight": weights})
+        chain = Chain(samples=df, name="weighted", statistics=SummaryStatistic.HDI, summary_area=0.5)
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        bound = consumer.analysis.get_summary()["weighted"]["x"]
+        assert bound.lower < bound.center < bound.upper
+        assert np.isclose(bound.center, 2.0, atol=5e-3)
+        assert bound.upper - bound.lower < 0.3
+
+    def test_hdi_warns_when_samples_low_without_kde(self):
+        df = pd.DataFrame({"x": np.linspace(-1.0, 1.0, 10)})
+        chain = Chain(samples=df, name="warn", statistics=SummaryStatistic.HDI, summary_area=0.5)
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        with pytest.warns(UserWarning, match="Only 10 samples available"):
+            consumer.analysis.get_parameter_summary_hdi(chain, "x")
+
+    def test_hdi_intervals_single(self):
+        chain = Chain(
+            samples=pd.DataFrame(self.data_skew[::20], columns=["x"]),
+            name="skew",
+            statistics=SummaryStatistic.HDI,
+            kde=True,
+        )
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+
+        intervals = consumer.analysis.get_parameter_hdi_intervals(chain, "x")
+        assert len(intervals) == 1
+        lower, upper = intervals[0]
+        assert lower < upper
+
+    def test_hdi_intervals_multimodal(self):
+        df = pd.DataFrame(self.data_bimodal[::20], columns=["x"])
+        chain_default = Chain(samples=df, name="bimodal", statistics=SummaryStatistic.HDI, kde=True)
+        consumer = ChainConsumer()
+        consumer.add_chain(chain_default)
+
+        multimodal_chain = Chain(
+            samples=df,
+            name="bimodal_multi",
+            statistics=SummaryStatistic.HDI,
+            kde=True,
+            multimodal=True,
+            summary_area=chain_default.summary_area,
+        )
+        consumer2 = ChainConsumer()
+        consumer2.add_chain(multimodal_chain)
+
+        multi_intervals = consumer2.analysis.get_parameter_hdi_intervals(multimodal_chain, "x")
+        assert len(multi_intervals) == 2
+        assert multi_intervals[0][1] < 0.0
+        assert multi_intervals[1][0] > 0.0
+
     def test_output_format7(self):
         p1 = [None, 2.0e-2, 3.5e-2]
         consumer = ChainConsumer()
@@ -249,6 +356,54 @@ class TestChain:
             array = stats[name]["x"]
             assert np.all(np.abs(array.center - means[i]) < 1e-1)
             assert np.abs(consumer.get_chain(name).get_data("x").mean() - means[i]) < 1e-2
+
+
+class TestHDIParityWithArviz:
+    @staticmethod
+    def _make_chain(
+        samples: np.ndarray,
+        *,
+        area: float,
+        multimodal: bool = False,
+        smooth: int = 0,
+        kde: int | float | bool = False,
+    ) -> tuple[ChainConsumer, Chain]:
+        chain = Chain(
+            samples=pd.DataFrame({"x": samples}),
+            name="arviz",
+            statistics=SummaryStatistic.HDI,
+            summary_area=area,
+            smooth=smooth,
+            kde=kde,
+            multimodal=multimodal,
+        )
+        consumer = ChainConsumer()
+        consumer.add_chain(chain)
+        return consumer, chain
+
+    def test_hdi_matches_arviz_unimodal(self) -> None:
+        rng = np.random.default_rng(9876)
+        samples = rng.normal(loc=-0.25, scale=1.3, size=5000)
+        area = 0.5
+
+        consumer, chain = self._make_chain(samples, area=area)
+        bound = consumer.analysis.get_summary()[chain.name]["x"]
+        assert isinstance(bound, Bound)
+
+        az_hdi = az.stats.hdi(samples, hdi_prob=area)
+        np.testing.assert_allclose([bound.lower, bound.upper], az_hdi, atol=5e-2)
+
+    def test_hdi_matches_arviz_high_sample_multimodal(self) -> None:
+        rng = np.random.default_rng(0)
+        samples = np.concatenate([rng.normal(-2.0, 0.3, size=5000), rng.normal(2.0, 0.25, size=5000)])
+        area = 0.5
+
+        consumer, chain = self._make_chain(samples, area=area, multimodal=True)
+        cc_intervals = np.array(consumer.analysis.get_parameter_hdi_intervals(chain, "x"))
+        az_intervals = np.asarray(az.stats.hdi(samples, hdi_prob=area, multimodal=True))
+
+        assert cc_intervals.shape == az_intervals.shape
+        np.testing.assert_allclose(cc_intervals, az_intervals, atol=8e-2)
 
     # def test_stats_max_cliff(self):
     #     tolerance = 5e-2
