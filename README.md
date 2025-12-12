@@ -44,6 +44,7 @@ which have helped improve ChainConsumer:
 
 - Simon Dupourqué (for his PRs and suggestions to make ChainConsumer better for all)
 - Chris Davis (check out https://github.com/cpadavis/preliminize)
+- Natalie B. Hogg
 - Joe Zuntz
 - Scott Dedelson
 - Elizabeth Krause
@@ -66,6 +67,11 @@ post, it can be solved by explicitly install the `matplotlib` dependency `dvipng
 If you are running on HPC or clusters where you can't install things yourself, users may run into issues where LaTeX or other optional dependencies aren't installed. In this case, set `usetex=False` in `configure` to request matplotlib not try to use TeX. If this does not work, also set `serif=False`, which has helped some uses.
 
 ### Update History
+
+##### 1.3.0
+
+- Adding HDI summary statistics with a `multimodal` kwarg to the Chains. Thanks @renecotyfanboy!
+- Adding 1D distribution plots via a `plot_dist` method. Thanks @nataliehogg!
 
 ##### 1.2.5
 
