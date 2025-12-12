@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from chainconsumer import Chain, ChainConsumer
-from chainconsumer.statistics import SummaryStatistic
 
 # %%
 # First, let's build some dummy data
@@ -27,13 +26,11 @@ rng.shuffle(phi)
 df = pd.DataFrame({"eta": eta, "phi": phi})
 
 # %%
-# To build a multimodal chain, you simply have to pass `multimodal=True` when building the chain. To work, it requires
-# you to specify `SummaryStatistic.HDI` as the summary statistic.
+# To build a multimodal chain, you simply have to pass `multimodal=True` when building the chain.
 
 chain_multimodal = Chain(
     samples=df.copy(),
     name="posterior-multimodal",
-    statistics=SummaryStatistic.HDI,
     multimodal=True,  # <- Here
 )
 
@@ -48,7 +45,7 @@ fig = cc.plotter.plot()
 # Let's compare with what would happen if you don't use a multimodal chain. We use the same data as before but don't
 # tell `ChainConsumer` that we expect the chains to be multimodal.
 
-chain_unimodal = Chain(samples=df.copy(), name="posterior-unimodal", statistics=SummaryStatistic.HDI, multimodal=False)
+chain_unimodal = Chain(samples=df.copy(), name="posterior-unimodal", multimodal=False)
 
 cc.add_chain(chain_unimodal)
 fig = cc.plotter.plot()
@@ -69,9 +66,7 @@ rng.shuffle(eta)
 
 df = pd.DataFrame({"eta": eta, "phi": phi})
 
-chain_multimodal = Chain(
-    samples=df.copy(), name="posterior-multimodal", statistics=SummaryStatistic.HDI, multimodal=True
-)
+chain_multimodal = Chain(samples=df.copy(), name="posterior-multimodal", multimodal=True)
 
 cc = ChainConsumer()
 cc.add_chain(chain_multimodal)
