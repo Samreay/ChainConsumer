@@ -30,7 +30,7 @@ test = [
     "pytest>=8.4.2",
     "numpyro>=0.13.2, <1",
     "emcee>=3.1.4,<4",
-    "arviz>=0.16.1, <1",
+    "arviz>=0.16.1,<1.1.0",
 ]
 dev = [
     "pre-commit>=3.7.0",

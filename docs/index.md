@@ -24,7 +24,6 @@ If you have some samples, analysing them should be straightforward:
 ```python
 from chainconsumer import Chain, ChainConsumer, make_sample
 
-
 df = make_sample()
 c = ChainConsumer()
 c.add_chain(Chain(samples=df, name="An Example Contour"))

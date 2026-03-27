@@ -150,7 +150,7 @@ docs = [
     { name = "pyyaml", specifier = ">=6.0.1,<7" },
 ]
 test = [
-    { name = "arviz", specifier = ">=0.16.1,<1" },
+    { name = "arviz", specifier = ">=0.16.1,<1.1.0" },
     { name = "emcee", specifier = ">=3.1.4,<4" },
     { name = "numpyro", specifier = ">=0.13.2,<1" },
     { name = "pytest", specifier = ">=8.4.2" },
