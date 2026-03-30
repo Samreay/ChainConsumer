@@ -390,7 +390,8 @@ class TestHDIParityWithArviz:
         bound = consumer.analysis.get_summary()[chain.name]["x"]
         assert isinstance(bound, Bound)
 
-        az_hdi = az.stats.hdi(samples, hdi_prob=area)
+        az_hdi = az.stats.hdi(samples, hdi_prob=area) if az.__version__.startswith("0.") else az.hdi(samples, prob=area)
+
         np.testing.assert_allclose([bound.lower, bound.upper], az_hdi, atol=5e-2)
 
     def test_hdi_matches_arviz_high_sample_multimodal(self) -> None:
@@ -400,7 +401,11 @@ class TestHDIParityWithArviz:
 
         consumer, chain = self._make_chain(samples, area=area, multimodal=True)
         cc_intervals = np.array(consumer.analysis.get_parameter_hdi_intervals(chain, "x"))
-        az_intervals = np.asarray(az.stats.hdi(samples, hdi_prob=area, multimodal=True))
+
+        if az.__version__.startswith("0."):
+            az_intervals = np.asarray(az.stats.hdi(samples, hdi_prob=area, multimodal=True))
+        else:
+            az_intervals = np.asarray(az.hdi(samples, prob=area, method="multimodal"))
 
         assert cc_intervals.shape == az_intervals.shape
         np.testing.assert_allclose(cc_intervals, az_intervals, atol=8e-2)
